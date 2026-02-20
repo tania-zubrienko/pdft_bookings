@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </div>
                 <div className='flex flex-col'>
                   <span className='font-bold text-lg text-white leading-tight'>
-                    Dance Academy
+                    Poled Dance Fit Talavera
                   </span>
                   <span className='text-xs text-gray-400 leading-tight'>
                     Admin Panel

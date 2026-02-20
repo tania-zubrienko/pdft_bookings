@@ -24,7 +24,7 @@ export default function Layout({ children }: LayoutProps) {
                 <span className='text-white font-bold text-xl'>D</span>
               </div>
               <span className='font-bold text-xl text-gray-900'>
-                Dance Academy
+                Poled Dance Fit Talavera
               </span>
             </Link>
 
@@ -125,7 +125,7 @@ export default function Layout({ children }: LayoutProps) {
       <footer className='bg-white border-t border-gray-200 mt-auto'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
           <p className='text-center text-gray-500 text-sm'>
-            © 2026 Dance Academy. All rights reserved.
+            © 2026 Poled Dance Fit Talavera. All rights reserved.
           </p>
         </div>
       </footer>
