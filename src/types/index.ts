@@ -1,68 +1,77 @@
 /**
- * Class document
+ * Generic class definition — a reusable "class type" (e.g. "Salsa Basics").
  * Path: classes/{classId}
  */
-export interface Class {
+export interface ClassDefinition {
   id: string;
   title: string;
-  description: string;
-  instructorId: string;
-  instructorName: string;
-  scheduledAt: Date;
-  duration: number; // in minutes
-  capacity: number;
-  enrolledCount: number;
+  defaultDuration: number; // minutes
+  defaultCapacity: number;
   active: boolean;
-  imageUrl?: string;
-  location?: string;
 }
 
 /**
- * Reservation document
+ * Scheduled class — a concrete instance planned for a specific date/time.
+ * Path: scheduledClasses/{scheduledId}
+ */
+export interface ScheduledClass {
+  id: string;
+  classId: string; // → classes/{classId}
+  instructorId: string; // → instructors/{instructorId}
+  date: Date; // specific date + time
+  duration: number; // minutes
+  capacity: number;
+  location: string;
+  status: 'active' | 'cancelled';
+
+  // Denormalized for fast reads
+  classTitle: string;
+  instructorName: string;
+
+  // Embedded student list (fast UI reads)
+  enrolledCount: number;
+  studentIds: string[];
+}
+
+/**
+ * Reservation — audit trail for bookings (separate from embedded studentIds).
  * Path: reservations/{reservationId}
  */
 export interface Reservation {
   id: string;
   studentId: string;
-  classId: string;
-  status: 'pending' | 'paid' | 'cancelled';
+  scheduledClassId: string; // → scheduledClasses/{id}
+  status: 'confirmed' | 'cancelled';
   paymentMode: 'single' | 'credit';
   createdAt: Date;
-  paidAt?: Date;
+  cancelledAt?: Date;
   creditPoolId?: string;
-  paymentIntentId?: string;
 }
 
 /**
- * User profile
- * Path: users/{userId}
+ * Instructor profile.
+ * Path: instructors/{instructorId}
  */
-export interface User {
+export interface Instructor {
   id: string;
+  name: string;
   email: string;
-  displayName: string;
-  role: 'student' | 'instructor' | 'admin';
-  createdAt: Date;
-  photoURL?: string;
+  specialties: string[];
+  active: boolean;
 }
 
 /**
- * Payment record
- * Path: payments/{paymentId}
+ * Student profile.
+ * Path: students/{studentId}
  */
-export interface Payment {
+export interface Student {
   id: string;
-  studentId: string;
-  amount: number;
-  type: 'single_class' | 'package';
-  stripePaymentIntentId: string;
-  reservationId?: string;
-  creditPoolId?: string;
-  createdAt: Date;
+  name: string;
+  email: string;
 }
 
 /**
- * Credit pool
+ * Credit pool — a bundle of credits from a package purchase.
  * Path: creditPools/{poolId}
  */
 export interface CreditPool {
@@ -76,11 +85,26 @@ export interface CreditPool {
 }
 
 /**
- * Credit balance summary (aggregated from all active pools)
+ * Credit balance summary (aggregated from all active pools).
  */
 export interface CreditBalance {
   remaining: number;
   total: number;
+}
+
+/**
+ * Package — a purchasable credit bundle.
+ * Path: packages/{packageId}
+ */
+export interface Package {
+  id: string;
+  name: string;
+  credits: number;
+  price: number; // in cents
+  validityDays: number;
+  active: boolean;
+  description?: string;
+  highlight?: boolean; // featured/recommended
 }
 
 // API Response types
@@ -97,55 +121,4 @@ export interface BookingError {
     | 'PAYMENT_REQUIRED'
     | 'INVALID_PAYMENT_MODE';
   message: string;
-}
-
-/**
- * Package (credit bundle for purchase)
- * Path: packages/{packageId}
- */
-export interface Package {
-  id: string;
-  name: string;
-  credits: number;
-  price: number; // in cents
-  validityDays: number;
-  active: boolean;
-  description?: string;
-  highlight?: boolean; // featured/recommended
-}
-
-/**
- * Weekly class template slot — defines a recurring class at a day+time.
- * Used by admin to plan the base weekly schedule that repeats each week.
- */
-export interface WeeklySlot {
-  id: string;
-  dayOfWeek: number; // 0 = Sunday … 6 = Saturday
-  startHour: number;
-  startMinute: number;
-  title: string;
-  description: string;
-  instructorId: string;
-  instructorName: string;
-  duration: number; // minutes
-  capacity: number;
-  location: string;
-}
-
-/**
- * Instructor profile
- */
-export interface Instructor {
-  id: string;
-  name: string;
-  specialties: string[];
-}
-
-/**
- * Mock student profile (for admin reservation view)
- */
-export interface Student {
-  id: string;
-  name: string;
-  email: string;
 }

@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import Layout from '../../components/Layout/Layout';
 
 export default function BookingSuccess() {
-  const [searchParams] = useSearchParams();
-  const sessionId = searchParams.get('session_id');
   const [status, setStatus] = useState<'success' | 'cancelled' | 'unknown'>(
     'unknown',
   );

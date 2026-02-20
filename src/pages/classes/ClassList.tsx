@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Class } from '../../types';
-import { getClasses } from '../../lib/mockData';
+import { ScheduledClass } from '../../types';
+import { getScheduledClasses } from '../../lib/mockData';
 import ClassCard from '../../components/Classes/ClassCard';
 import CalendarView from '../../components/Calendar/CalendarView';
 import Layout from '../../components/Layout/Layout';
@@ -15,14 +15,14 @@ function isSameDay(a: Date, b: Date): boolean {
 }
 
 export default function ClassList() {
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [classes, setClasses] = useState<ScheduledClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   useEffect(() => {
-    getClasses().then((data) => {
+    getScheduledClasses().then((data) => {
       setClasses(data);
       setLoading(false);
     });
@@ -32,8 +32,8 @@ export default function ClassList() {
   const classesForDay = useMemo(() => {
     if (!selectedDate) return [];
     return classes
-      .filter((c) => isSameDay(c.scheduledAt, selectedDate))
-      .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
+      .filter((c) => isSameDay(c.date, selectedDate))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [classes, selectedDate]);
 
   // Format selected date for the heading

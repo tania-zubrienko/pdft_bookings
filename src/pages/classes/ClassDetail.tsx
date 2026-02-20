@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getClassById, getCreditBalance } from '../../lib/mockData';
-import { Class, CreditBalance } from '../../types';
+import { getScheduledClassById, getCreditBalance } from '../../lib/mockData';
+import { ScheduledClass, CreditBalance } from '../../types';
 import Layout from '../../components/Layout/Layout';
 import {
   ArrowLeft,
@@ -17,7 +17,7 @@ import {
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
 
-  const [classData, setClassData] = useState<Class | null>(null);
+  const [classData, setClassData] = useState<ScheduledClass | null>(null);
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(
     null,
   );
@@ -28,7 +28,7 @@ export default function ClassDetail() {
   useEffect(() => {
     if (!classId) return;
 
-    Promise.all([getClassById(classId), getCreditBalance()]).then(
+    Promise.all([getScheduledClassById(classId), getCreditBalance()]).then(
       ([classResult, balanceResult]) => {
         setClassData(classResult);
         setCreditBalance(balanceResult);
@@ -103,7 +103,7 @@ export default function ClassDetail() {
     );
   }
 
-  const scheduledDate = classData.scheduledAt;
+  const scheduledDate = classData.date;
   const isFull = classData.enrolledCount >= classData.capacity;
   const spotsLeft = classData.capacity - classData.enrolledCount;
 
@@ -123,10 +123,8 @@ export default function ClassDetail() {
         <div className='lg:col-span-2'>
           {/* Class Info */}
           <h1 className='text-3xl font-bold text-gray-900 mb-4'>
-            {classData.title}
+            {classData.classTitle}
           </h1>
-
-          <p className='text-gray-600 text-lg mb-6'>{classData.description}</p>
 
           {/* Details Grid */}
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-8'>
@@ -181,17 +179,15 @@ export default function ClassDetail() {
           </div>
 
           {/* Location */}
-          {classData.location && (
-            <div className='bg-white rounded-xl border border-gray-200 p-6'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-                Location
-              </h3>
-              <div className='flex items-center gap-3'>
-                <MapPin className='w-5 h-5 text-primary-600' />
-                <span className='text-gray-700'>{classData.location}</span>
-              </div>
+          <div className='bg-white rounded-xl border border-gray-200 p-6'>
+            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+              Location
+            </h3>
+            <div className='flex items-center gap-3'>
+              <MapPin className='w-5 h-5 text-primary-600' />
+              <span className='text-gray-700'>{classData.location}</span>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Booking Card */}

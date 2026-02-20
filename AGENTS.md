@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A reservation and credit-based booking system for a dance academy. Students browse classes via a calendar view and reserve spots using pre-purchased credit packages.
+A reservation and credit-based booking system for a dance academy. Students browse classes via a calendar view and reserve spots using pre-purchased credit packages. Admins manage class schedules via a week-based planner with a "duplicate previous week" strategy.
 
 **Stack:** React + TypeScript + Vite + Tailwind CSS  
 **Data Layer:** Mock data (in-memory, simulated async) — Firebase integration planned for production  
@@ -22,6 +22,10 @@ The system currently supports:
 - Credit balance display when reserving
 - Mobile-responsive UI with hamburger menu
 - No per-class pricing — all bookings use credits
+- Admin: week-based class scheduling with ClassDefinition picker
+- Admin: "Duplicate to Next Week" for fast schedule planning
+- Admin: cancel/restore individual scheduled classes
+- Admin: reservation viewer with search and stats
 
 ---
 
@@ -31,7 +35,7 @@ The system currently supports:
 
 ```
 src/
-├── App.tsx                          # Routes
+├── App.tsx                          # Routes (student + admin)
 ├── main.tsx                         # Entry (BrowserRouter, no auth)
 ├── index.css                        # Tailwind + custom components
 ├── types/index.ts                   # All TypeScript interfaces
@@ -41,8 +45,13 @@ src/
 ├── components/
 │   ├── Calendar/CalendarView.tsx    # Week/month calendar grid
 │   ├── Classes/ClassCard.tsx        # Compact class card
-│   └── Layout/Layout.tsx            # Header, nav, footer, mobile menu
+│   └── Layout/
+│       ├── Layout.tsx               # Student header, nav, footer, mobile menu
+│       └── AdminLayout.tsx          # Admin dark-themed layout
 └── pages/
+    ├── admin/
+    │   ├── ClassScheduler.tsx       # Week-based class planner
+    │   └── AdminReservations.tsx    # Reservation viewer + stats
     ├── classes/
     │   ├── ClassList.tsx            # Main page: calendar + day class list
     │   └── ClassDetail.tsx          # Class info + credit booking card
@@ -56,20 +65,24 @@ src/
 
 ### Routes
 
-| Path                 | Component             | Description                         |
-| -------------------- | --------------------- | ----------------------------------- |
-| `/classes`           | ClassList             | Calendar + day class list (default) |
-| `/classes/:classId`  | ClassDetail           | Class detail + booking              |
-| `/packages`          | Packages              | Credit packages for purchase        |
-| `/my-reservations`   | MyReservations        | Student's reservation list          |
-| `/booking/success`   | BookingResult         | Post-booking success                |
-| `/booking/cancelled` | BookingResult         | Post-booking cancelled              |
-| `/` or `*`           | Redirect → `/classes` | Default/fallback                    |
+| Path                  | Component             | Description                         |
+| --------------------- | --------------------- | ----------------------------------- |
+| `/classes`            | ClassList             | Calendar + day class list (default) |
+| `/classes/:classId`   | ClassDetail           | Class detail + booking              |
+| `/packages`           | Packages              | Credit packages for purchase        |
+| `/my-reservations`    | MyReservations        | Student's reservation list          |
+| `/booking/success`    | BookingResult         | Post-booking success                |
+| `/booking/cancelled`  | BookingResult         | Post-booking cancelled              |
+| `/admin/schedule`     | ClassScheduler        | Week-based class planner            |
+| `/admin/reservations` | AdminReservations     | Reservation viewer + stats          |
+| `/admin`              | Redirect → schedule   | Admin landing                       |
+| `/` or `*`            | Redirect → `/classes` | Default/fallback                    |
 
 ### Navigation
 
 - **Desktop:** Horizontal nav in header (Classes, Buy Credits, My Reservations)
 - **Mobile:** Hamburger menu (☰/✕ toggle) with same links in dropdown
+- **Admin:** Separate dark-themed layout with Schedule / Reservations nav
 
 ---
 
@@ -95,12 +108,12 @@ Classes do **not** have individual prices. All reservations consume 1 credit fro
 
 ### Booking Flow (Credit-Based)
 
-1. Student browses classes via calendar view
+1. Student browses scheduled classes via calendar view
 2. Clicks "Reserve" → navigates to class detail
 3. Class detail shows credit balance (e.g., 5/10)
 4. If credits available: "Use 1 Credit to Reserve" button
 5. If no credits: "Get Credits to Reserve" → links to `/packages`
-6. On booking: 1 credit deducted, reservation created as `paid`
+6. On booking: 1 credit deducted, reservation created as `confirmed`
 
 ### Package Purchase Flow
 
@@ -114,32 +127,113 @@ Classes do **not** have individual prices. All reservations consume 1 credit fro
 
 ## Data Models
 
-### Class
+### ClassDefinition
 
 Path: `classes/{classId}`
 
+A reusable "class type" (e.g. "Salsa Basics"). Admins pick from these when scheduling.
+
 ```typescript
-interface Class {
+interface ClassDefinition {
   id: string;
   title: string;
-  description: string;
-  instructorId: string;
-  instructorName: string;
-  scheduledAt: Date;
-  duration: number; // in minutes
-  capacity: number;
-  enrolledCount: number; // Denormalized counter
+  defaultDuration: number; // minutes
+  defaultCapacity: number;
   active: boolean;
-  imageUrl?: string;
-  location?: string;
 }
 ```
 
 **Notes:**
 
+- Serves as a template — does not represent a scheduled event
 - No `price` field — pricing is package-based only
+- `defaultDuration` and `defaultCapacity` are copied to `ScheduledClass` on creation
+
+### ScheduledClass
+
+Path: `scheduledClasses/{scheduledId}`
+
+A concrete class instance planned for a specific date/time.
+
+```typescript
+interface ScheduledClass {
+  id: string;
+  classId: string; // → classes/{classId}
+  instructorId: string; // → instructors/{instructorId}
+  date: Date; // specific date + time
+  duration: number; // minutes
+  capacity: number;
+  location: string;
+  status: 'active' | 'cancelled';
+
+  // Denormalized for fast reads
+  classTitle: string;
+  instructorName: string;
+
+  // Embedded student list (fast UI reads)
+  enrolledCount: number;
+  studentIds: string[];
+}
+```
+
+**Notes:**
+
+- `date` uses `Date` (will be `Timestamp` in Firestore)
 - `enrolledCount` is denormalized (ADR-001)
-- `scheduledAt` uses `Date` (will be `Timestamp` in Firestore)
+- `studentIds` is an embedded array for fast UI reads
+- `classTitle` and `instructorName` are denormalized from related documents
+- `status: 'cancelled'` means the class was cancelled by admin (not individual bookings)
+
+### Reservation
+
+Path: `reservations/{reservationId}`
+
+Audit trail for bookings (separate from embedded `studentIds` on ScheduledClass).
+
+```typescript
+interface Reservation {
+  id: string;
+  studentId: string;
+  scheduledClassId: string; // → scheduledClasses/{id}
+  status: 'confirmed' | 'cancelled';
+  paymentMode: 'single' | 'credit';
+  createdAt: Date;
+  cancelledAt?: Date;
+  creditPoolId?: string; // If paid with credits
+}
+```
+
+**Notes:**
+
+- `confirmed` is the only active booking state (no `pending` state)
+- `paymentMode = 'single'` is reserved for future direct payment support
+- `cancelledAt` is set when a reservation is cancelled
+
+### Instructor
+
+Path: `instructors/{instructorId}`
+
+```typescript
+interface Instructor {
+  id: string;
+  name: string;
+  email: string;
+  specialties: string[];
+  active: boolean;
+}
+```
+
+### Student
+
+Path: `students/{studentId}`
+
+```typescript
+interface Student {
+  id: string;
+  name: string;
+  email: string;
+}
+```
 
 ### Package
 
@@ -162,29 +256,6 @@ interface Package {
 
 - Only admin can modify (future)
 - Public read (authenticated, future)
-
-### Reservation
-
-Path: `reservations/{reservationId}`
-
-```typescript
-interface Reservation {
-  id: string;
-  studentId: string;
-  classId: string;
-  status: 'pending' | 'paid' | 'cancelled';
-  paymentMode: 'single' | 'credit';
-  createdAt: Date;
-  paidAt?: Date;
-  creditPoolId?: string; // If paid with credits
-  paymentIntentId?: string; // If paid with Stripe
-}
-```
-
-**Rules:**
-
-- If `paymentMode = 'credit'`: Must decrement `remainingCredits`, no Stripe payment required
-- If `paymentMode = 'single'`: Reserved for future direct payment support
 
 ### CreditPool
 
@@ -219,38 +290,6 @@ interface CreditBalance {
 }
 ```
 
-### User
-
-Path: `users/{userId}` (future — no auth currently)
-
-```typescript
-interface User {
-  id: string;
-  email: string;
-  displayName: string;
-  role: 'student' | 'instructor' | 'admin';
-  createdAt: Date;
-  photoURL?: string;
-}
-```
-
-### Payment
-
-Path: `payments/{paymentId}`
-
-```typescript
-interface Payment {
-  id: string;
-  studentId: string;
-  amount: number;
-  type: 'single_class' | 'package';
-  stripePaymentIntentId: string;
-  reservationId?: string;
-  creditPoolId?: string;
-  createdAt: Date;
-}
-```
-
 ---
 
 ## Mock Data Layer
@@ -259,21 +298,29 @@ All data is served from `src/lib/mockData.ts` with simulated async delays (200-3
 
 ### Available Mock Data
 
-| Data         | Count | Description                                   |
-| ------------ | ----- | --------------------------------------------- |
-| Classes      | 16    | Spread across days 0-14, various styles/times |
-| Reservations | 3     | Mix of paid, pending, credit & single modes   |
-| Credit Pools | 1     | 5/10 remaining, expires in 60 days            |
-| Packages     | 4     | 1/4/8/14 credits at $25/$80/$144/$224         |
+| Data             | Count | Description                                               |
+| ---------------- | ----- | --------------------------------------------------------- |
+| ClassDefinitions | 16    | Reusable class types (Salsa, Bachata, Stretch, etc.)      |
+| Instructors      | 4     | With email, specialties, active flag                      |
+| Students         | 5     | Basic profiles (name, email)                              |
+| ScheduledClasses | 16    | Spread across days 0-14, various styles/times, studentIds |
+| Reservations     | 11    | All confirmed, credit payment mode                        |
+| Credit Pools     | 1     | 5/10 remaining, expires in 60 days                        |
+| Packages         | 4     | 1/4/8/14 credits at $25/$80/$144/$224                     |
 
 ### Exported Functions
 
 ```typescript
-getClasses(): Promise<Class[]>
-getClassById(id: string): Promise<Class | null>
+getClassDefinitions(): Promise<ClassDefinition[]>
+getScheduledClasses(): Promise<ScheduledClass[]>
+getScheduledClassById(id: string): Promise<ScheduledClass | null>
 getReservations(): Promise<Reservation[]>
 getCreditBalance(): Promise<CreditBalance>
 getPackages(): Promise<Package[]>
+getInstructors(): Promise<Instructor[]>
+getStudents(): Promise<Student[]>
+getAdminReservations(): Promise<AdminReservation[]>
+duplicateWeek(sourceClasses: ScheduledClass[], offsetWeeks: number): ScheduledClass[]
 ```
 
 ---
@@ -334,13 +381,13 @@ getPackages(): Promise<Package[]>
 
 These conditions must **never** be violated under any circumstances:
 
-| ID      | Invariant                                                   | Enforcement                                     |
-| ------- | ----------------------------------------------------------- | ----------------------------------------------- |
-| INV-001 | `remainingCredits >= 0`                                     | Firestore transaction with pre-check            |
-| INV-002 | `enrolledCount <= capacity`                                 | Firestore transaction with pre-check            |
-| INV-003 | No duplicate reservation for same `(studentId, classId)`    | Composite unique constraint / transaction check |
-| INV-004 | `reservation.status === 'paid'` is the ONLY confirmed state | Server-side status management only              |
-| INV-005 | Credits cannot be consumed after `expiresAt`                | Server-side expiration validation               |
+| ID      | Invariant                                                             | Enforcement                                     |
+| ------- | --------------------------------------------------------------------- | ----------------------------------------------- |
+| INV-001 | `remainingCredits >= 0`                                               | Firestore transaction with pre-check            |
+| INV-002 | `enrolledCount <= capacity`                                           | Firestore transaction with pre-check            |
+| INV-003 | No duplicate reservation for same `(studentId, scheduledClassId)`     | Composite unique constraint / transaction check |
+| INV-004 | `reservation.status === 'confirmed'` is the ONLY active booking state | Server-side status management only              |
+| INV-005 | Credits cannot be consumed after `expiresAt`                          | Server-side expiration validation               |
 
 ### Invariant Violation Response
 
@@ -388,16 +435,20 @@ match /creditPools/{poolId} {
   allow write: if false; // Only Cloud Functions
 }
 
-// reservations - READ for owner, CREATE with 'pending' only
+// reservations - READ for owner, CREATE with 'confirmed' only via Cloud Functions
 match /reservations/{resId} {
   allow read: if request.auth.uid == resource.data.studentId;
-  allow create: if request.auth.uid == request.resource.data.studentId
-                && request.resource.data.status == 'pending';
-  allow update, delete: if false; // Only Cloud Functions
+  allow create, update, delete: if false; // Only Cloud Functions
 }
 
-// classes - Public read (authenticated)
+// classDefinitions - Public read (authenticated), Admin write
 match /classes/{classId} {
+  allow read: if request.auth != null;
+  allow write: if request.auth.token.admin == true;
+}
+
+// scheduledClasses - Public read (authenticated), Admin write
+match /scheduledClasses/{scheduledId} {
   allow read: if request.auth != null;
   allow write: if request.auth.token.admin == true;
 }
@@ -432,7 +483,7 @@ async function bookWithCredits(studentId: string, classId: string) {
     const existingRes = await tx.get(
       reservationsRef
         .where('studentId', '==', studentId)
-        .where('classId', '==', classId),
+        .where('scheduledClassId', '==', classId),
     );
     if (!existingRes.empty) {
       throw new Error('ALREADY_BOOKED');
@@ -465,12 +516,11 @@ async function bookWithCredits(studentId: string, classId: string) {
     // 6. Create confirmed reservation
     tx.create(newReservationRef, {
       studentId,
-      classId,
-      status: 'paid',
-      paymentMode: 'credits',
+      scheduledClassId: classId,
+      status: 'confirmed',
+      paymentMode: 'credit',
       creditPoolId: pool.id,
       createdAt: Timestamp.now(),
-      paidAt: Timestamp.now(),
     });
 
     return { success: true, reservationId: newReservationRef.id };
@@ -507,7 +557,7 @@ async function bookWithCredits(studentId: string, classId: string) {
 
 1. Decrement `remainingCredits` from earliest expiring pool
 2. Increment `enrolledCount` on class
-3. Create reservation (`paymentMode = 'credit'`, `status = 'paid'`)
+3. Create reservation (`paymentMode = 'credit'`, `status = 'confirmed'`)
 
 **Output:**
 
@@ -732,7 +782,7 @@ await updateDoc(poolRef, { remainingCredits: pool.remainingCredits - 1 });
 const isAvailable = req.body.seatsAvailable; // NEVER
 
 // BAD: Direct status update from client
-await updateDoc(resRef, { status: 'paid' }); // FORBIDDEN
+await updateDoc(resRef, { status: 'confirmed' }); // FORBIDDEN
 ```
 
 ### ✅ DO
@@ -765,7 +815,7 @@ When implementing any booking-related feature, verify:
 - [ ] Capacity checks are server-side and transactional
 - [ ] FIFO credit consumption is enforced
 - [ ] No client can directly modify `remainingCredits`
-- [ ] No client can set `reservation.status = 'paid'`
+- [ ] No client can set `reservation.status = 'confirmed'`
 - [ ] Stripe webhooks validate signatures
 - [ ] Duplicate reservations are prevented
 - [ ] Expiration is validated server-side
@@ -778,7 +828,7 @@ When implementing any booking-related feature, verify:
 
 ### ADR-001: Denormalized Enrollment Counter
 
-**Decision:** Use `enrolledCount` on Class document instead of counting reservations.  
+**Decision:** Use `enrolledCount` on ScheduledClass document instead of counting reservations.  
 **Rationale:** Faster reads, simpler capacity checks.  
 **Trade-off:** Must maintain consistency via transactions.
 
@@ -806,6 +856,18 @@ When implementing any booking-related feature, verify:
 **Rationale:** Faster iteration on UI/UX. Auth can be layered on top without restructuring.  
 **Trade-off:** Cannot distinguish users; mock studentId used throughout.
 
+### ADR-006: ClassDefinition + ScheduledClass Split
+
+**Decision:** Separate reusable class types (`ClassDefinition`) from concrete scheduled instances (`ScheduledClass`).  
+**Rationale:** Admins define class types once, then schedule them for specific dates/times. Avoids duplicating class metadata across every instance.  
+**Trade-off:** Two collections to manage; `classTitle` and `instructorName` denormalized on ScheduledClass for fast reads.
+
+### ADR-007: Duplicate-Week Scheduling Strategy
+
+**Decision:** Admin schedules classes week-by-week with a "Duplicate to Next Week" action instead of a template-based approach.  
+**Rationale:** Simpler mental model — admins see exactly what's scheduled and copy it forward. No template/instance sync issues.  
+**Trade-off:** Requires manual duplication each week (but one-click operation).
+
 ---
 
 ## Business Rules
@@ -821,7 +883,7 @@ When implementing any booking-related feature, verify:
 Reservation creation must:
 
 1. Check `enrolledCount < capacity` in transaction
-2. Check for duplicate `(studentId, classId)` reservation
+2. Check for duplicate `(studentId, scheduledClassId)` reservation
 3. Abort if either check fails
 
 ### Cancellation Logic
@@ -875,6 +937,17 @@ If original pool has expired when cancellation is requested:
 - [x] Reservation list page
 - [x] Mock data layer
 
+### Phase 1.5: Admin View & Data Model ✅
+
+- [x] ClassDefinition + ScheduledClass data model
+- [x] Week-based class scheduler with ClassDefinition picker
+- [x] "Duplicate to Next Week" for fast planning
+- [x] Cancel/restore individual scheduled classes
+- [x] Instructor assignment via dropdown
+- [x] Reservation viewer (week/month filter + search)
+- [x] Stats dashboard (total, confirmed, unique students/classes)
+- [x] Admin layout with dark theme
+
 ### Phase 2: Authentication & Firebase
 
 - [ ] Firebase Auth integration
@@ -903,14 +976,17 @@ If original pool has expired when cancellation is requested:
 
 ## Glossary
 
-| Term           | Definition                                                   |
-| -------------- | ------------------------------------------------------------ |
-| Credit Pool    | A bundle of class credits with shared expiration             |
-| FIFO           | First-In-First-Out - consume earliest expiring credits first |
-| Reservation    | A student's booking for a specific class                     |
-| Package        | A purchasable bundle defining credits, price, and validity   |
-| Capacity       | Maximum students allowed in a class                          |
-| Enrolled Count | Current number of confirmed students                         |
-| Validity Days  | Number of days until credits expire (30/60/90)               |
-| Credit Balance | Aggregated remaining/total from all active pools             |
-| Mock Data      | In-memory simulated data layer for development               |
+| Term            | Definition                                                   |
+| --------------- | ------------------------------------------------------------ |
+| Credit Pool     | A bundle of class credits with shared expiration             |
+| FIFO            | First-In-First-Out - consume earliest expiring credits first |
+| Reservation     | A student's booking for a specific class                     |
+| Package         | A purchasable bundle defining credits, price, and validity   |
+| Capacity        | Maximum students allowed in a class                          |
+| Enrolled Count  | Current number of confirmed students                         |
+| Validity Days   | Number of days until credits expire (30/60/90)               |
+| Credit Balance  | Aggregated remaining/total from all active pools             |
+| Mock Data       | In-memory simulated data layer for development               |
+| ClassDefinition | A reusable class type (e.g. "Salsa Basics")                  |
+| ScheduledClass  | A concrete class instance planned for a specific date/time   |
+| Duplicate Week  | Admin action to copy a week's classes to the following week  |

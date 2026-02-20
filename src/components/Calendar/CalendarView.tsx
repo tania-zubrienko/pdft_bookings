@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Class } from '../../types';
+import { ScheduledClass } from '../../types';
 
 type ViewMode = 'week' | 'month';
 
 interface CalendarViewProps {
-  classes: Class[];
+  classes: ScheduledClass[];
   viewMode: ViewMode;
   currentDate: Date;
   selectedDate: Date | null;
@@ -54,7 +54,7 @@ export default function CalendarView({
   const classCountByDay = useMemo(() => {
     const map = new Map<string, number>();
     for (const c of classes) {
-      const key = toDateKey(c.scheduledAt);
+      const key = toDateKey(c.date);
       map.set(key, (map.get(key) ?? 0) + 1);
     }
     return map;

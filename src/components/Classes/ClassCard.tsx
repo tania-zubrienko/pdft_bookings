@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Clock, Users, MapPin } from 'lucide-react';
-import { Class } from '../../types';
+import { ScheduledClass } from '../../types';
 
 interface ClassCardProps {
-  classData: Class;
+  classData: ScheduledClass;
 }
 
 export default function ClassCard({ classData }: ClassCardProps) {
@@ -27,7 +27,7 @@ export default function ClassCard({ classData }: ClassCardProps) {
               to={`/classes/${classData.id}`}
               className='text-base font-semibold text-gray-900 hover:text-primary-600 transition-colors line-clamp-1'
             >
-              {classData.title}
+              {classData.classTitle}
             </Link>
             <p className='text-sm text-gray-500 mt-0.5'>
               {classData.instructorName}
@@ -35,7 +35,7 @@ export default function ClassCard({ classData }: ClassCardProps) {
           </div>
           <span className='shrink-0 text-sm font-medium text-gray-600 flex items-center gap-1'>
             <Clock className='w-4 h-4' />
-            {formatTime(classData.scheduledAt)}
+            {formatTime(classData.date)}
           </span>
         </div>
 
@@ -52,12 +52,10 @@ export default function ClassCard({ classData }: ClassCardProps) {
               ? 'Full'
               : `${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left`}
           </span>
-          {classData.location && (
-            <span className='flex items-center gap-1'>
-              <MapPin className='w-4 h-4' />
-              {classData.location}
-            </span>
-          )}
+          <span className='flex items-center gap-1'>
+            <MapPin className='w-4 h-4' />
+            {classData.location}
+          </span>
           <span className='text-gray-400'>{classData.duration} min</span>
         </div>
 

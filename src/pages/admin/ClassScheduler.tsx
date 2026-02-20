@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
-  getWeeklySlots,
+  getScheduledClasses,
   getInstructors,
-  generateMonthClasses,
+  getClassDefinitions,
+  duplicateWeek,
 } from '../../lib/mockData';
-import { Class, Instructor, WeeklySlot } from '../../types';
+import { ClassDefinition, Instructor, ScheduledClass } from '../../types';
 import AdminLayout from '../../components/Layout/AdminLayout';
 import {
   ChevronLeft,
@@ -17,7 +18,8 @@ import {
   MapPin,
   Users,
   X,
-  CalendarPlus,
+  Copy,
+  RotateCcw,
 } from 'lucide-react';
 
 const DAY_NAMES = [
@@ -29,211 +31,196 @@ const DAY_NAMES = [
   'Friday',
   'Saturday',
 ];
-const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-type ViewTab = 'template' | 'month';
+// ─── Helpers ──────────────────────────────────────────────────────────
+
+/** Monday-based start of week */
+function startOfWeek(d: Date): Date {
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const s = new Date(d);
+  s.setDate(diff);
+  s.setHours(0, 0, 0, 0);
+  return s;
+}
+
+function endOfWeek(mondayStart: Date): Date {
+  const e = new Date(mondayStart);
+  e.setDate(e.getDate() + 6);
+  e.setHours(23, 59, 59, 999);
+  return e;
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function weekLabel(monday: Date): string {
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `${fmt(monday)} – ${fmt(sunday)}, ${sunday.getFullYear()}`;
+}
+
+// ──────────────────────────────────────────────────────────────────────
 
 export default function ClassScheduler() {
-  const [template, setTemplate] = useState<WeeklySlot[]>([]);
+  const [allClasses, setAllClasses] = useState<ScheduledClass[]>([]);
+  const [classDefinitions, setClassDefinitions] = useState<ClassDefinition[]>(
+    [],
+  );
   const [instructors, setInstructors] = useState<Instructor[]>([]);
-  const [monthClasses, setMonthClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<ViewTab>('template');
 
-  // Month navigation
-  const now = new Date();
-  const [viewYear, setViewYear] = useState(now.getFullYear());
-  const [viewMonth, setViewMonth] = useState(now.getMonth());
+  // Week navigation — always tracks the Monday of the viewed week
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
 
   // Modal state
-  const [editingSlot, setEditingSlot] = useState<WeeklySlot | null>(null);
-  const [showSlotModal, setShowSlotModal] = useState(false);
-  const [editingClass, setEditingClass] = useState<Class | null>(null);
-  const [showClassModal, setShowClassModal] = useState(false);
+  const [editingClass, setEditingClass] = useState<ScheduledClass | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    Promise.all([getWeeklySlots(), getInstructors()]).then(([slots, insts]) => {
-      setTemplate(slots);
+    Promise.all([
+      getScheduledClasses(),
+      getInstructors(),
+      getClassDefinitions(),
+    ]).then(([sc, insts, defs]) => {
+      setAllClasses(sc);
       setInstructors(insts);
+      setClassDefinitions(defs);
       setLoading(false);
     });
   }, []);
 
-  // Generate month view from template
-  useEffect(() => {
-    if (template.length > 0) {
-      const generated = generateMonthClasses(viewYear, viewMonth, template);
-      setMonthClasses(generated);
-    }
-  }, [template, viewYear, viewMonth]);
+  // Classes for the currently viewed week
+  const weekEnd = endOfWeek(weekStart);
 
-  const monthLabel = new Date(viewYear, viewMonth).toLocaleString('en-US', {
-    month: 'long',
-    year: 'numeric',
-  });
+  const weekClasses = useMemo(() => {
+    return allClasses
+      .filter((c) => c.date >= weekStart && c.date <= weekEnd)
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [allClasses, weekStart, weekEnd]);
 
-  const prevMonth = () => {
-    if (viewMonth === 0) {
-      setViewYear(viewYear - 1);
-      setViewMonth(11);
-    } else {
-      setViewMonth(viewMonth - 1);
-    }
-  };
-
-  const nextMonth = () => {
-    if (viewMonth === 11) {
-      setViewYear(viewYear + 1);
-      setViewMonth(0);
-    } else {
-      setViewMonth(viewMonth + 1);
-    }
-  };
-
-  // ─── Template editing ───────────────────────────────────────────────
-
-  const slotsGroupedByDay = useMemo(() => {
-    const groups: Record<number, WeeklySlot[]> = {};
+  // Group by day-of-week (Mon → Sun order: 1,2,3,4,5,6,0)
+  const classesGroupedByDay = useMemo(() => {
+    const groups: Record<number, ScheduledClass[]> = {};
     for (let d = 0; d < 7; d++) groups[d] = [];
-    template.forEach((s) => groups[s.dayOfWeek].push(s));
-    // Sort each day by start time
-    Object.values(groups).forEach((arr) =>
-      arr.sort(
-        (a, b) =>
-          a.startHour * 60 + a.startMinute - (b.startHour * 60 + b.startMinute),
-      ),
-    );
+    weekClasses.forEach((c) => groups[c.date.getDay()].push(c));
     return groups;
-  }, [template]);
+  }, [weekClasses]);
 
-  const openNewSlot = (dayOfWeek: number) => {
-    setEditingSlot({
-      id: `ws-${Date.now()}`,
-      dayOfWeek,
-      startHour: 18,
-      startMinute: 0,
-      title: '',
-      description: '',
-      instructorId: instructors[0]?.id ?? '',
-      instructorName: instructors[0]?.name ?? '',
-      duration: 60,
-      capacity: 20,
-      location: 'Studio A - Main Floor',
+  // Stats
+  const activeCount = weekClasses.filter((c) => c.status === 'active').length;
+  const cancelledCount = weekClasses.filter(
+    (c) => c.status === 'cancelled',
+  ).length;
+
+  // ─── Navigation ─────────────────────────────────────────────────────
+
+  const prevWeek = () => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() - 7);
+    setWeekStart(d);
+  };
+
+  const nextWeek = () => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + 7);
+    setWeekStart(d);
+  };
+
+  const goToCurrentWeek = () => {
+    setWeekStart(startOfWeek(new Date()));
+  };
+
+  // ─── Duplicate week ─────────────────────────────────────────────────
+
+  const handleDuplicateWeek = () => {
+    const activeInWeek = weekClasses.filter((c) => c.status === 'active');
+    if (activeInWeek.length === 0) return;
+    const newClasses = duplicateWeek(activeInWeek, 1);
+    setAllClasses((prev) => [...prev, ...newClasses]);
+    // Navigate to the next week
+    nextWeek();
+  };
+
+  // ─── Add / Edit / Cancel / Restore ──────────────────────────────────
+
+  const daysInCurrentWeek = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      return d;
     });
-    setShowSlotModal(true);
-  };
+  }, [weekStart]);
 
-  const openEditSlot = (slot: WeeklySlot) => {
-    setEditingSlot({ ...slot });
-    setShowSlotModal(true);
-  };
+  const openAddClass = (dayDate?: Date) => {
+    const targetDate = dayDate ?? daysInCurrentWeek[0];
+    const firstDef = classDefinitions[0];
+    const firstInst = instructors[0];
 
-  const saveSlot = () => {
-    if (!editingSlot || !editingSlot.title) return;
-    setTemplate((prev) => {
-      const exists = prev.find((s) => s.id === editingSlot.id);
-      if (exists) {
-        return prev.map((s) => (s.id === editingSlot.id ? editingSlot : s));
-      }
-      return [...prev, editingSlot];
-    });
-    setShowSlotModal(false);
-    setEditingSlot(null);
-  };
-
-  const deleteSlot = (id: string) => {
-    setTemplate((prev) => prev.filter((s) => s.id !== id));
-  };
-
-  // ─── Month class editing (overrides) ────────────────────────────────
-
-  const monthGroupedByWeek = useMemo(() => {
-    const weeks: Class[][] = [];
-    if (monthClasses.length === 0) return weeks;
-
-    // Group by ISO week
-    const sorted = [...monthClasses].sort(
-      (a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime(),
-    );
-    let currentWeekStart: number | null = null;
-    let currentWeek: Class[] = [];
-
-    sorted.forEach((cls) => {
-      const d = new Date(cls.scheduledAt);
-      const dayOfWeek = d.getDay();
-      const weekStart = new Date(d);
-      weekStart.setDate(d.getDate() - dayOfWeek);
-      weekStart.setHours(0, 0, 0, 0);
-      const weekTs = weekStart.getTime();
-
-      if (currentWeekStart === null || weekTs !== currentWeekStart) {
-        if (currentWeek.length > 0) weeks.push(currentWeek);
-        currentWeek = [];
-        currentWeekStart = weekTs;
-      }
-      currentWeek.push(cls);
-    });
-    if (currentWeek.length > 0) weeks.push(currentWeek);
-    return weeks;
-  }, [monthClasses]);
-
-  const openAddClass = () => {
-    const date = new Date(viewYear, viewMonth, 1);
     setEditingClass({
-      id: `extra-${Date.now()}`,
-      title: '',
-      description: '',
-      instructorId: instructors[0]?.id ?? '',
-      instructorName: instructors[0]?.name ?? '',
-      scheduledAt: date,
-      duration: 60,
-      capacity: 20,
-      enrolledCount: 0,
-      active: true,
+      id: `sc-new-${Date.now()}`,
+      classId: firstDef?.id ?? '',
+      instructorId: firstInst?.id ?? '',
+      date: new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate(),
+        18,
+        0,
+        0,
+      ),
+      duration: firstDef?.defaultDuration ?? 60,
+      capacity: firstDef?.defaultCapacity ?? 20,
       location: 'Studio A - Main Floor',
+      status: 'active',
+      classTitle: firstDef?.title ?? '',
+      instructorName: firstInst?.name ?? '',
+      enrolledCount: 0,
+      studentIds: [],
     });
-    setShowClassModal(true);
+    setShowModal(true);
   };
 
-  const openEditClass = (cls: Class) => {
+  const openEditClass = (cls: ScheduledClass) => {
     setEditingClass({ ...cls });
-    setShowClassModal(true);
+    setShowModal(true);
   };
 
   const saveClass = () => {
-    if (!editingClass || !editingClass.title) return;
-    setMonthClasses((prev) => {
+    if (!editingClass || !editingClass.classTitle) return;
+    setAllClasses((prev) => {
       const exists = prev.find((c) => c.id === editingClass.id);
       if (exists) {
         return prev.map((c) => (c.id === editingClass.id ? editingClass : c));
       }
       return [...prev, editingClass];
     });
-    setShowClassModal(false);
+    setShowModal(false);
     setEditingClass(null);
   };
 
   const cancelClass = (id: string) => {
-    setMonthClasses((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, active: false } : c)),
+    setAllClasses((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, status: 'cancelled' as const } : c,
+      ),
     );
   };
 
   const restoreClass = (id: string) => {
-    setMonthClasses((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, active: true } : c)),
+    setAllClasses((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, status: 'active' as const } : c)),
     );
   };
 
-  const formatTime = (h: number, m: number) => {
-    const d = new Date();
-    d.setHours(h, m);
-    return d.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
+  // ─── Render ─────────────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -252,210 +239,136 @@ export default function ClassScheduler() {
           Class Schedule
         </h1>
         <p className='text-gray-500 mt-1'>
-          Manage the weekly template and monthly class instances
+          Manage weekly classes — duplicate any week to plan ahead
         </p>
       </div>
 
-      {/* Tab switcher */}
-      <div className='flex gap-2 mb-6'>
-        <button
-          onClick={() => setActiveTab('template')}
-          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-            activeTab === 'template'
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          Weekly Template
-        </button>
-        <button
-          onClick={() => setActiveTab('month')}
-          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-            activeTab === 'month'
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          Month View
-        </button>
+      {/* Week navigation */}
+      <div className='flex flex-col sm:flex-row items-center justify-between gap-3 mb-6'>
+        <div className='flex items-center gap-2'>
+          <button
+            onClick={prevWeek}
+            className='p-2 rounded-lg hover:bg-gray-200 transition-colors'
+            aria-label='Previous week'
+          >
+            <ChevronLeft className='w-5 h-5' />
+          </button>
+          <h2 className='text-lg sm:text-xl font-bold text-gray-900 min-w-[220px] text-center'>
+            {weekLabel(weekStart)}
+          </h2>
+          <button
+            onClick={nextWeek}
+            className='p-2 rounded-lg hover:bg-gray-200 transition-colors'
+            aria-label='Next week'
+          >
+            <ChevronRight className='w-5 h-5' />
+          </button>
+          <button
+            onClick={goToCurrentWeek}
+            className='ml-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors'
+          >
+            This Week
+          </button>
+        </div>
+
+        <div className='flex items-center gap-2'>
+          <button
+            onClick={() => openAddClass()}
+            className='btn btn-outline text-sm flex items-center gap-1'
+          >
+            <Plus className='w-4 h-4' />
+            Add Class
+          </button>
+          <button
+            onClick={handleDuplicateWeek}
+            disabled={activeCount === 0}
+            className='btn btn-primary text-sm flex items-center gap-1'
+            title="Copy this week's classes to next week (enrollment reset)"
+          >
+            <Copy className='w-4 h-4' />
+            Duplicate to Next Week
+          </button>
+        </div>
       </div>
 
-      {/* ─────── WEEKLY TEMPLATE TAB ─────── */}
-      {activeTab === 'template' && (
-        <div className='space-y-4'>
-          {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+      {/* Stats */}
+      <p className='text-sm text-gray-500 mb-4'>
+        {activeCount} active class{activeCount !== 1 ? 'es' : ''}
+        {cancelledCount > 0 && ` · ${cancelledCount} cancelled`}
+      </p>
+
+      {/* Day-by-day schedule */}
+      <div className='space-y-4'>
+        {[1, 2, 3, 4, 5, 6, 0].map((dayNum) => {
+          const dayDate = daysInCurrentWeek[dayNum === 0 ? 6 : dayNum - 1];
+          const isCurrentDay = isSameDay(dayDate, new Date());
+          const dayClasses = classesGroupedByDay[dayNum];
+
+          return (
             <div
-              key={day}
+              key={dayNum}
               className='bg-white rounded-xl border border-gray-200 overflow-hidden'
             >
-              <div className='flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200'>
+              <div
+                className={`flex items-center justify-between px-4 py-3 border-b border-gray-200 ${
+                  isCurrentDay ? 'bg-primary-50' : 'bg-gray-50'
+                }`}
+              >
                 <h3 className='font-semibold text-gray-900'>
-                  {DAY_NAMES[day]}
+                  {DAY_NAMES[dayNum]}{' '}
+                  <span className='font-normal text-gray-500'>
+                    {dayDate.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                  {isCurrentDay && (
+                    <span className='ml-2 text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full'>
+                      Today
+                    </span>
+                  )}
                 </h3>
                 <button
-                  onClick={() => openNewSlot(day)}
+                  onClick={() => openAddClass(dayDate)}
                   className='flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-medium'
                 >
                   <Plus className='w-4 h-4' />
-                  Add Class
+                  Add
                 </button>
               </div>
-              {slotsGroupedByDay[day].length === 0 ? (
+
+              {dayClasses.length === 0 ? (
                 <p className='px-4 py-4 text-sm text-gray-400 italic'>
                   No classes scheduled
                 </p>
               ) : (
                 <div className='divide-y divide-gray-100'>
-                  {slotsGroupedByDay[day].map((slot) => (
-                    <div
-                      key={slot.id}
-                      className='px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 hover:bg-gray-50 transition-colors'
-                    >
-                      <div className='flex-1 min-w-0'>
-                        <p className='font-medium text-gray-900'>
-                          {slot.title}
-                        </p>
-                        <div className='flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-1'>
-                          <span className='flex items-center gap-1'>
-                            <Clock className='w-3.5 h-3.5' />
-                            {formatTime(
-                              slot.startHour,
-                              slot.startMinute,
-                            )} · {slot.duration}min
-                          </span>
-                          <span className='flex items-center gap-1'>
-                            <UserCog className='w-3.5 h-3.5' />
-                            {slot.instructorName}
-                          </span>
-                          <span className='flex items-center gap-1'>
-                            <Users className='w-3.5 h-3.5' />
-                            {slot.capacity} spots
-                          </span>
-                          <span className='flex items-center gap-1'>
-                            <MapPin className='w-3.5 h-3.5' />
-                            {slot.location}
-                          </span>
-                        </div>
-                      </div>
-                      <div className='flex items-center gap-2 shrink-0'>
-                        <button
-                          onClick={() => openEditSlot(slot)}
-                          className='p-2 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-colors'
-                          title='Edit'
-                        >
-                          <UserCog className='w-4 h-4' />
-                        </button>
-                        <button
-                          onClick={() => deleteSlot(slot.id)}
-                          className='p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors'
-                          title='Delete'
-                        >
-                          <Trash2 className='w-4 h-4' />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ─────── MONTH VIEW TAB ─────── */}
-      {activeTab === 'month' && (
-        <div>
-          {/* Month navigation */}
-          <div className='flex items-center justify-between mb-6'>
-            <button
-              onClick={prevMonth}
-              className='p-2 rounded-lg hover:bg-gray-200 transition-colors'
-            >
-              <ChevronLeft className='w-5 h-5' />
-            </button>
-            <h2 className='text-xl font-bold text-gray-900'>{monthLabel}</h2>
-            <button
-              onClick={nextMonth}
-              className='p-2 rounded-lg hover:bg-gray-200 transition-colors'
-            >
-              <ChevronRight className='w-5 h-5' />
-            </button>
-          </div>
-
-          <div className='flex items-center justify-between mb-4'>
-            <p className='text-sm text-gray-500'>
-              {monthClasses.filter((c) => c.active).length} classes ·{' '}
-              {monthClasses.filter((c) => !c.active).length} cancelled
-            </p>
-            <button
-              onClick={openAddClass}
-              className='btn btn-primary text-sm flex items-center gap-1'
-            >
-              <CalendarPlus className='w-4 h-4' />
-              Add Extra Class
-            </button>
-          </div>
-
-          {/* Week cards */}
-          {monthGroupedByWeek.map((week, wi) => {
-            const weekStart = new Date(week[0].scheduledAt);
-            const weekDay = weekStart.getDay();
-            const mondayDate = new Date(weekStart);
-            mondayDate.setDate(
-              weekStart.getDate() - weekDay + (weekDay === 0 ? -6 : 1),
-            );
-
-            return (
-              <div
-                key={wi}
-                className='mb-6 bg-white rounded-xl border border-gray-200 overflow-hidden'
-              >
-                <div className='px-4 py-3 bg-gray-50 border-b border-gray-200'>
-                  <h3 className='font-semibold text-gray-900'>
-                    Week {wi + 1} —{' '}
-                    {mondayDate.toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </h3>
-                </div>
-                <div className='divide-y divide-gray-100'>
-                  {week
-                    .sort(
-                      (a, b) =>
-                        a.scheduledAt.getTime() - b.scheduledAt.getTime(),
-                    )
-                    .map((cls) => (
+                  {dayClasses.map((cls) => {
+                    const isCancelled = cls.status === 'cancelled';
+                    return (
                       <div
                         key={cls.id}
                         className={`px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 ${
-                          !cls.active ? 'opacity-50' : 'hover:bg-gray-50'
+                          isCancelled ? 'opacity-50' : 'hover:bg-gray-50'
                         } transition-colors`}
                       >
                         <div className='flex-1 min-w-0'>
                           <div className='flex items-center gap-2'>
                             <p
-                              className={`font-medium ${cls.active ? 'text-gray-900' : 'text-gray-400 line-through'}`}
+                              className={`font-medium ${isCancelled ? 'text-gray-400 line-through' : 'text-gray-900'}`}
                             >
-                              {cls.title}
+                              {cls.classTitle}
                             </p>
-                            {!cls.active && (
+                            {isCancelled && (
                               <span className='text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium'>
                                 Cancelled
                               </span>
                             )}
                           </div>
                           <div className='flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-1'>
-                            <span>
-                              {DAY_NAMES_SHORT[cls.scheduledAt.getDay()]}{' '}
-                              {cls.scheduledAt.toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </span>
                             <span className='flex items-center gap-1'>
                               <Clock className='w-3.5 h-3.5' />
-                              {cls.scheduledAt.toLocaleTimeString('en-US', {
+                              {cls.date.toLocaleTimeString('en-US', {
                                 hour: 'numeric',
                                 minute: '2-digit',
                                 hour12: true,
@@ -465,6 +378,10 @@ export default function ClassScheduler() {
                             <span className='flex items-center gap-1'>
                               <UserCog className='w-3.5 h-3.5' />
                               {cls.instructorName}
+                            </span>
+                            <span className='flex items-center gap-1'>
+                              <Users className='w-3.5 h-3.5' />
+                              {cls.enrolledCount}/{cls.capacity}
                             </span>
                             <span className='flex items-center gap-1'>
                               <MapPin className='w-3.5 h-3.5' />
@@ -480,7 +397,7 @@ export default function ClassScheduler() {
                           >
                             <UserCog className='w-4 h-4' />
                           </button>
-                          {cls.active ? (
+                          {cls.status === 'active' ? (
                             <button
                               onClick={() => cancelClass(cls.id)}
                               className='p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors'
@@ -491,246 +408,37 @@ export default function ClassScheduler() {
                           ) : (
                             <button
                               onClick={() => restoreClass(cls.id)}
-                              className='text-xs text-primary-600 hover:text-primary-700 font-medium px-2 py-1'
+                              className='flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium px-2 py-1'
+                              title='Restore class'
                             >
+                              <RotateCcw className='w-3.5 h-3.5' />
                               Restore
                             </button>
                           )}
                         </div>
                       </div>
-                    ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ─────── SLOT EDITOR MODAL (weekly template) ─────── */}
-      {showSlotModal && editingSlot && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4'>
-          <div className='bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto'>
-            <div className='flex items-center justify-between px-6 py-4 border-b border-gray-200'>
-              <h3 className='text-lg font-bold text-gray-900'>
-                {template.find((s) => s.id === editingSlot.id)
-                  ? 'Edit Class Slot'
-                  : 'New Class Slot'}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowSlotModal(false);
-                  setEditingSlot(null);
-                }}
-                className='p-1 rounded-lg hover:bg-gray-100'
-              >
-                <X className='w-5 h-5' />
-              </button>
-            </div>
-
-            <div className='px-6 py-4 space-y-4'>
-              {/* Day */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Day
-                </label>
-                <select
-                  value={editingSlot.dayOfWeek}
-                  onChange={(e) =>
-                    setEditingSlot({
-                      ...editingSlot,
-                      dayOfWeek: Number(e.target.value),
-                    })
-                  }
-                  className='input'
-                >
-                  {DAY_NAMES.map((name, i) => (
-                    <option
-                      key={i}
-                      value={i}
-                    >
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Title */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Class Title
-                </label>
-                <input
-                  type='text'
-                  value={editingSlot.title}
-                  onChange={(e) =>
-                    setEditingSlot({ ...editingSlot, title: e.target.value })
-                  }
-                  className='input'
-                  placeholder='e.g. Salsa Basics'
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Description
-                </label>
-                <textarea
-                  value={editingSlot.description}
-                  onChange={(e) =>
-                    setEditingSlot({
-                      ...editingSlot,
-                      description: e.target.value,
-                    })
-                  }
-                  className='input'
-                  rows={2}
-                  placeholder='Short description…'
-                />
-              </div>
-
-              {/* Time */}
-              <div className='grid grid-cols-2 gap-4'>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Start Time
-                  </label>
-                  <input
-                    type='time'
-                    value={`${String(editingSlot.startHour).padStart(2, '0')}:${String(editingSlot.startMinute).padStart(2, '0')}`}
-                    onChange={(e) => {
-                      const [h, m] = e.target.value.split(':').map(Number);
-                      setEditingSlot({
-                        ...editingSlot,
-                        startHour: h,
-                        startMinute: m,
-                      });
-                    }}
-                    className='input'
-                  />
-                </div>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Duration (min)
-                  </label>
-                  <input
-                    type='number'
-                    value={editingSlot.duration}
-                    onChange={(e) =>
-                      setEditingSlot({
-                        ...editingSlot,
-                        duration: Number(e.target.value),
-                      })
-                    }
-                    className='input'
-                    min={15}
-                    step={15}
-                  />
-                </div>
-              </div>
-
-              {/* Instructor */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Instructor
-                </label>
-                <select
-                  value={editingSlot.instructorId}
-                  onChange={(e) => {
-                    const inst = instructors.find(
-                      (i) => i.id === e.target.value,
                     );
-                    setEditingSlot({
-                      ...editingSlot,
-                      instructorId: e.target.value,
-                      instructorName: inst?.name ?? '',
-                    });
-                  }}
-                  className='input'
-                >
-                  {instructors.map((inst) => (
-                    <option
-                      key={inst.id}
-                      value={inst.id}
-                    >
-                      {inst.name} — {inst.specialties.join(', ')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Capacity */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Capacity
-                </label>
-                <input
-                  type='number'
-                  value={editingSlot.capacity}
-                  onChange={(e) =>
-                    setEditingSlot({
-                      ...editingSlot,
-                      capacity: Number(e.target.value),
-                    })
-                  }
-                  className='input'
-                  min={1}
-                />
-              </div>
-
-              {/* Location */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Location
-                </label>
-                <input
-                  type='text'
-                  value={editingSlot.location}
-                  onChange={(e) =>
-                    setEditingSlot({ ...editingSlot, location: e.target.value })
-                  }
-                  className='input'
-                  placeholder='e.g. Studio A'
-                />
-              </div>
+                  })}
+                </div>
+              )}
             </div>
+          );
+        })}
+      </div>
 
-            <div className='flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200'>
-              <button
-                onClick={() => {
-                  setShowSlotModal(false);
-                  setEditingSlot(null);
-                }}
-                className='btn btn-secondary'
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveSlot}
-                disabled={!editingSlot.title}
-                className='btn btn-primary flex items-center gap-1'
-              >
-                <Save className='w-4 h-4' />
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─────── CLASS EDITOR MODAL (month override) ─────── */}
-      {showClassModal && editingClass && (
+      {/* ─────── CLASS EDITOR MODAL ─────── */}
+      {showModal && editingClass && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4'>
           <div className='bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto'>
             <div className='flex items-center justify-between px-6 py-4 border-b border-gray-200'>
               <h3 className='text-lg font-bold text-gray-900'>
-                {monthClasses.find((c) => c.id === editingClass.id)
+                {allClasses.find((c) => c.id === editingClass.id)
                   ? 'Edit Class'
-                  : 'Add Extra Class'}
+                  : 'Add Class'}
               </h3>
               <button
                 onClick={() => {
-                  setShowClassModal(false);
+                  setShowModal(false);
                   setEditingClass(null);
                 }}
                 className='p-1 rounded-lg hover:bg-gray-100'
@@ -740,38 +448,40 @@ export default function ClassScheduler() {
             </div>
 
             <div className='px-6 py-4 space-y-4'>
-              {/* Title */}
+              {/* Class Definition picker */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Class Title
+                  Class Type
                 </label>
-                <input
-                  type='text'
-                  value={editingClass.title}
-                  onChange={(e) =>
-                    setEditingClass({ ...editingClass, title: e.target.value })
-                  }
+                <select
+                  value={editingClass.classId}
+                  onChange={(e) => {
+                    const def = classDefinitions.find(
+                      (d) => d.id === e.target.value,
+                    );
+                    if (def) {
+                      setEditingClass({
+                        ...editingClass,
+                        classId: def.id,
+                        classTitle: def.title,
+                        duration: def.defaultDuration,
+                        capacity: def.defaultCapacity,
+                      });
+                    }
+                  }}
                   className='input'
-                  placeholder='e.g. Salsa Workshop'
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Description
-                </label>
-                <textarea
-                  value={editingClass.description}
-                  onChange={(e) =>
-                    setEditingClass({
-                      ...editingClass,
-                      description: e.target.value,
-                    })
-                  }
-                  className='input'
-                  rows={2}
-                />
+                >
+                  {classDefinitions
+                    .filter((d) => d.active)
+                    .map((def) => (
+                      <option
+                        key={def.id}
+                        value={def.id}
+                      >
+                        {def.title}
+                      </option>
+                    ))}
+                </select>
               </div>
 
               {/* Date + Time */}
@@ -782,14 +492,14 @@ export default function ClassScheduler() {
                   </label>
                   <input
                     type='date'
-                    value={editingClass.scheduledAt.toISOString().split('T')[0]}
+                    value={editingClass.date.toISOString().split('T')[0]}
                     onChange={(e) => {
                       const d = new Date(e.target.value + 'T00:00:00');
                       d.setHours(
-                        editingClass.scheduledAt.getHours(),
-                        editingClass.scheduledAt.getMinutes(),
+                        editingClass.date.getHours(),
+                        editingClass.date.getMinutes(),
                       );
-                      setEditingClass({ ...editingClass, scheduledAt: d });
+                      setEditingClass({ ...editingClass, date: d });
                     }}
                     className='input'
                   />
@@ -800,12 +510,12 @@ export default function ClassScheduler() {
                   </label>
                   <input
                     type='time'
-                    value={`${String(editingClass.scheduledAt.getHours()).padStart(2, '0')}:${String(editingClass.scheduledAt.getMinutes()).padStart(2, '0')}`}
+                    value={`${String(editingClass.date.getHours()).padStart(2, '0')}:${String(editingClass.date.getMinutes()).padStart(2, '0')}`}
                     onChange={(e) => {
                       const [h, m] = e.target.value.split(':').map(Number);
-                      const d = new Date(editingClass.scheduledAt);
+                      const d = new Date(editingClass.date);
                       d.setHours(h, m, 0, 0);
-                      setEditingClass({ ...editingClass, scheduledAt: d });
+                      setEditingClass({ ...editingClass, date: d });
                     }}
                     className='input'
                   />
@@ -851,14 +561,16 @@ export default function ClassScheduler() {
                   }}
                   className='input'
                 >
-                  {instructors.map((inst) => (
-                    <option
-                      key={inst.id}
-                      value={inst.id}
-                    >
-                      {inst.name} — {inst.specialties.join(', ')}
-                    </option>
-                  ))}
+                  {instructors
+                    .filter((i) => i.active)
+                    .map((inst) => (
+                      <option
+                        key={inst.id}
+                        value={inst.id}
+                      >
+                        {inst.name} — {inst.specialties.join(', ')}
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -888,7 +600,7 @@ export default function ClassScheduler() {
                 </label>
                 <input
                   type='text'
-                  value={editingClass.location ?? ''}
+                  value={editingClass.location}
                   onChange={(e) =>
                     setEditingClass({
                       ...editingClass,
@@ -903,7 +615,7 @@ export default function ClassScheduler() {
             <div className='flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200'>
               <button
                 onClick={() => {
-                  setShowClassModal(false);
+                  setShowModal(false);
                   setEditingClass(null);
                 }}
                 className='btn btn-secondary'
@@ -912,7 +624,7 @@ export default function ClassScheduler() {
               </button>
               <button
                 onClick={saveClass}
-                disabled={!editingClass.title}
+                disabled={!editingClass.classTitle}
                 className='btn btn-primary flex items-center gap-1'
               >
                 <Save className='w-4 h-4' />

@@ -7,7 +7,6 @@ import {
   Users,
   Search,
   CheckCircle2,
-  Clock,
   XCircle,
 } from 'lucide-react';
 
@@ -92,20 +91,20 @@ export default function AdminReservations() {
       {
         classTitle: string;
         classDate: Date;
-        classId: string;
+        scheduledClassId: string;
         reservations: AdminReservation[];
       }
     >();
     filteredReservations.forEach((r) => {
-      if (!map.has(r.reservation.classId)) {
-        map.set(r.reservation.classId, {
+      if (!map.has(r.scheduledClassId)) {
+        map.set(r.scheduledClassId, {
           classTitle: r.classTitle,
           classDate: r.classDate,
-          classId: r.reservation.classId,
+          scheduledClassId: r.scheduledClassId,
           reservations: [],
         });
       }
-      map.get(r.reservation.classId)!.reservations.push(r);
+      map.get(r.scheduledClassId)!.reservations.push(r);
     });
     return Array.from(map.values()).sort(
       (a, b) => a.classDate.getTime() - b.classDate.getTime(),
@@ -115,11 +114,8 @@ export default function AdminReservations() {
   // Stats
   const stats = useMemo(() => {
     const total = filteredReservations.length;
-    const paid = filteredReservations.filter(
-      (r) => r.reservation.status === 'paid',
-    ).length;
-    const pending = filteredReservations.filter(
-      (r) => r.reservation.status === 'pending',
+    const confirmed = filteredReservations.filter(
+      (r) => r.reservation.status === 'confirmed',
     ).length;
     const cancelled = filteredReservations.filter(
       (r) => r.reservation.status === 'cancelled',
@@ -128,17 +124,15 @@ export default function AdminReservations() {
       filteredReservations.map((r) => r.reservation.studentId),
     ).size;
     const uniqueClasses = new Set(
-      filteredReservations.map((r) => r.reservation.classId),
+      filteredReservations.map((r) => r.scheduledClassId),
     ).size;
-    return { total, paid, pending, cancelled, uniqueStudents, uniqueClasses };
+    return { total, confirmed, cancelled, uniqueStudents, uniqueClasses };
   }, [filteredReservations]);
 
   const statusIcon = (status: string) => {
     switch (status) {
-      case 'paid':
+      case 'confirmed':
         return <CheckCircle2 className='w-4 h-4 text-green-600' />;
-      case 'pending':
-        return <Clock className='w-4 h-4 text-amber-500' />;
       case 'cancelled':
         return <XCircle className='w-4 h-4 text-red-500' />;
       default:
@@ -148,8 +142,7 @@ export default function AdminReservations() {
 
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
-      paid: 'bg-green-100 text-green-700',
-      pending: 'bg-amber-100 text-amber-700',
+      confirmed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     };
     return (
@@ -242,7 +235,7 @@ export default function AdminReservations() {
           <p className='text-xs text-gray-500'>Total Reservations</p>
         </div>
         <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
-          <p className='text-2xl font-bold text-green-600'>{stats.paid}</p>
+          <p className='text-2xl font-bold text-green-600'>{stats.confirmed}</p>
           <p className='text-xs text-gray-500'>Confirmed</p>
         </div>
         <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
@@ -271,7 +264,7 @@ export default function AdminReservations() {
         <div className='space-y-4'>
           {groupedByClass.map((group) => (
             <div
-              key={group.classId}
+              key={group.scheduledClassId}
               className='bg-white rounded-xl border border-gray-200 overflow-hidden'
             >
               <div className='px-4 py-3 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1'>

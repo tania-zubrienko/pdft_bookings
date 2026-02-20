@@ -1,18 +1,13 @@
 import { useEffect, useState } from 'react';
-import { getReservations } from '../../lib/mockData';
-import { Reservation, Class } from '../../types';
+import { getReservations, getScheduledClasses } from '../../lib/mockData';
+import { Reservation } from '../../types';
 import Layout from '../../components/Layout/Layout';
-import {
-  Calendar,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-} from 'lucide-react';
+import { Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ScheduledClass } from '../../types';
 
 interface ReservationWithClass extends Reservation {
-  classData?: Class;
+  scheduledClass?: ScheduledClass;
 }
 
 export default function MyReservations() {
@@ -20,20 +15,24 @@ export default function MyReservations() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getReservations().then((data) => {
-      setReservations(data);
-      setLoading(false);
-    });
+    Promise.all([getReservations(), getScheduledClasses()]).then(
+      ([resData, classData]) => {
+        const enriched = resData.map((r) => ({
+          ...r,
+          scheduledClass: classData.find((c) => c.id === r.scheduledClassId),
+        }));
+        setReservations(enriched);
+        setLoading(false);
+      },
+    );
   }, []);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'paid':
+      case 'confirmed':
         return <CheckCircle className='w-5 h-5 text-green-600' />;
       case 'cancelled':
         return <XCircle className='w-5 h-5 text-red-600' />;
-      case 'pending':
-        return <AlertCircle className='w-5 h-5 text-yellow-600' />;
       default:
         return null;
     }
@@ -41,12 +40,10 @@ export default function MyReservations() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'paid':
+      case 'confirmed':
         return 'bg-green-100 text-green-700';
       case 'cancelled':
         return 'bg-red-100 text-red-700';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -107,7 +104,7 @@ export default function MyReservations() {
                   </div>
 
                   <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-                    Class ID: {reservation.classId}
+                    {reservation.scheduledClass?.classTitle ?? 'Unknown Class'}
                   </h3>
 
                   <div className='flex flex-wrap gap-4 text-sm text-gray-500'>
@@ -115,10 +112,12 @@ export default function MyReservations() {
                       <Calendar className='w-4 h-4' />
                       <span>Booked: {formatDate(reservation.createdAt)}</span>
                     </div>
-                    {reservation.paidAt && (
+                    {reservation.scheduledClass && (
                       <div className='flex items-center gap-1'>
-                        <Clock className='w-4 h-4' />
-                        <span>Paid: {formatDate(reservation.paidAt)}</span>
+                        <Calendar className='w-4 h-4' />
+                        <span>
+                          Class: {formatDate(reservation.scheduledClass.date)}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -126,7 +125,7 @@ export default function MyReservations() {
 
                 <div className='flex gap-2'>
                   <Link
-                    to={`/classes/${reservation.classId}`}
+                    to={`/classes/${reservation.scheduledClassId}`}
                     className='btn btn-secondary'
                   >
                     View Class

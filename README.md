@@ -26,9 +26,9 @@ A reservation and credit-based booking system for a dance academy. Students brow
 
 ### Admin View
 
-- ✅ Weekly template editor (add/edit/delete recurring class slots)
-- ✅ Monthly class generation from weekly template
-- ✅ Individual class overrides (add extra, cancel, restore)
+- ✅ Week-based class scheduler with ClassDefinition picker
+- ✅ "Duplicate to Next Week" for fast schedule planning
+- ✅ Cancel/restore individual scheduled classes
 - ✅ Instructor assignment via dropdown
 - ✅ Reservation viewer (current week/month filter)
 - ✅ Search reservations by student or class
@@ -53,8 +53,8 @@ pd_bookings/
 │   │   └── mockData.ts             # Mock data layer (replaces Firebase)
 │   ├── pages/
 │   │   ├── admin/
-│   │   │   ├── ClassScheduler.tsx   # Template + month class planner
-│   │   │   └── AdminReservations.tsx# Reservation viewer
+│   │   │   ├── ClassScheduler.tsx   # Week-based class planner
+│   │   │   └── AdminReservations.tsx# Reservation viewer + stats
 │   │   ├── booking/
 │   │   │   └── BookingResult.tsx    # Success/cancelled feedback
 │   │   ├── classes/
@@ -66,7 +66,7 @@ pd_bookings/
 │   │       └── MyReservations.tsx   # Student reservation list
 │   ├── types/
 │   │   └── index.ts                # All TypeScript interfaces
-│   ├── App.tsx                     # Routes
+│   ├── App.tsx                     # Routes (student + admin)
 │   └── main.tsx                    # Entry point
 ├── functions/                      # Firebase Cloud Functions (future)
 ├── AGENTS.md                       # AI agent specifications
@@ -96,18 +96,18 @@ The app runs entirely on mock data — no Firebase or Stripe setup required for 
 
 ## Routes
 
-| Path                  | Component           | Description                     |
-| --------------------- | ------------------- | ------------------------------- |
-| `/classes`            | ClassList           | Calendar + day class list       |
-| `/classes/:classId`   | ClassDetail         | Class detail + credit booking   |
-| `/packages`           | Packages            | Credit packages for purchase    |
-| `/my-reservations`    | MyReservations      | Student reservation list        |
-| `/booking/success`    | BookingResult       | Post-booking success            |
-| `/booking/cancelled`  | BookingResult       | Post-booking cancelled          |
-| `/admin/schedule`     | ClassScheduler      | Weekly template + month planner |
-| `/admin/reservations` | AdminReservations   | Reservation viewer              |
-| `/admin`              | Redirect → schedule | Admin landing                   |
-| `/` or `*`            | Redirect → classes  | Default/fallback                |
+| Path                  | Component           | Description                   |
+| --------------------- | ------------------- | ----------------------------- |
+| `/classes`            | ClassList           | Calendar + day class list     |
+| `/classes/:classId`   | ClassDetail         | Class detail + credit booking |
+| `/packages`           | Packages            | Credit packages for purchase  |
+| `/my-reservations`    | MyReservations      | Student reservation list      |
+| `/booking/success`    | BookingResult       | Post-booking success          |
+| `/booking/cancelled`  | BookingResult       | Post-booking cancelled        |
+| `/admin/schedule`     | ClassScheduler      | Week-based class planner      |
+| `/admin/reservations` | AdminReservations   | Reservation viewer            |
+| `/admin`              | Redirect → schedule | Admin landing                 |
+| `/` or `*`            | Redirect → classes  | Default/fallback              |
 
 ## Credit System
 
@@ -134,13 +134,15 @@ Classes have no individual prices. All bookings consume 1 credit from a pre-purc
 - [x] Reservation list page
 - [x] Mock data layer
 
-### Phase 1.5: Admin View ✅
+### Phase 1.5: Admin View & Data Model ✅
 
-- [x] Weekly template editor (recurring class slots)
-- [x] Monthly class generation from template
-- [x] Individual class overrides (add/cancel/restore)
+- [x] ClassDefinition + ScheduledClass data model
+- [x] Week-based class scheduler with ClassDefinition picker
+- [x] "Duplicate to Next Week" for fast planning
+- [x] Cancel/restore individual scheduled classes
 - [x] Instructor assignment
 - [x] Reservation viewer (week/month filter + search)
+- [x] Stats dashboard (total, confirmed, unique students/classes)
 - [x] Admin layout with dark theme
 
 ### Phase 2: Authentication & Firebase
