@@ -1,0 +1,107 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Class } from '../../types';
+import { getClasses } from '../../lib/mockData';
+import ClassCard from '../../components/Classes/ClassCard';
+import CalendarView from '../../components/Calendar/CalendarView';
+import Layout from '../../components/Layout/Layout';
+import { Calendar } from 'lucide-react';
+
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+export default function ClassList() {
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+
+  useEffect(() => {
+    getClasses().then((data) => {
+      setClasses(data);
+      setLoading(false);
+    });
+  }, []);
+
+  // Classes for the selected day
+  const classesForDay = useMemo(() => {
+    if (!selectedDate) return [];
+    return classes
+      .filter((c) => isSameDay(c.scheduledAt, selectedDate))
+      .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
+  }, [classes, selectedDate]);
+
+  // Format selected date for the heading
+  const selectedDayLabel = selectedDate
+    ? selectedDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+      })
+    : null;
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className='flex items-center justify-center min-h-[400px]'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600'></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      {/* Header */}
+      <div className='mb-4 sm:mb-6'>
+        <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-1'>
+          Class Schedule
+        </h1>
+        <p className='text-sm sm:text-base text-gray-600'>
+          Select a day to see available classes
+        </p>
+      </div>
+
+      {/* Calendar */}
+      <CalendarView
+        classes={classes}
+        viewMode={viewMode}
+        currentDate={currentDate}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+        onChangeDate={setCurrentDate}
+        onChangeViewMode={setViewMode}
+      />
+
+      {/* Classes for selected day */}
+      {selectedDate && (
+        <div className='mt-8'>
+          <h2 className='text-xl font-semibold text-gray-900 mb-4'>
+            {selectedDayLabel}
+          </h2>
+
+          {classesForDay.length > 0 ? (
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              {classesForDay.map((classData) => (
+                <ClassCard
+                  key={classData.id}
+                  classData={classData}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className='text-center py-10 bg-white rounded-xl border border-gray-200'>
+              <Calendar className='w-12 h-12 text-gray-300 mx-auto mb-3' />
+              <p className='text-gray-500'>No classes scheduled for this day</p>
+            </div>
+          )}
+        </div>
+      )}
+    </Layout>
+  );
+}
