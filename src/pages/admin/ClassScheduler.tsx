@@ -23,13 +23,13 @@ import {
 } from 'lucide-react';
 
 const DAY_NAMES = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
+  'Domingo',
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado',
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ function weekLabel(monday: Date): string {
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
   const fmt = (d: Date) =>
-    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    d.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
   return `${fmt(monday)} – ${fmt(sunday)}, ${sunday.getFullYear()}`;
 }
 
@@ -236,10 +236,11 @@ export default function ClassScheduler() {
     <AdminLayout>
       <div className='mb-6'>
         <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
-          Class Schedule
+          Horario de Clases
         </h1>
         <p className='text-gray-500 mt-1'>
-          Manage weekly classes — duplicate any week to plan ahead
+          Gestiona las clases semanales — duplica cualquier semana para
+          planificar
         </p>
       </div>
 
@@ -267,7 +268,7 @@ export default function ClassScheduler() {
             onClick={goToCurrentWeek}
             className='ml-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors'
           >
-            This Week
+            Esta Semana
           </button>
         </div>
 
@@ -277,24 +278,26 @@ export default function ClassScheduler() {
             className='btn btn-outline text-sm flex items-center gap-1'
           >
             <Plus className='w-4 h-4' />
-            Add Class
+            Añadir Clase
           </button>
           <button
             onClick={handleDuplicateWeek}
             disabled={activeCount === 0}
             className='btn btn-primary text-sm flex items-center gap-1'
-            title="Copy this week's classes to next week (enrollment reset)"
+            title='Copiar las clases de esta semana a la siguiente (inscripciones reiniciadas)'
           >
             <Copy className='w-4 h-4' />
-            Duplicate to Next Week
+            Duplicar a Siguiente Semana
           </button>
         </div>
       </div>
 
       {/* Stats */}
       <p className='text-sm text-gray-500 mb-4'>
-        {activeCount} active class{activeCount !== 1 ? 'es' : ''}
-        {cancelledCount > 0 && ` · ${cancelledCount} cancelled`}
+        {activeCount} clase{activeCount !== 1 ? 's' : ''} activa
+        {activeCount !== 1 ? 's' : ''}
+        {cancelledCount > 0 &&
+          ` · ${cancelledCount} cancelada${cancelledCount !== 1 ? 's' : ''}`}
       </p>
 
       {/* Day-by-day schedule */}
@@ -317,14 +320,14 @@ export default function ClassScheduler() {
                 <h3 className='font-semibold text-gray-900'>
                   {DAY_NAMES[dayNum]}{' '}
                   <span className='font-normal text-gray-500'>
-                    {dayDate.toLocaleDateString('en-US', {
+                    {dayDate.toLocaleDateString('es-ES', {
                       month: 'short',
                       day: 'numeric',
                     })}
                   </span>
                   {isCurrentDay && (
                     <span className='ml-2 text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full'>
-                      Today
+                      Hoy
                     </span>
                   )}
                 </h3>
@@ -333,13 +336,13 @@ export default function ClassScheduler() {
                   className='flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-medium'
                 >
                   <Plus className='w-4 h-4' />
-                  Add
+                  Añadir
                 </button>
               </div>
 
               {dayClasses.length === 0 ? (
                 <p className='px-4 py-4 text-sm text-gray-400 italic'>
-                  No classes scheduled
+                  Sin clases programadas
                 </p>
               ) : (
                 <div className='divide-y divide-gray-100'>
@@ -361,17 +364,17 @@ export default function ClassScheduler() {
                             </p>
                             {isCancelled && (
                               <span className='text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium'>
-                                Cancelled
+                                Cancelada
                               </span>
                             )}
                           </div>
                           <div className='flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-1'>
                             <span className='flex items-center gap-1'>
                               <Clock className='w-3.5 h-3.5' />
-                              {cls.date.toLocaleTimeString('en-US', {
-                                hour: 'numeric',
+                              {cls.date.toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
                                 minute: '2-digit',
-                                hour12: true,
+                                hour12: false,
                               })}{' '}
                               · {cls.duration}min
                             </span>
@@ -401,7 +404,7 @@ export default function ClassScheduler() {
                             <button
                               onClick={() => cancelClass(cls.id)}
                               className='p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors'
-                              title='Cancel class'
+                              title='Cancelar clase'
                             >
                               <Trash2 className='w-4 h-4' />
                             </button>
@@ -409,10 +412,10 @@ export default function ClassScheduler() {
                             <button
                               onClick={() => restoreClass(cls.id)}
                               className='flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium px-2 py-1'
-                              title='Restore class'
+                              title='Restaurar clase'
                             >
                               <RotateCcw className='w-3.5 h-3.5' />
-                              Restore
+                              Restaurar
                             </button>
                           )}
                         </div>
@@ -433,8 +436,8 @@ export default function ClassScheduler() {
             <div className='flex items-center justify-between px-6 py-4 border-b border-gray-200'>
               <h3 className='text-lg font-bold text-gray-900'>
                 {allClasses.find((c) => c.id === editingClass.id)
-                  ? 'Edit Class'
-                  : 'Add Class'}
+                  ? 'Editar Clase'
+                  : 'Añadir Clase'}
               </h3>
               <button
                 onClick={() => {
@@ -451,7 +454,7 @@ export default function ClassScheduler() {
               {/* Class Definition picker */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Class Type
+                  Tipo de Clase
                 </label>
                 <select
                   value={editingClass.classId}
@@ -488,7 +491,7 @@ export default function ClassScheduler() {
               <div className='grid grid-cols-2 gap-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Date
+                    Fecha
                   </label>
                   <input
                     type='date'
@@ -506,7 +509,7 @@ export default function ClassScheduler() {
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Time
+                    Hora
                   </label>
                   <input
                     type='time'
@@ -525,7 +528,7 @@ export default function ClassScheduler() {
               {/* Duration */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Duration (min)
+                  Duración (min)
                 </label>
                 <input
                   type='number'
@@ -545,7 +548,7 @@ export default function ClassScheduler() {
               {/* Instructor */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Instructor
+                  Instructora
                 </label>
                 <select
                   value={editingClass.instructorId}
@@ -577,7 +580,7 @@ export default function ClassScheduler() {
               {/* Capacity */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Capacity
+                  Capacidad
                 </label>
                 <input
                   type='number'
@@ -596,7 +599,7 @@ export default function ClassScheduler() {
               {/* Location */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Location
+                  Ubicación
                 </label>
                 <input
                   type='text'
@@ -620,7 +623,7 @@ export default function ClassScheduler() {
                 }}
                 className='btn btn-secondary'
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 onClick={saveClass}
@@ -628,7 +631,7 @@ export default function ClassScheduler() {
                 className='btn btn-primary flex items-center gap-1'
               >
                 <Save className='w-4 h-4' />
-                Save
+                Guardar
               </button>
             </div>
           </div>

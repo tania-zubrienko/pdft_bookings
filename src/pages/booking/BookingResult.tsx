@@ -26,12 +26,12 @@ export default function BookingSuccess() {
           </div>
 
           <h1 className='text-3xl font-bold text-gray-900 mb-4'>
-            Booking Confirmed!
+            ¡Reserva Confirmada!
           </h1>
 
           <p className='text-gray-600 mb-8'>
-            Your class has been successfully booked. We've sent a confirmation
-            email with all the details.
+            Tu clase ha sido reservada con éxito. Te hemos enviado un correo de
+            confirmación con todos los detalles.
           </p>
 
           <div className='space-y-4'>
@@ -39,7 +39,7 @@ export default function BookingSuccess() {
               to='/my-reservations'
               className='btn btn-primary w-full py-3 flex items-center justify-center gap-2'
             >
-              View My Reservations
+              Ver Mis Reservas
               <ArrowRight className='w-5 h-5' />
             </Link>
 
@@ -47,7 +47,7 @@ export default function BookingSuccess() {
               to='/classes'
               className='btn btn-secondary w-full py-3'
             >
-              Browse More Classes
+              Explorar Más Clases
             </Link>
           </div>
         </div>
@@ -64,12 +64,12 @@ export default function BookingSuccess() {
           </div>
 
           <h1 className='text-3xl font-bold text-gray-900 mb-4'>
-            Booking Cancelled
+            Reserva Cancelada
           </h1>
 
           <p className='text-gray-600 mb-8'>
-            Your payment was cancelled. No charges were made. Feel free to try
-            again when you're ready.
+            Tu pago ha sido cancelado. No se ha realizado ningún cargo. Puedes
+            intentarlo de nuevo cuando quieras.
           </p>
 
           <div className='space-y-4'>
@@ -77,7 +77,7 @@ export default function BookingSuccess() {
               to='/classes'
               className='btn btn-primary w-full py-3'
             >
-              Browse Classes
+              Explorar Clases
             </Link>
           </div>
         </div>

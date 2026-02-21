@@ -145,12 +145,16 @@ export default function AdminReservations() {
       confirmed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     };
+    const labels: Record<string, string> = {
+      confirmed: 'Confirmada',
+      cancelled: 'Cancelada',
+    };
     return (
       <span
         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] ?? 'bg-gray-100 text-gray-600'}`}
       >
         {statusIcon(status)}
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {labels[status] ?? status}
       </span>
     );
   };
@@ -167,8 +171,8 @@ export default function AdminReservations() {
 
   const periodLabel =
     period === 'week'
-      ? `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${new Date(weekEnd.getTime() - 1).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-      : new Date(now.getFullYear(), now.getMonth()).toLocaleString('en-US', {
+      ? `${weekStart.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })} – ${new Date(weekEnd.getTime() - 1).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}`
+      : new Date(now.getFullYear(), now.getMonth()).toLocaleString('es-ES', {
           month: 'long',
           year: 'numeric',
         });
@@ -177,10 +181,11 @@ export default function AdminReservations() {
     <AdminLayout>
       <div className='mb-6'>
         <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
-          Reservations
+          Reservas
         </h1>
         <p className='text-gray-500 mt-1'>
-          See who reserved classes for the current {period}
+          Consulta quién reservó clases en{' '}
+          {period === 'week' ? 'la semana' : 'el mes'} actual
         </p>
       </div>
 
@@ -197,7 +202,7 @@ export default function AdminReservations() {
             }`}
           >
             <Calendar className='w-4 h-4' />
-            This Week
+            Esta Semana
           </button>
           <button
             onClick={() => setPeriod('month')}
@@ -208,7 +213,7 @@ export default function AdminReservations() {
             }`}
           >
             <CalendarDays className='w-4 h-4' />
-            This Month
+            Este Mes
           </button>
         </div>
 
@@ -219,7 +224,7 @@ export default function AdminReservations() {
             type='text'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder='Search student or class…'
+            placeholder='Buscar alumna o clase…'
             className='input pl-9'
           />
         </div>
@@ -232,23 +237,23 @@ export default function AdminReservations() {
       <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6'>
         <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
           <p className='text-2xl font-bold text-gray-900'>{stats.total}</p>
-          <p className='text-xs text-gray-500'>Total Reservations</p>
+          <p className='text-xs text-gray-500'>Total Reservas</p>
         </div>
         <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
           <p className='text-2xl font-bold text-green-600'>{stats.confirmed}</p>
-          <p className='text-xs text-gray-500'>Confirmed</p>
+          <p className='text-xs text-gray-500'>Confirmadas</p>
         </div>
         <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
           <p className='text-2xl font-bold text-gray-900'>
             {stats.uniqueStudents}
           </p>
-          <p className='text-xs text-gray-500'>Unique Students</p>
+          <p className='text-xs text-gray-500'>Alumnas Únicas</p>
         </div>
         <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
           <p className='text-2xl font-bold text-gray-900'>
             {stats.uniqueClasses}
           </p>
-          <p className='text-xs text-gray-500'>Classes</p>
+          <p className='text-xs text-gray-500'>Clases</p>
         </div>
       </div>
 
@@ -257,7 +262,8 @@ export default function AdminReservations() {
         <div className='bg-white rounded-xl border border-gray-200 px-6 py-12 text-center'>
           <Users className='w-10 h-10 text-gray-300 mx-auto mb-3' />
           <p className='text-gray-500'>
-            No reservations found for this {period}.
+            No se encontraron reservas para{' '}
+            {period === 'week' ? 'esta semana' : 'este mes'}.
           </p>
         </div>
       ) : (
@@ -273,16 +279,16 @@ export default function AdminReservations() {
                     {group.classTitle}
                   </h3>
                   <p className='text-sm text-gray-500'>
-                    {group.classDate.toLocaleDateString('en-US', {
+                    {group.classDate.toLocaleDateString('es-ES', {
                       weekday: 'short',
                       month: 'short',
                       day: 'numeric',
                     })}{' '}
-                    at{' '}
-                    {group.classDate.toLocaleTimeString('en-US', {
-                      hour: 'numeric',
+                    a las{' '}
+                    {group.classDate.toLocaleTimeString('es-ES', {
+                      hour: '2-digit',
                       minute: '2-digit',
-                      hour12: true,
+                      hour12: false,
                     })}
                   </p>
                 </div>
@@ -316,8 +322,8 @@ export default function AdminReservations() {
                       {statusBadge(r.reservation.status)}
                       <span className='text-xs text-gray-400'>
                         {r.reservation.paymentMode === 'credit'
-                          ? 'Credit'
-                          : 'Single'}
+                          ? 'Crédito'
+                          : 'Individual'}
                       </span>
                     </div>
                   </div>

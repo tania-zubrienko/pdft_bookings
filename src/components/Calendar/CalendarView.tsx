@@ -114,18 +114,18 @@ export default function CalendarView({
       const start = calendarDays[0];
       const end = calendarDays[6];
       const fmt = (d: Date) =>
-        d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        d.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
       const yearStr = end.getFullYear();
       return `${fmt(start)} – ${fmt(end)}, ${yearStr}`;
     }
-    return currentDate.toLocaleDateString('en-US', {
+    return currentDate.toLocaleDateString('es-ES', {
       month: 'long',
       year: 'numeric',
     });
   }, [viewMode, currentDate, calendarDays]);
 
-  const dayNamesFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const dayNamesShort = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const dayNamesFull = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  const dayNamesShort = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
   return (
     <div className='bg-white rounded-xl shadow-md overflow-hidden'>
@@ -154,7 +154,7 @@ export default function CalendarView({
             onClick={goToday}
             className='ml-1 sm:ml-2 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 active:bg-gray-100 transition-colors'
           >
-            Today
+            Hoy
           </button>
         </div>
 
@@ -168,7 +168,7 @@ export default function CalendarView({
                 : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
-            Week
+            Semana
           </button>
           <button
             onClick={() => onChangeViewMode('month')}
@@ -178,7 +178,7 @@ export default function CalendarView({
                 : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
-            Month
+            Mes
           </button>
         </div>
       </div>
@@ -243,7 +243,7 @@ export default function CalendarView({
                       ${outOfMonth ? 'bg-gray-200 text-gray-500' : 'bg-primary-100 text-primary-700'}
                     `}
                   >
-                    {count} {count === 1 ? 'class' : 'classes'}
+                    {count} {count === 1 ? 'clase' : 'clases'}
                   </span>
                 </>
               )}

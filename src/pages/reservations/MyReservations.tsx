@@ -50,9 +50,9 @@ export default function MyReservations() {
   };
 
   const formatDate = (timestamp: any) => {
-    if (!timestamp) return 'N/A';
+    if (!timestamp) return 'N/D';
     const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('es-ES', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -73,10 +73,10 @@ export default function MyReservations() {
   return (
     <Layout>
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-          My Reservations
-        </h1>
-        <p className='text-gray-600'>View and manage your class bookings</p>
+        <h1 className='text-3xl font-bold text-gray-900 mb-2'>Mis Reservas</h1>
+        <p className='text-gray-600'>
+          Consulta y gestiona tus reservas de clases
+        </p>
       </div>
 
       {reservations.length > 0 ? (
@@ -93,13 +93,16 @@ export default function MyReservations() {
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(reservation.status)}`}
                     >
-                      {reservation.status.charAt(0).toUpperCase() +
-                        reservation.status.slice(1)}
+                      {reservation.status === 'confirmed'
+                        ? 'Confirmada'
+                        : reservation.status === 'cancelled'
+                          ? 'Cancelada'
+                          : reservation.status}
                     </span>
                     <span className='text-sm text-gray-500'>
                       {reservation.paymentMode === 'credit'
-                        ? '(Credit)'
-                        : '(Single Payment)'}
+                        ? '(Crédito)'
+                        : '(Pago Único)'}
                     </span>
                   </div>
 
@@ -110,13 +113,15 @@ export default function MyReservations() {
                   <div className='flex flex-wrap gap-4 text-sm text-gray-500'>
                     <div className='flex items-center gap-1'>
                       <Calendar className='w-4 h-4' />
-                      <span>Booked: {formatDate(reservation.createdAt)}</span>
+                      <span>
+                        Reservada: {formatDate(reservation.createdAt)}
+                      </span>
                     </div>
                     {reservation.scheduledClass && (
                       <div className='flex items-center gap-1'>
                         <Calendar className='w-4 h-4' />
                         <span>
-                          Class: {formatDate(reservation.scheduledClass.date)}
+                          Clase: {formatDate(reservation.scheduledClass.date)}
                         </span>
                       </div>
                     )}
@@ -128,7 +133,7 @@ export default function MyReservations() {
                     to={`/classes/${reservation.scheduledClassId}`}
                     className='btn btn-secondary'
                   >
-                    View Class
+                    Ver Clase
                   </Link>
                 </div>
               </div>
@@ -139,16 +144,16 @@ export default function MyReservations() {
         <div className='text-center py-12'>
           <Calendar className='w-16 h-16 text-gray-300 mx-auto mb-4' />
           <h3 className='text-xl font-medium text-gray-600 mb-2'>
-            No reservations yet
+            Aún no tienes reservas
           </h3>
           <p className='text-gray-500 mb-6'>
-            Book your first dance class to get started!
+            ¡Reserva tu primera clase de baile para empezar!
           </p>
           <Link
             to='/classes'
             className='btn btn-primary'
           >
-            Browse Classes
+            Explorar Clases
           </Link>
         </div>
       )}

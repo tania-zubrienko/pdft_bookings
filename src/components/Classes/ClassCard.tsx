@@ -11,10 +11,10 @@ export default function ClassCard({ classData }: ClassCardProps) {
   const spotsLeft = classData.capacity - classData.enrolledCount;
 
   const formatTime = (date: Date) =>
-    date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
+    date.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
       minute: '2-digit',
-      hour12: true,
+      hour12: false,
     });
 
   return (
@@ -43,14 +43,14 @@ export default function ClassCard({ classData }: ClassCardProps) {
         <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500'>
           <span className='flex items-center gap-1'>
             <Users className='w-4 h-4' />
-            {classData.enrolledCount} signed up
+            {classData.enrolledCount} inscritos
           </span>
           <span
             className={`font-medium ${isFull ? 'text-red-600' : spotsLeft <= 3 ? 'text-amber-600' : 'text-green-600'}`}
           >
             {isFull
-              ? 'Full'
-              : `${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left`}
+              ? 'Completa'
+              : `${spotsLeft} plaza${spotsLeft !== 1 ? 's' : ''} libre${spotsLeft !== 1 ? 's' : ''}`}
           </span>
           <span className='flex items-center gap-1'>
             <MapPin className='w-4 h-4' />
@@ -65,7 +65,7 @@ export default function ClassCard({ classData }: ClassCardProps) {
             to={`/classes/${classData.id}`}
             className={`btn text-sm ${isFull ? 'btn-secondary cursor-not-allowed pointer-events-none' : 'btn-primary'}`}
           >
-            {isFull ? 'Full' : 'Reserve'}
+            {isFull ? 'Completa' : 'Reservar'}
           </Link>
         </div>
       </div>

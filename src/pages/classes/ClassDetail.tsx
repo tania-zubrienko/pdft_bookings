@@ -46,16 +46,18 @@ export default function ClassDetail() {
     try {
       // Mock booking — simulate a short delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert('Booking confirmed! (mock)');
+      alert('¡Reserva confirmada! (simulación)');
     } catch (err: any) {
-      setError(err.message || 'Failed to book class. Please try again.');
+      setError(
+        err.message || 'Error al reservar la clase. Inténtalo de nuevo.',
+      );
     } finally {
       setBookingLoading(false);
     }
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -64,10 +66,10 @@ export default function ClassDetail() {
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
+    return date.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
       minute: '2-digit',
-      hour12: true,
+      hour12: false,
     });
   };
 
@@ -87,16 +89,16 @@ export default function ClassDetail() {
         <div className='text-center py-12'>
           <AlertCircle className='w-16 h-16 text-gray-300 mx-auto mb-4' />
           <h2 className='text-2xl font-bold text-gray-900 mb-2'>
-            Class Not Found
+            Clase No Encontrada
           </h2>
           <p className='text-gray-600 mb-6'>
-            The class you're looking for doesn't exist or has been removed.
+            La clase que buscas no existe o ha sido eliminada.
           </p>
           <Link
             to='/classes'
             className='btn btn-primary'
           >
-            Browse Classes
+            Explorar Clases
           </Link>
         </div>
       </Layout>
@@ -115,7 +117,7 @@ export default function ClassDetail() {
         className='inline-flex items-center gap-2 text-gray-600 hover:text-primary-600 mb-6 transition-colors'
       >
         <ArrowLeft className='w-5 h-5' />
-        Back to Classes
+        Volver a Clases
       </Link>
 
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
@@ -130,30 +132,30 @@ export default function ClassDetail() {
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-8'>
             <div className='bg-gray-50 rounded-lg p-4'>
               <Calendar className='w-6 h-6 text-primary-600 mb-2' />
-              <p className='text-sm text-gray-500'>Date</p>
+              <p className='text-sm text-gray-500'>Fecha</p>
               <p className='font-medium text-gray-900'>
                 {formatDate(scheduledDate)}
               </p>
             </div>
             <div className='bg-gray-50 rounded-lg p-4'>
               <Clock className='w-6 h-6 text-primary-600 mb-2' />
-              <p className='text-sm text-gray-500'>Time</p>
+              <p className='text-sm text-gray-500'>Hora</p>
               <p className='font-medium text-gray-900'>
                 {formatTime(scheduledDate)}
               </p>
             </div>
             <div className='bg-gray-50 rounded-lg p-4'>
               <Users className='w-6 h-6 text-primary-600 mb-2' />
-              <p className='text-sm text-gray-500'>Spots</p>
+              <p className='text-sm text-gray-500'>Plazas</p>
               <p className='font-medium text-gray-900'>
-                {spotsLeft} / {classData.capacity} available
+                {spotsLeft} / {classData.capacity} disponibles
               </p>
             </div>
             <div className='bg-gray-50 rounded-lg p-4'>
               <Clock className='w-6 h-6 text-primary-600 mb-2' />
-              <p className='text-sm text-gray-500'>Duration</p>
+              <p className='text-sm text-gray-500'>Duración</p>
               <p className='font-medium text-gray-900'>
-                {classData.duration} minutes
+                {classData.duration} minutos
               </p>
             </div>
           </div>
@@ -161,7 +163,7 @@ export default function ClassDetail() {
           {/* Instructor */}
           <div className='bg-white rounded-xl border border-gray-200 p-6 mb-6'>
             <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              Instructor
+              Instructora
             </h3>
             <div className='flex items-center gap-4'>
               <div className='w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center'>
@@ -173,7 +175,7 @@ export default function ClassDetail() {
                 <p className='font-medium text-gray-900'>
                   {classData.instructorName}
                 </p>
-                <p className='text-sm text-gray-500'>Dance Instructor</p>
+                <p className='text-sm text-gray-500'>Instructora de Baile</p>
               </div>
             </div>
           </div>
@@ -181,7 +183,7 @@ export default function ClassDetail() {
           {/* Location */}
           <div className='bg-white rounded-xl border border-gray-200 p-6'>
             <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              Location
+              Ubicación
             </h3>
             <div className='flex items-center gap-3'>
               <MapPin className='w-5 h-5 text-primary-600' />
@@ -199,7 +201,7 @@ export default function ClassDetail() {
                 <div className='flex items-center gap-2 mb-2'>
                   <Ticket className='w-5 h-5 text-indigo-600' />
                   <span className='font-medium text-indigo-900'>
-                    Your Class Balance
+                    Tu Saldo de Clases
                   </span>
                 </div>
                 <div className='flex items-baseline gap-1'>
@@ -207,7 +209,7 @@ export default function ClassDetail() {
                     {creditBalance.remaining}
                   </span>
                   <span className='text-sm text-indigo-500'>
-                    / {creditBalance.total} classes remaining
+                    / {creditBalance.total} clases restantes
                   </span>
                 </div>
                 {/* Progress bar */}
@@ -225,17 +227,17 @@ export default function ClassDetail() {
                 <div className='flex items-center gap-2 mb-2'>
                   <AlertCircle className='w-5 h-5 text-amber-600' />
                   <span className='font-medium text-amber-900'>
-                    No Credits Available
+                    Sin Créditos Disponibles
                   </span>
                 </div>
                 <p className='text-sm text-amber-700 mb-3'>
-                  Purchase a class package to reserve this class.
+                  Compra un paquete de clases para reservar.
                 </p>
                 <Link
                   to='/packages'
                   className='btn btn-primary text-sm w-full'
                 >
-                  Buy Credits
+                  Comprar Créditos
                 </Link>
               </div>
             )}
@@ -257,14 +259,17 @@ export default function ClassDetail() {
                   <>
                     <AlertCircle className='w-5 h-5 text-red-600' />
                     <span className='font-medium text-red-700'>
-                      Class is Full
+                      Clase Completa
                     </span>
                   </>
                 ) : (
                   <>
                     <CheckCircle className='w-5 h-5 text-green-600' />
                     <span className='font-medium text-green-700'>
-                      {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} available
+                      {spotsLeft}{' '}
+                      {spotsLeft === 1
+                        ? 'plaza disponible'
+                        : 'plazas disponibles'}
                     </span>
                   </>
                 )}
@@ -281,14 +286,14 @@ export default function ClassDetail() {
                 {bookingLoading ? (
                   <>
                     <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
-                    Processing...
+                    Procesando...
                   </>
                 ) : isFull ? (
-                  'Class Full'
+                  'Clase Completa'
                 ) : (
                   <>
                     <Ticket className='w-5 h-5' />
-                    Use 1 Credit to Reserve
+                    Usar 1 Crédito para Reservar
                   </>
                 )}
               </button>
@@ -298,31 +303,29 @@ export default function ClassDetail() {
                 className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
               >
                 <Ticket className='w-5 h-5' />
-                Get Credits to Reserve
+                Obtén Créditos para Reservar
               </Link>
             )}
 
             <p className='text-xs text-gray-500 text-center mt-4'>
-              1 credit = 1 class reservation
+              1 crédito = 1 reserva de clase
             </p>
 
             {/* What's Included */}
             <div className='mt-6 pt-6 border-t border-gray-200'>
-              <h4 className='font-medium text-gray-900 mb-3'>
-                What's Included
-              </h4>
+              <h4 className='font-medium text-gray-900 mb-3'>Qué Incluye</h4>
               <ul className='space-y-2 text-sm text-gray-600'>
                 <li className='flex items-center gap-2'>
                   <CheckCircle className='w-4 h-4 text-green-500' />
-                  {classData.duration} minute class
+                  Clase de {classData.duration} minutos
                 </li>
                 <li className='flex items-center gap-2'>
                   <CheckCircle className='w-4 h-4 text-green-500' />
-                  Professional instruction
+                  Instrucción profesional
                 </li>
                 <li className='flex items-center gap-2'>
                   <CheckCircle className='w-4 h-4 text-green-500' />
-                  All skill levels welcome
+                  Todos los niveles bienvenidos
                 </li>
               </ul>
             </div>

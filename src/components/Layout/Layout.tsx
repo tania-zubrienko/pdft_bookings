@@ -35,21 +35,21 @@ export default function Layout({ children }: LayoutProps) {
                 className='flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors'
               >
                 <Calendar className='w-5 h-5' />
-                Classes
+                Clases
               </Link>
               <Link
                 to='/packages'
                 className='flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors'
               >
                 <Ticket className='w-5 h-5' />
-                Buy Credits
+                Comprar Créditos
               </Link>
               <Link
                 to='/my-reservations'
                 className='flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors'
               >
                 <User className='w-5 h-5' />
-                My Reservations
+                Mis Reservas
               </Link>
               <Link
                 to='/admin'
@@ -85,7 +85,7 @@ export default function Layout({ children }: LayoutProps) {
                 className='flex items-center gap-3 px-3 py-3 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors'
               >
                 <Calendar className='w-5 h-5' />
-                Classes
+                Clases
               </Link>
               <Link
                 to='/packages'
@@ -93,7 +93,7 @@ export default function Layout({ children }: LayoutProps) {
                 className='flex items-center gap-3 px-3 py-3 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors'
               >
                 <Ticket className='w-5 h-5' />
-                Buy Credits
+                Comprar Créditos
               </Link>
               <Link
                 to='/my-reservations'
@@ -101,7 +101,7 @@ export default function Layout({ children }: LayoutProps) {
                 className='flex items-center gap-3 px-3 py-3 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors'
               >
                 <User className='w-5 h-5' />
-                My Reservations
+                Mis Reservas
               </Link>
               <Link
                 to='/admin'
@@ -125,7 +125,7 @@ export default function Layout({ children }: LayoutProps) {
       <footer className='bg-white border-t border-gray-200 mt-auto'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
           <p className='text-center text-gray-500 text-sm'>
-            © 2026 Poled Dance Fit Talavera. All rights reserved.
+            © 2026 Poled Dance Fit Talavera. Todos los derechos reservados.
           </p>
         </div>
       </footer>

@@ -7,8 +7,8 @@ interface AdminLayoutProps {
 }
 
 const adminLinks = [
-  { to: '/admin/schedule', label: 'Class Schedule', icon: CalendarDays },
-  { to: '/admin/reservations', label: 'Reservations', icon: ClipboardList },
+  { to: '/admin/schedule', label: 'Horarios', icon: CalendarDays },
+  { to: '/admin/reservations', label: 'Reservas', icon: ClipboardList },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     Poled Dance Fit Talavera
                   </span>
                   <span className='text-xs text-gray-400 leading-tight'>
-                    Admin Panel
+                    Panel de Admin
                   </span>
                 </div>
               </Link>
@@ -65,7 +65,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 className='flex items-center gap-2 text-gray-400 hover:text-white transition-colors ml-4 border-l border-gray-700 pl-4'
               >
                 <ArrowLeft className='w-4 h-4' />
-                Student View
+                Vista Alumna
               </Link>
             </nav>
 
@@ -112,7 +112,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 className='flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors border-t border-gray-700 mt-2 pt-4'
               >
                 <ArrowLeft className='w-5 h-5' />
-                Student View
+                Vista Alumna
               </Link>
             </div>
           </nav>

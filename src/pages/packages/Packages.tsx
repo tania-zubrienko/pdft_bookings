@@ -21,9 +21,9 @@ export default function Packages() {
   }, []);
 
   const formatPrice = (cents: number) =>
-    new Intl.NumberFormat('en-US', {
+    new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'EUR',
     }).format(cents / 100);
 
   const pricePerClass = (pkg: Package) =>
@@ -44,11 +44,11 @@ export default function Packages() {
       {/* Header */}
       <div className='text-center mb-10'>
         <h1 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-3'>
-          Class Packages
+          Paquetes de Clases
         </h1>
         <p className='text-gray-600 text-lg max-w-2xl mx-auto'>
-          Purchase credits to reserve classes. The more you buy, the more you
-          save.
+          Compra créditos para reservar clases. Cuantos más compres, más
+          ahorras.
         </p>
       </div>
 
@@ -58,7 +58,7 @@ export default function Packages() {
           <div className='flex items-center gap-2 mb-2'>
             <Ticket className='w-5 h-5 text-indigo-600' />
             <span className='font-semibold text-indigo-900'>
-              Your Current Balance
+              Tu Saldo Actual
             </span>
           </div>
           <div className='flex items-baseline gap-1'>
@@ -66,7 +66,7 @@ export default function Packages() {
               {creditBalance.remaining}
             </span>
             <span className='text-sm text-indigo-500'>
-              / {creditBalance.total} classes remaining
+              / {creditBalance.total} clases restantes
             </span>
           </div>
           <div className='mt-2 h-2 bg-indigo-200 rounded-full overflow-hidden'>
@@ -94,7 +94,7 @@ export default function Packages() {
               <div className='absolute -top-3 left-1/2 -translate-x-1/2'>
                 <span className='inline-flex items-center gap-1 bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full'>
                   <Sparkles className='w-3 h-3' />
-                  Most Popular
+                  Más Popular
                 </span>
               </div>
             )}
@@ -105,7 +105,7 @@ export default function Packages() {
                 {pkg.credits}
               </span>
               <p className='text-sm text-gray-500 mt-1'>
-                {pkg.credits === 1 ? 'class' : 'classes'}
+                {pkg.credits === 1 ? 'clase' : 'clases'}
               </p>
             </div>
 
@@ -128,29 +128,30 @@ export default function Packages() {
               </span>
               {pkg.credits > 1 && (
                 <p className='text-xs text-gray-400 mt-1'>
-                  {pricePerClass(pkg)} per class
+                  {pricePerClass(pkg)} por clase
                 </p>
               )}
             </div>
 
             {/* Validity */}
             <div className='text-center text-sm text-gray-500 mb-6'>
-              Valid for {pkg.validityDays} days
+              Válido por {pkg.validityDays} días
             </div>
 
             {/* Features */}
             <ul className='space-y-2 text-sm text-gray-600 mb-6 flex-1'>
               <li className='flex items-center gap-2'>
                 <CheckCircle className='w-4 h-4 text-green-500 shrink-0' />
-                {pkg.credits} class {pkg.credits === 1 ? 'credit' : 'credits'}
+                {pkg.credits} {pkg.credits === 1 ? 'crédito' : 'créditos'} de
+                clase
               </li>
               <li className='flex items-center gap-2'>
                 <CheckCircle className='w-4 h-4 text-green-500 shrink-0' />
-                Any class type
+                Cualquier tipo de clase
               </li>
               <li className='flex items-center gap-2'>
                 <CheckCircle className='w-4 h-4 text-green-500 shrink-0' />
-                {pkg.validityDays}-day validity
+                Validez de {pkg.validityDays} días
               </li>
             </ul>
 
@@ -161,12 +162,12 @@ export default function Packages() {
               }`}
               onClick={() =>
                 alert(
-                  `Purchase ${pkg.name} for ${formatPrice(pkg.price)} (mock)`,
+                  `Compra ${pkg.name} por ${formatPrice(pkg.price)} (simulación)`,
                 )
               }
             >
               <ShoppingCart className='w-4 h-4' />
-              Buy {pkg.name}
+              Comprar {pkg.name}
             </button>
           </div>
         ))}
@@ -178,7 +179,7 @@ export default function Packages() {
           to='/classes'
           className='text-primary-600 hover:text-primary-700 font-medium transition-colors'
         >
-          ← Back to Classes
+          ← Volver a Clases
         </Link>
       </div>
     </Layout>

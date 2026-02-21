@@ -38,7 +38,7 @@ export default function ClassList() {
 
   // Format selected date for the heading
   const selectedDayLabel = selectedDate
-    ? selectedDate.toLocaleDateString('en-US', {
+    ? selectedDate.toLocaleDateString('es-ES', {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
@@ -60,10 +60,10 @@ export default function ClassList() {
       {/* Header */}
       <div className='mb-4 sm:mb-6'>
         <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-1'>
-          Class Schedule
+          Horario de Clases
         </h1>
         <p className='text-sm sm:text-base text-gray-600'>
-          Select a day to see available classes
+          Selecciona un día para ver las clases disponibles
         </p>
       </div>
 
@@ -97,7 +97,9 @@ export default function ClassList() {
           ) : (
             <div className='text-center py-10 bg-white rounded-xl border border-gray-200'>
               <Calendar className='w-12 h-12 text-gray-300 mx-auto mb-3' />
-              <p className='text-gray-500'>No classes scheduled for this day</p>
+              <p className='text-gray-500'>
+                No hay clases programadas para este día
+              </p>
             </div>
           )}
         </div>
