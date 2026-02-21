@@ -168,6 +168,46 @@ Classes have no individual prices. All bookings consume 1 credit from a pre-purc
 - [ ] Booking history
 - [ ] Email notifications
 
+## Deployment
+
+The project deploys to **Firebase Hosting** (frontend) and **Firebase Functions** (backend) via GitHub Actions.
+
+### How it works
+
+| Trigger | Action |
+|---------|--------|
+| Push to `main` | Builds the app, deploys Hosting to the **live** channel, deploys Functions |
+| Pull request targeting `main` | Builds the app, deploys Hosting to a temporary **preview** channel (URL posted as a PR comment) |
+
+### Required GitHub Secrets
+
+Add these secrets in **GitHub → Settings → Secrets and variables → Actions**:
+
+| Secret | How to obtain |
+|--------|---------------|
+| `FIREBASE_SERVICE_ACCOUNT` | Run `firebase init hosting:github` in the project root, or go to **Firebase Console → Project Settings → Service accounts → Generate new private key** and paste the full JSON |
+| `FIREBASE_TOKEN` | Run `firebase login:ci` locally and copy the printed token (used for Functions deployment) |
+| `VITE_FIREBASE_API_KEY` | Firebase Console → Project Settings → Your apps → Web app config |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Same as above |
+| `VITE_FIREBASE_PROJECT_ID` | Same as above (also used as the target project for every deploy step) |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Same as above |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Same as above |
+| `VITE_FIREBASE_APP_ID` | Same as above |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe Dashboard → Developers → API keys → Publishable key |
+
+### First-time setup
+
+1. Create a Firebase project at <https://console.firebase.google.com> and note the **Project ID**.
+2. Enable **Firebase Hosting** and (optionally) **Cloud Functions** in the console.
+3. Copy the values from `.env.example`, fill them in, and add each as a GitHub secret (see table above).
+4. Generate a service-account key and save it as the `FIREBASE_SERVICE_ACCOUNT` secret.
+5. Run `firebase login:ci` locally and save the token as `FIREBASE_TOKEN`.
+6. Push to `main` — the workflow will build and deploy automatically.
+
+> **Tip:** The easiest way to configure the service account is to run  
+> `firebase init hosting:github` in the repo root. It will create the  
+> workflow file and add the secret to your repository automatically.
+
 ## License
 
 MIT
