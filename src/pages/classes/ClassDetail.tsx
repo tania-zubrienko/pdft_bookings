@@ -8,7 +8,6 @@ import {
   Calendar,
   Clock,
   Users,
-  MapPin,
   AlertCircle,
   CheckCircle,
   Ticket,
@@ -59,8 +58,7 @@ export default function ClassDetail() {
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('es-ES', {
       weekday: 'long',
-      year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
     });
   };
@@ -124,70 +122,48 @@ export default function ClassDetail() {
         {/* Main Content */}
         <div className='lg:col-span-2'>
           {/* Class Info */}
-          <h1 className='text-3xl font-bold text-gray-900 mb-4'>
+          <h1 className='text-3xl font-bold text-gray-100 mb-4'>
             {classData.classTitle}
           </h1>
 
           {/* Details Grid */}
-          <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-8'>
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-8'>
             <div className='bg-gray-50 rounded-lg p-4'>
-              <Calendar className='w-6 h-6 text-primary-600 mb-2' />
-              <p className='text-sm text-gray-500'>Fecha</p>
+              <div className='flex items-center gap-2'>
+                <Calendar className='w-6 h-6 text-primary-600' />
+                <p className='text-sm text-gray-500'>Fecha</p>
+              </div>
               <p className='font-medium text-gray-900'>
-                {formatDate(scheduledDate)}
+                {formatDate(scheduledDate)} - {formatTime(scheduledDate)}
               </p>
             </div>
             <div className='bg-gray-50 rounded-lg p-4'>
-              <Clock className='w-6 h-6 text-primary-600 mb-2' />
-              <p className='text-sm text-gray-500'>Hora</p>
-              <p className='font-medium text-gray-900'>
-                {formatTime(scheduledDate)}
-              </p>
-            </div>
-            <div className='bg-gray-50 rounded-lg p-4'>
-              <Users className='w-6 h-6 text-primary-600 mb-2' />
-              <p className='text-sm text-gray-500'>Plazas</p>
+              <div className='flex items-center gap-2'>
+
+                <Users className='w-6 h-6 text-primary-600 mb-2' />
+                <p className='text-sm text-gray-500'>Plazas</p>
+              </div>
               <p className='font-medium text-gray-900'>
                 {spotsLeft} / {classData.capacity} disponibles
               </p>
-            </div>
-            <div className='bg-gray-50 rounded-lg p-4'>
-              <Clock className='w-6 h-6 text-primary-600 mb-2' />
-              <p className='text-sm text-gray-500'>Duración</p>
-              <p className='font-medium text-gray-900'>
-                {classData.duration} minutos
-              </p>
+              <p className='text-sm text-gray-500'> Fotos de alumos</p>
             </div>
           </div>
 
           {/* Instructor */}
           <div className='bg-white rounded-xl border border-gray-200 p-6 mb-6'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              Instructora
-            </h3>
+            <p className='text-sm text-gray-500'>
+              Instructor
+            </p>
             <div className='flex items-center gap-4'>
               <div className='w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center'>
                 <span className='text-primary-600 font-bold text-lg'>
                   {classData.instructorName.charAt(0)}
                 </span>
               </div>
-              <div>
-                <p className='font-medium text-gray-900'>
-                  {classData.instructorName}
-                </p>
-                <p className='text-sm text-gray-500'>Instructora de Baile</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Location */}
-          <div className='bg-white rounded-xl border border-gray-200 p-6'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              Ubicación
-            </h3>
-            <div className='flex items-center gap-3'>
-              <MapPin className='w-5 h-5 text-primary-600' />
-              <span className='text-gray-700'>{classData.location}</span>
+              <p className='font-medium text-gray-900'>
+                {classData.instructorName}
+              </p>
             </div>
           </div>
         </div>
@@ -251,87 +227,57 @@ export default function ClassDetail() {
             )}
 
             {/* Availability Status */}
-            <div
-              className={`mb-6 p-4 rounded-lg ${isFull ? 'bg-red-50' : 'bg-green-50'}`}
-            >
-              <div className='flex items-center gap-2'>
-                {isFull ? (
-                  <>
-                    <AlertCircle className='w-5 h-5 text-red-600' />
-                    <span className='font-medium text-red-700'>
-                      Clase Completa
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className='w-5 h-5 text-green-600' />
-                    <span className='font-medium text-green-700'>
-                      {spotsLeft}{' '}
-                      {spotsLeft === 1
-                        ? 'plaza disponible'
-                        : 'plazas disponibles'}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
 
-            {/* Book Button */}
-            {creditBalance && creditBalance.remaining > 0 ? (
-              <button
-                onClick={handleBookClass}
-                disabled={isFull || bookingLoading}
-                className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
-              >
-                {bookingLoading ? (
-                  <>
-                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
-                    Procesando...
-                  </>
-                ) : isFull ? (
-                  'Clase Completa'
-                ) : (
-                  <>
-                    <Ticket className='w-5 h-5' />
-                    Usar 1 Crédito para Reservar
-                  </>
-                )}
-              </button>
-            ) : (
-              <Link
-                to='/packages'
-                className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
-              >
-                <Ticket className='w-5 h-5' />
-                Obtén Créditos para Reservar
-              </Link>
-            )}
-
-            <p className='text-xs text-gray-500 text-center mt-4'>
-              1 crédito = 1 reserva de clase
-            </p>
-
-            {/* What's Included */}
-            <div className='mt-6 pt-6 border-t border-gray-200'>
-              <h4 className='font-medium text-gray-900 mb-3'>Qué Incluye</h4>
-              <ul className='space-y-2 text-sm text-gray-600'>
-                <li className='flex items-center gap-2'>
-                  <CheckCircle className='w-4 h-4 text-green-500' />
-                  Clase de {classData.duration} minutos
-                </li>
-                <li className='flex items-center gap-2'>
-                  <CheckCircle className='w-4 h-4 text-green-500' />
-                  Instrucción profesional
-                </li>
-                <li className='flex items-center gap-2'>
-                  <CheckCircle className='w-4 h-4 text-green-500' />
-                  Todos los niveles bienvenidos
-                </li>
-              </ul>
-            </div>
+            <>
+              {isFull ?? (
+                <div className='flex items-center gap-2'>
+                  <AlertCircle className='w-5 h-5 text-red-600' />
+                  <span className='font-medium text-red-700'>
+                    Clase Completa
+                  </span>
+                </div>
+              )}
+            </>
           </div>
+
+          {/* Book Button */}
+          {creditBalance && creditBalance.remaining > 0 ? (
+            <button
+              onClick={handleBookClass}
+              disabled={isFull || bookingLoading}
+              className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
+            >
+              {bookingLoading ? (
+                <>
+                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
+                  Procesando...
+                </>
+              ) : isFull ? (
+                'Clase Completa'
+              ) : (
+                <>
+                  <Ticket className='w-5 h-5' />
+                  Usar 1 Crédito para Reservar
+                </>
+              )}
+            </button>
+          ) : (
+            <Link
+              to='/packages'
+              className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
+            >
+              <Ticket className='w-5 h-5' />
+              Obtén Créditos para Reservar
+            </Link>
+          )}
+
+          <p className='text-xs text-gray-500 text-center mt-4'>
+            1 crédito = 1 reserva de clase
+          </p>
+
         </div>
       </div>
+
     </Layout>
   );
 }

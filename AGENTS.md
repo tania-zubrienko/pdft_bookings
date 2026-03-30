@@ -16,16 +16,17 @@ The system currently supports:
 
 - Calendar-based class browsing (week/month view)
 - Credit-based reservations (1 credit = 1 class)
-- Purchase of class packages (1, 4, 8, 14 credits)
-- Credit pool management per student
-- Expiration policy (30/60/90 days per package)
 - Credit balance display when reserving
 - Mobile-responsive UI with hamburger menu
 - No per-class pricing — all bookings use credits
+- Package information display (pricing reference only, no purchases)
 - Admin: week-based class scheduling with ClassDefinition picker
 - Admin: "Duplicate to Next Week" for fast schedule planning
 - Admin: cancel/restore individual scheduled classes
 - Admin: reservation viewer with search and stats
+- Admin: manual credit management — add credits to students with custom validity dates
+
+**Note:** Payment integration is **not implemented**. Credits are manually assigned by admins to students with configurable start and expiration dates.
 
 ---
 
@@ -69,12 +70,13 @@ src/
 | --------------------- | --------------------- | ----------------------------------- |
 | `/classes`            | ClassList             | Calendar + day class list (default) |
 | `/classes/:classId`   | ClassDetail           | Class detail + booking              |
-| `/packages`           | Packages              | Credit packages for purchase        |
+| `/packages`           | Packages              | Credit packages (reference only)    |
 | `/my-reservations`    | MyReservations        | Student's reservation list          |
 | `/booking/success`    | BookingResult         | Post-booking success                |
 | `/booking/cancelled`  | BookingResult         | Post-booking cancelled              |
 | `/admin/schedule`     | ClassScheduler        | Week-based class planner            |
 | `/admin/reservations` | AdminReservations     | Reservation viewer + stats          |
+| `/admin/credits`      | CreditManagement      | Manual credit assignment to students |
 | `/admin`              | Redirect → schedule   | Admin landing                       |
 | `/` or `*`            | Redirect → `/classes` | Default/fallback                    |
 
@@ -82,7 +84,7 @@ src/
 
 - **Desktop:** Horizontal nav in header (Classes, Buy Credits, My Reservations)
 - **Mobile:** Hamburger menu (☰/✕ toggle) with same links in dropdown
-- **Admin:** Separate dark-themed layout with Schedule / Reservations nav
+- **Admin:** Separate dark-themed layout with Schedule / Reservations / Credits nav
 
 ---
 
@@ -101,8 +103,9 @@ Classes do **not** have individual prices. All reservations consume 1 credit fro
 
 ### Credit Pools
 
-- Credits are purchased in packages (bundles)
-- Each purchase creates a new credit pool with an expiration date
+- Credits are manually assigned by admins to students
+- Each credit assignment creates a new credit pool with custom validity dates
+- Admin specifies start date and expiration date for each pool
 - Multiple pools can exist per student
 - Stored in `creditPools` collection (mock data currently)
 
@@ -115,13 +118,13 @@ Classes do **not** have individual prices. All reservations consume 1 credit fro
 5. If no credits: "Get Credits to Reserve" → links to `/packages`
 6. On booking: 1 credit deducted, reservation created as `confirmed`
 
-### Package Purchase Flow
+### Package Display (Informational Only)
 
 1. Student navigates to `/packages` (via "Buy Credits" nav link)
 2. Views 4 package tiers with pricing and savings
-3. Clicks "Buy" → Stripe checkout (mock alert currently)
-4. On webhook confirmation: credit pool created with expiration
-5. Credits become available for booking
+3. "Buy" button shows alert (no actual purchase flow)
+
+**Note:** Package purchases are **not implemented**. The page exists to display pricing information only. Credit pools must be created manually in mock data or via Firebase console in production.
 
 ---
 
@@ -163,7 +166,6 @@ interface ScheduledClass {
   date: Date; // specific date + time
   duration: number; // minutes
   capacity: number;
-  location: string;
   status: 'active' | 'cancelled';
 
   // Denormalized for fast reads
@@ -267,9 +269,12 @@ interface CreditPool {
   studentId: string;
   remainingCredits: number;
   totalCredits: number;
-  expiresAt: Date;
-  packageId: string; // Reference to packages collection
+  startDate: Date; // When credits become valid
+  expiresAt: Date; // When credits expire
+  packageId?: string; // Optional reference for display/reporting
   createdAt: Date;
+  createdBy: string; // Admin who created the pool
+  notes?: string; // Optional admin notes
 }
 ```
 
@@ -277,6 +282,7 @@ interface CreditPool {
 
 - `remainingCredits` cannot be negative
 - Expired pools cannot be used
+- Credits are only valid between `startDate` and `expiresAt`
 - Credits are consumed FIFO (earliest expiration first)
 
 ### CreditBalance
@@ -338,7 +344,7 @@ duplicateWeek(sourceClasses: ScheduledClass[], offsetWeeks: number): ScheduledCl
 
 ### ClassCard (`components/Classes/ClassCard.tsx`)
 
-- Compact card: title, instructor, time, enrolled count, spots left, location, duration
+- Compact card: title, instructor, time, enrolled count, spots left, duration
 - No price display
 - Color-coded availability (green/amber/red)
 - "Reserve" button → links to class detail
@@ -348,7 +354,6 @@ duplicateWeek(sourceClasses: ScheduledClass[], offsetWeeks: number): ScheduledCl
 
 - Class info grid (date, time, spots, duration)
 - Instructor section with avatar initial
-- Location section
 - **Booking card (sidebar):**
   - Credit balance (remaining/total with progress bar) — if credits > 0
   - "No Credits Available" prompt with "Buy Credits" link — if credits = 0
@@ -372,6 +377,20 @@ duplicateWeek(sourceClasses: ScheduledClass[], offsetWeeks: number): ScheduledCl
 - Mobile: hamburger menu toggle (☰/✕) with dropdown nav
 - Footer with copyright
 - Wraps all pages
+
+### CreditManagement (`pages/admin/CreditManagement.tsx`)
+
+- Student selector (dropdown or search)
+- Credit pool creation form:
+  - Number of credits to add
+  - Start date picker (when credits become valid)
+  - Expiration date picker
+  - Optional package reference (for display/categorization)
+  - Optional notes field
+- List of existing credit pools for selected student
+- Pool details: total/remaining, validity period, status (active/expired/future)
+- Action buttons: view usage history, deactivate pool
+- Summary stats: total active credits, expiring soon alerts
 
 ---
 
@@ -411,7 +430,6 @@ If any invariant would be violated:
 |------|--------|---------------|
 | Credit availability | Client can fabricate balances | Query `creditPools` server-side |
 | Seat availability | Race conditions possible | Check `enrolledCount` in transaction |
-| Payment confirmation | Can be spoofed | Only accept Stripe webhook |
 | Credit pool selection | Must enforce FIFO | Server selects earliest expiring pool |
 | `remainingCredits` value | Direct modification forbidden | Only Cloud Functions modify |
 
@@ -494,6 +512,7 @@ async function bookWithCredits(studentId: string, classId: string) {
       creditPoolsRef
         .where('studentId', '==', studentId)
         .where('remainingCredits', '>', 0)
+        .where('startDate', '<=', Timestamp.now())
         .where('expiresAt', '>', Timestamp.now())
         .orderBy('expiresAt', 'asc'),
     );
@@ -568,37 +587,6 @@ async function bookWithCredits(studentId: string, classId: string) {
 }
 ```
 
-#### createPackageSession()
-
-**Authentication:** Required  
-**Role:** Student
-
-**Input:**
-
-```typescript
-{
-  packageId: string;
-}
-```
-
-**Validation:**
-
-- Package exists
-- Package is active
-
-**Action:**
-
-1. Create Stripe Checkout session
-2. Include `packageId` and `studentId` in metadata
-
-**Output:**
-
-```typescript
-{
-  checkoutUrl: string;
-}
-```
-
 #### cancelReservation()
 
 **Authentication:** Required  
@@ -623,61 +611,60 @@ async function bookWithCredits(studentId: string, classId: string) {
 - Set `reservation.status = 'cancelled'`
 - Decrement `enrolledCount` on class
 
-### Stripe Integration
+---
 
-| Requirement                  | Implementation                                         |
-| ---------------------------- | ------------------------------------------------------ |
-| Webhook signature validation | **MANDATORY** - Use `stripe.webhooks.constructEvent()` |
-| Idempotency                  | Check if pool already created before processing        |
-| Event types to handle        | `checkout.session.completed`                           |
+## Admin Credit Management System
 
-### stripeWebhook() Handler
+**Note:** Credits are assigned manually by admins through the admin UI or directly via Firebase.
 
+### Admin UI (Recommended)
+
+Admins use the `/admin/credits` page to:
+
+1. Select a student from the dropdown
+2. Enter credit pool details:
+   - Number of credits to assign
+   - Start date (when credits become valid)
+   - Expiration date
+   - Optional package reference (e.g., "Monthly Pass", "Trial Credits")
+   - Optional notes (e.g., "Comp for referral", "Makeup credits")
+3. Submit to create credit pool
+4. View and manage existing pools for each student
+
+### Development (Mock Data)
+Update `src/lib/mockData.ts` to add credit pools:
 ```typescript
-// PSEUDOCODE — handles package purchases only
-export const stripeWebhook = functions.https.onRequest(async (req, res) => {
-  // 1. Validate signature (MANDATORY)
-  const sig = req.headers['stripe-signature'];
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
-  } catch (err) {
-    return res.status(400).send('Invalid signature');
-  }
+export const mockCreditPools: CreditPool[] = [
+  {
+    id: 'pool_1',
+    studentId: 'student_1',
+    totalCredits: 10,
+    remainingCredits: 5,
+    startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Started 7 days ago
+    expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // Expires in 60 days
+    packageId: 'pkg_regular',
+    createdAt: new Date(),
+    createdBy: 'admin_1',
+    notes: 'Monthly subscription',
+  },
+];
+```
 
-  // 2. Handle package purchase
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const packageId = session.metadata.packageId;
-    const studentId = session.metadata.studentId;
-
-    const packageDoc = await packagesRef.doc(packageId).get();
-    const pkg = packageDoc.data();
-
-    // Create credit pool
-    const poolRef = await creditPoolsRef.add({
-      studentId,
-      totalCredits: pkg.credits,
-      remainingCredits: pkg.credits,
-      expiresAt: Timestamp.fromMillis(
-        Date.now() + pkg.validityDays * 24 * 60 * 60 * 1000,
-      ),
-      packageId,
-      createdAt: Timestamp.now(),
-    });
-
-    // Create payment record
-    await paymentsRef.add({
-      studentId,
-      amount: session.amount_total,
-      type: 'package',
-      stripePaymentIntentId: session.payment_intent,
-      creditPoolId: poolRef.id,
-      createdAt: Timestamp.now(),
-    });
-  }
-
-  res.json({ received: true });
+### Production (Firebase Console / Admin SDK)
+Create credit pools via Firebase Console or Admin SDK:
+```typescript
+await admin.firestore().collection('creditPools').add({
+  studentId: 'student_id_here',
+  totalCredits: 10,
+  remainingCredits: 10,
+  startDate: admin.firestore.Timestamp.now(),
+  expiresAt: admin.firestore.Timestamp.fromDate(
+    new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+  ),
+  packageId: 'custom_monthly', // Optional
+  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  createdBy: 'admin_user_id',
+  notes: 'Monthly membership credits',
 });
 ```
 
@@ -695,25 +682,34 @@ Pool B: 5 credits, expires Mar 15 ← Use second
 Pool C: 2 credits, expires Apr 01 ← Use last
 ```
 
-### Expiration Handling
+### Validity Period Handling
 
-- Expiration checked **server-side only**
-- Query filter: `expiresAt > Timestamp.now()`
+- Validity checked **server-side only**
+- Query filters: `startDate <= Timestamp.now()` AND `expiresAt > Timestamp.now()`
+- Credits are only usable within their validity window
 - Cron job recommended for marking expired pools
-- Expired credits are non-recoverable
-- Pool expires same day: Must compare timestamps, not date-only
+- Expired or not-yet-started credits cannot be used
+- Same-day validity: Must compare timestamps, not date-only
 
-### Credit Purchase Flow
+### Credit Provisioning (Admin-Managed)
+
+**Note:** Credits are manually assigned by admins:
 
 ```
-1. Student navigates to /packages
-2. Selects a package (1/4/8/14 credits)
-3. Stripe checkout session created
-4. Client redirected to Stripe
-5. Stripe webhook received
-6. Cloud Function creates creditPool with expiration
-7. Credits become available for booking
+1. Admin navigates to /admin/credits
+2. Selects student from dropdown
+3. Configures credit pool:
+   - Number of credits
+   - Start date (when credits become active)
+   - Expiration date
+   - Optional: package type, notes
+4. Submits form to create credit pool
+5. Credits become available for booking based on start date
 ```
+
+**Alternative:** Admin can create pools via Firebase Console/Admin SDK.
+
+The `/packages` page displays pricing information for reference only.
 
 ### Partial Pool Usage
 
@@ -729,9 +725,9 @@ Pool C: 2 credits, expires Apr 01 ← Use last
 | ----------------------------- | ---------------------------------------- | ------------------------- |
 | `CLASS_FULL`                  | No seats available                       | Show "class full" message |
 | `ALREADY_BOOKED`              | Student already has reservation          | Show existing reservation |
-| `NO_VALID_CREDITS`            | No unexpired credits with balance        | Redirect to /packages     |
+| `NO_VALID_CREDITS`            | No credits within validity period        | Show "no credits" message |
 | `CREDITS_EXPIRED`             | Selected pool expired during transaction | Retry with fresh query    |
-| `PAYMENT_REQUIRED`            | Package payment not confirmed            | Redirect to Stripe        |
+| `CREDITS_NOT_YET_VALID`       | Start date is in the future              | Show "not yet active" message |
 | `INVALID_PAYMENT_MODE`        | Unknown payment mode                     | Bug - log and alert       |
 | `CANCELLATION_WINDOW_EXPIRED` | Past allowed cancellation time           | Show policy message       |
 | `POOL_EXPIRED`                | Credit pool expired during restore       | Policy decision required  |
@@ -751,16 +747,14 @@ Pool C: 2 credits, expires Apr 01 ← Use last
 ### Integration Tests Must Verify
 
 - [ ] Concurrent booking attempts (race conditions)
-- [ ] Stripe webhook signature validation
 - [ ] Transaction rollback on failure
 - [ ] End-to-end credit booking flow
-- [ ] Package purchase → credit pool creation
+- [ ] Manual credit pool creation and consumption
 
 ### Load Tests (Target: 500+ students)
 
 - [ ] 50 concurrent booking attempts for same class
 - [ ] Credit consumption under contention
-- [ ] Webhook processing throughput
 
 ---
 
@@ -796,13 +790,15 @@ await runTransaction(async (tx) => {
   tx.update(poolRef, { remainingCredits: FieldValue.increment(-1) });
 });
 
-// GOOD: Webhook-confirmed payments only
-if (event.type === 'checkout.session.completed') {
-  await createCreditPool(
-    session.metadata.packageId,
-    session.metadata.studentId,
-  );
-}
+// GOOD: Admin-created credit pools
+await admin.firestore().collection('creditPools').add({
+  studentId,
+  totalCredits: pkg.credits,
+  remainingCredits: pkg.credits,
+  expiresAt: expirationDate,
+  packageId,
+  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+});
 ```
 
 ---
@@ -816,11 +812,12 @@ When implementing any booking-related feature, verify:
 - [ ] FIFO credit consumption is enforced
 - [ ] No client can directly modify `remainingCredits`
 - [ ] No client can set `reservation.status = 'confirmed'`
-- [ ] Stripe webhooks validate signatures
 - [ ] Duplicate reservations are prevented
-- [ ] Expiration is validated server-side
+- [ ] Both `startDate` and `expiresAt` are validated server-side
 - [ ] Error handling returns appropriate codes
-- [ ] Audit logging for sensitive operations
+- [ ] Audit logging for sensitive operations (credit creation, admin actions)
+- [ ] Admin credit management UI validates date ranges (startDate < expiresAt)
+- [ ] Credit pools track `createdBy` for audit trail
 
 ---
 
@@ -868,6 +865,18 @@ When implementing any booking-related feature, verify:
 **Rationale:** Simpler mental model — admins see exactly what's scheduled and copy it forward. No template/instance sync issues.  
 **Trade-off:** Requires manual duplication each week (but one-click operation).
 
+### ADR-008: No Payment Integration (MVP)
+
+**Decision:** Payment processing is **not implemented** in the current system. Credit pools must be created manually.  
+**Rationale:** Focus on core booking functionality first. Payment can be added later without restructuring the data model.  
+**Trade-off:** Admin must manually provision credits for students via Firebase Console or Admin SDK. The `/packages` page displays pricing information only.
+
+### ADR-009: Admin-Managed Credit System
+
+**Decision:** Credits are assigned manually by admins through a dedicated UI, with configurable start and expiration dates.  
+**Rationale:** Provides maximum flexibility for academy operations—admins can offer trial credits, comp credits, custom validity periods, and handle special cases without code changes. Supports various business models (memberships, punch cards, promotions) through admin configuration.  
+**Trade-off:** Requires admin action for every credit assignment. No self-service purchase flow. Scales to ~500 students with proper tooling but may need automation for larger operations.
+
 ---
 
 ## Business Rules
@@ -910,16 +919,16 @@ If original pool has expired when cancellation is requested:
 
 ## Edge Cases
 
-| Scenario                        | Resolution                                      |
-| ------------------------------- | ----------------------------------------------- |
-| Student has multiple pools      | Always consume earliest expiration first (FIFO) |
-| Pool expires same day           | Compare full timestamps, not date-only          |
-| Partial usage of pool           | `remainingCredits` decremented individually     |
-| Refund after expiration         | Policy decision: restore credit or deny         |
-| Concurrent booking attempts     | Transaction ensures only one succeeds           |
-| Webhook delivered twice         | Idempotency check prevents duplicate processing |
-| Package purchase during booking | Credits not available until webhook confirmed   |
-| No credits when booking         | UI redirects to /packages, button disabled      |
+| Scenario                    | Resolution                                      |
+| --------------------------- | ----------------------------------------------- |
+| Student has multiple pools  | Always consume earliest expiration first (FIFO) |
+| Pool expires same day       | Compare full timestamps, not date-only          |
+| Future-dated pool           | Only consume after startDate passes             |
+| Partial usage of pool       | `remainingCredits` decremented individually     |
+| Refund after expiration     | Policy decision: restore credit or deny         |
+| Concurrent booking attempts | Transaction ensures only one succeeds           |
+| No credits when booking     | UI shows "Contact admin" or admin adds credits  |
+| Admin retroactive credits   | startDate can be set to past date               |
 
 ---
 
@@ -948,29 +957,45 @@ If original pool has expired when cancellation is requested:
 - [x] Stats dashboard (total, confirmed, unique students/classes)
 - [x] Admin layout with dark theme
 
+### Phase 1.75: Admin Credit Management 🔄
+
+- [ ] Credit management page UI
+- [ ] Student selector with search
+- [ ] Credit pool creation form (credits, start date, expiration)
+- [ ] Credit pool list view per student
+- [ ] Mock data functions for credit management
+- [ ] Validation for date ranges and credit amounts
+
 ### Phase 2: Authentication & Firebase
 
 - [ ] Firebase Auth integration
 - [ ] Firestore data migration (replace mocks)
 - [ ] Firestore security rules deployment
 - [ ] User profile page
+- [ ] Admin interface for manual credit pool creation
 
-### Phase 3: Payments & Credits
+### Phase 3: Core Backend Functions
 
-- [ ] Stripe integration for package purchases
-- [ ] Stripe webhook handler
-- [ ] Credit pool creation on purchase
 - [ ] Credit consumption (bookWithCredits Cloud Function)
 - [ ] FIFO enforcement
 - [ ] Expiration validation
+- [ ] Transaction-based booking flow
+- [ ] Admin SDK for credit pool management
 
 ### Phase 4: Advanced Features
 
 - [ ] Cancellation with credit restore logic
 - [ ] Expiration handling (scheduled function)
-- [ ] Admin package dashboard
+- [ ] Admin dashboard for credit pool management
 - [ ] Booking history
-- [ ] Push notifications
+- [ ] Email notifications
+
+### Future Consideration: Payment Integration
+
+- [ ] Stripe integration for package purchases
+- [ ] Stripe webhook handler
+- [ ] Automated credit pool creation on purchase
+- [ ] Payment history tracking
 
 ---
 
@@ -978,15 +1003,17 @@ If original pool has expired when cancellation is requested:
 
 | Term            | Definition                                                   |
 | --------------- | ------------------------------------------------------------ |
-| Credit Pool     | A bundle of class credits with shared expiration             |
+| Credit Pool     | A bundle of class credits with defined validity period       |
 | FIFO            | First-In-First-Out - consume earliest expiring credits first |
 | Reservation     | A student's booking for a specific class                     |
-| Package         | A purchasable bundle defining credits, price, and validity   |
+| Package         | Display-only pricing reference (not purchasable)             |
 | Capacity        | Maximum students allowed in a class                          |
 | Enrolled Count  | Current number of confirmed students                         |
-| Validity Days   | Number of days until credits expire (30/60/90)               |
+| Validity Period | Time window between startDate and expiresAt for credit pool  |
 | Credit Balance  | Aggregated remaining/total from all active pools             |
 | Mock Data       | In-memory simulated data layer for development               |
 | ClassDefinition | A reusable class type (e.g. "Salsa Basics")                  |
 | ScheduledClass  | A concrete class instance planned for a specific date/time   |
 | Duplicate Week  | Admin action to copy a week's classes to the following week  |
+| Start Date      | Date when credit pool becomes valid for use                  |
+| Admin Credit Mgmt | Admin interface for manually assigning credits to students |

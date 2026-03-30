@@ -21,7 +21,6 @@ export interface ScheduledClass {
   date: Date; // specific date + time
   duration: number; // minutes
   capacity: number;
-  location: string;
   status: 'active' | 'cancelled';
 
   // Denormalized for fast reads
@@ -115,10 +114,10 @@ export interface CreateCheckoutSessionResponse {
 
 export interface BookingError {
   code:
-    | 'CLASS_FULL'
-    | 'ALREADY_BOOKED'
-    | 'NO_VALID_CREDITS'
-    | 'PAYMENT_REQUIRED'
-    | 'INVALID_PAYMENT_MODE';
+  | 'CLASS_FULL'
+  | 'ALREADY_BOOKED'
+  | 'NO_VALID_CREDITS'
+  | 'PAYMENT_REQUIRED'
+  | 'INVALID_PAYMENT_MODE';
   message: string;
 }

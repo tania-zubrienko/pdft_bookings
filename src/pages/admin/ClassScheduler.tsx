@@ -15,7 +15,6 @@ import {
   Save,
   UserCog,
   Clock,
-  MapPin,
   Users,
   X,
   Copy,
@@ -178,7 +177,6 @@ export default function ClassScheduler() {
       ),
       duration: firstDef?.defaultDuration ?? 60,
       capacity: firstDef?.defaultCapacity ?? 20,
-      location: 'Studio A - Main Floor',
       status: 'active',
       classTitle: firstDef?.title ?? '',
       instructorName: firstInst?.name ?? '',
@@ -313,9 +311,8 @@ export default function ClassScheduler() {
               className='bg-white rounded-xl border border-gray-200 overflow-hidden'
             >
               <div
-                className={`flex items-center justify-between px-4 py-3 border-b border-gray-200 ${
-                  isCurrentDay ? 'bg-primary-50' : 'bg-gray-50'
-                }`}
+                className={`flex items-center justify-between px-4 py-3 border-b border-gray-200 ${isCurrentDay ? 'bg-primary-50' : 'bg-gray-50'
+                  }`}
               >
                 <h3 className='font-semibold text-gray-900'>
                   {DAY_NAMES[dayNum]}{' '}
@@ -351,9 +348,8 @@ export default function ClassScheduler() {
                     return (
                       <div
                         key={cls.id}
-                        className={`px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 ${
-                          isCancelled ? 'opacity-50' : 'hover:bg-gray-50'
-                        } transition-colors`}
+                        className={`px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 ${isCancelled ? 'opacity-50' : 'hover:bg-gray-50'
+                          } transition-colors`}
                       >
                         <div className='flex-1 min-w-0'>
                           <div className='flex items-center gap-2'>
@@ -385,10 +381,6 @@ export default function ClassScheduler() {
                             <span className='flex items-center gap-1'>
                               <Users className='w-3.5 h-3.5' />
                               {cls.enrolledCount}/{cls.capacity}
-                            </span>
-                            <span className='flex items-center gap-1'>
-                              <MapPin className='w-3.5 h-3.5' />
-                              {cls.location}
                             </span>
                           </div>
                         </div>
@@ -593,24 +585,6 @@ export default function ClassScheduler() {
                   }
                   className='input'
                   min={1}
-                />
-              </div>
-
-              {/* Location */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Ubicación
-                </label>
-                <input
-                  type='text'
-                  value={editingClass.location}
-                  onChange={(e) =>
-                    setEditingClass({
-                      ...editingClass,
-                      location: e.target.value,
-                    })
-                  }
-                  className='input'
                 />
               </div>
             </div>

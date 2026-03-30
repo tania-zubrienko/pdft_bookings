@@ -128,7 +128,7 @@ export default function CalendarView({
   const dayNamesShort = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
   return (
-    <div className='bg-white rounded-xl shadow-md overflow-hidden'>
+    <div className='bg-white rounded-xl shadow-md overflow-hidden p-3'>
       {/* Toolbar */}
       <div className='flex flex-col sm:flex-row items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200'>
         {/* Navigation */}
@@ -162,21 +162,19 @@ export default function CalendarView({
         <div className='flex rounded-lg border border-gray-300 overflow-hidden'>
           <button
             onClick={() => onChangeViewMode('week')}
-            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${
-              viewMode === 'week'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${viewMode === 'week'
+              ? 'bg-primary-600 text-white'
+              : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
           >
             Semana
           </button>
           <button
             onClick={() => onChangeViewMode('month')}
-            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${
-              viewMode === 'month'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${viewMode === 'month'
+              ? 'bg-primary-600 text-white'
+              : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
           >
             Mes
           </button>
