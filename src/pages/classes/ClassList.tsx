@@ -97,7 +97,7 @@ export default function ClassList() {
           ) : (
             <div className='text-center py-10 bg-white rounded-xl border border-gray-200'>
               <Calendar className='w-12 h-12 text-gray-300 mx-auto mb-3' />
-              <p className='text-gray-500'>
+              <p className='text-ui-text-soft	'>
                 No hay clases programadas para este día
               </p>
             </div>

@@ -105,7 +105,7 @@ export default function MyReservations() {
                     {reservation.scheduledClass?.classTitle ?? 'Unknown Class'}
                   </h3>
 
-                  <div className='flex flex-wrap gap-4 text-sm text-gray-500'>
+                  <div className='flex flex-wrap gap-4 text-sm text-ui-text-soft	'>
                     {reservation.scheduledClass && (
                       <div className='flex items-center gap-1'>
                         <Calendar className='w-4 h-4' />
@@ -135,7 +135,7 @@ export default function MyReservations() {
           <h3 className='text-xl font-medium text-gray-600 mb-2'>
             Aún no tienes reservas
           </h3>
-          <p className='text-gray-500 mb-6'>
+          <p className='text-ui-text-soft	 mb-6'>
             ¡Reserva tu primera clase de baile para empezar!
           </p>
           <Link

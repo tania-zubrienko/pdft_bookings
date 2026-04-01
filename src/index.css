@@ -25,7 +25,7 @@ body {
 
 @layer base {
   body {
-    @apply bg-gray-950 text-gray-100;
+    @apply bg-ui-page text-ui-text;
   }
 }
 
@@ -35,28 +35,27 @@ body {
   }
 
   .btn-primary {
-    @apply text-white;
-    background-color: #162dc9;
+    @apply text-white bg-brand;
   }
 
   .btn-primary:hover,
   .btn-primary:active {
-    background-color: #162dc9;
+    @apply bg-brand;
   }
 
   .btn-secondary {
-    @apply bg-gray-800 text-gray-100 hover:bg-gray-700 active:bg-gray-600 border border-gray-700;
+    @apply bg-ui-input text-gray-100 hover:bg-ui-hover active:bg-ui-hover border border-ui-border;
   }
 
   .btn-outline {
-    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-50;
+    @apply border-2 border-brand text-brand hover:bg-primary-50;
   }
 
   .input {
-    @apply w-full px-4 py-2 bg-gray-800 border border-gray-700 text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply w-full px-4 py-2 bg-ui-input border border-ui-border text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
   }
 
   .card {
-    @apply bg-gray-900 rounded-xl shadow-md overflow-hidden border border-gray-800;
+    @apply bg-ui-card rounded-xl shadow-md overflow-hidden border border-ui-border-soft;
   }
 }

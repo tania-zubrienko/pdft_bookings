@@ -150,7 +150,7 @@ export default function ClassDetail() {
 
           {/* Instructor */}
           <div className=' card  rounded-xl border p-6 mb-6'>
-            <p className='text-sm text-gray-500 pb-2'>
+            <p className='text-sm text-ui-text-soft	 pb-2'>
               Instructor
             </p>
             <div className='flex items-center gap-4'>
@@ -266,7 +266,7 @@ export default function ClassDetail() {
             </Link>
           )}
 
-          <p className='text-xs text-gray-500 text-center mt-4'>
+          <p className='text-xs text-ui-text-soft	 text-center mt-4'>
             1 crédito = 1 reserva de clase
           </p>
 

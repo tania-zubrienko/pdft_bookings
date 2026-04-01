@@ -183,7 +183,7 @@ export default function AdminReservations() {
         <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
           Reservas
         </h1>
-        <p className='text-gray-500 mt-1'>
+        <p className='text-ui-text-soft	 mt-1'>
           Consulta quién reservó clases en{' '}
           {period === 'week' ? 'la semana' : 'el mes'} actual
         </p>
@@ -196,8 +196,8 @@ export default function AdminReservations() {
           <button
             onClick={() => setPeriod('week')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${period === 'week'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              ? 'bg-primary-600 text-white'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
           >
             <Calendar className='w-4 h-4' />
@@ -206,8 +206,8 @@ export default function AdminReservations() {
           <button
             onClick={() => setPeriod('month')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${period === 'month'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              ? 'bg-primary-600 text-white'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
           >
             <CalendarDays className='w-4 h-4' />
@@ -229,29 +229,29 @@ export default function AdminReservations() {
       </div>
 
       {/* Period label */}
-      <p className='text-sm font-medium text-gray-500 mb-4'>{periodLabel}</p>
+      <p className='text-sm font-medium text-ui-text-soft	 mb-4'>{periodLabel}</p>
 
       {/* Stats row */}
       <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6'>
         <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
           <p className='text-2xl font-bold text-gray-900'>{stats.total}</p>
-          <p className='text-xs text-gray-500'>Total Reservas</p>
+          <p className='text-xs text-ui-text-soft	'>Total Reservas</p>
         </div>
         <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
           <p className='text-2xl font-bold text-green-600'>{stats.confirmed}</p>
-          <p className='text-xs text-gray-500'>Confirmadas</p>
+          <p className='text-xs text-ui-text-soft	'>Confirmadas</p>
         </div>
         <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
           <p className='text-2xl font-bold text-gray-900'>
             {stats.uniqueStudents}
           </p>
-          <p className='text-xs text-gray-500'>Alumnas Únicas</p>
+          <p className='text-xs text-ui-text-soft	'>Alumnas Únicas</p>
         </div>
         <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
           <p className='text-2xl font-bold text-gray-900'>
             {stats.uniqueClasses}
           </p>
-          <p className='text-xs text-gray-500'>Clases</p>
+          <p className='text-xs text-ui-text-soft	'>Clases</p>
         </div>
       </div>
 
@@ -259,7 +259,7 @@ export default function AdminReservations() {
       {groupedByClass.length === 0 ? (
         <div className='bg-white rounded-xl border border-gray-200 px-6 py-12 text-center'>
           <Users className='w-10 h-10 text-gray-300 mx-auto mb-3' />
-          <p className='text-gray-500'>
+          <p className='text-ui-text-soft	'>
             No se encontraron reservas para{' '}
             {period === 'week' ? 'esta semana' : 'este mes'}.
           </p>
@@ -276,7 +276,7 @@ export default function AdminReservations() {
                   <h3 className='font-semibold text-gray-900'>
                     {group.classTitle}
                   </h3>
-                  <p className='text-sm text-gray-500'>
+                  <p className='text-sm text-ui-text-soft	'>
                     {group.classDate.toLocaleDateString('es-ES', {
                       weekday: 'short',
                       month: 'short',
@@ -311,7 +311,7 @@ export default function AdminReservations() {
                         <p className='font-medium text-gray-900 truncate'>
                           {r.studentName}
                         </p>
-                        <p className='text-sm text-gray-500 truncate'>
+                        <p className='text-sm text-ui-text-soft	 truncate'>
                           {r.studentId}
                         </p>
                       </div>

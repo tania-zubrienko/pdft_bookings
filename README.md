@@ -157,7 +157,7 @@ Classes have no individual prices. All bookings consume 1 credit from a pre-purc
 
 ### Phase 2: Authentication & Firebase
 
-- [ ] Firebase Auth integration
+- [x] Firebase Auth integration
 - [ ] Firestore data migration (replace mocks)
 - [ ] Firestore security rules deployment
 - [ ] User profile page

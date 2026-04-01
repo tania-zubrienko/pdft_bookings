@@ -968,7 +968,7 @@ If original pool has expired when cancellation is requested:
 
 ### Phase 2: Authentication & Firebase
 
-- [ ] Firebase Auth integration
+- [x] Firebase Auth integration
 - [ ] Firestore data migration (replace mocks)
 - [ ] Firestore security rules deployment
 - [ ] User profile page

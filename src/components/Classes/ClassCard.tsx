@@ -17,7 +17,7 @@ export default function ClassCard({ classData }: ClassCardProps) {
   const isFull = classData.enrolledCount >= classData.capacity;
   const spotsLeft = classData.capacity - classData.enrolledCount;
   const accentBarClass =
-    CLASS_ACCENT_BAR_CLASSES[classData.classTitle] ?? 'bg-primary-600';
+    CLASS_ACCENT_BAR_CLASSES[classData.classTitle] ?? 'bg-brand';
 
   const formatTime = (date: Date) =>
     date.toLocaleTimeString('es-ES', {
@@ -27,7 +27,7 @@ export default function ClassCard({ classData }: ClassCardProps) {
     });
 
   return (
-    <div className='bg-gray-900 rounded-xl border border-gray-800 hover:border-primary-600 transition-all duration-200 overflow-hidden relative'>
+    <div className='bg-ui-card rounded-xl border border-ui-border-soft hover:border-brand transition-all duration-200 overflow-hidden relative'>
       {/* Colored accent bar on the left */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${accentBarClass}`}></div>
 

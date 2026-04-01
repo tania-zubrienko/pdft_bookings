@@ -1,10 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import {
-  getScheduledClasses,
-  getInstructors,
-  getClassDefinitions,
-  duplicateWeek,
-} from '../../lib/mockData';
+
 import { ClassDefinition, Instructor, ScheduledClass } from '../../types';
 import AdminLayout from '../../components/Layout/AdminLayout';
 import {
@@ -20,6 +15,7 @@ import {
   Copy,
   RotateCcw,
 } from 'lucide-react';
+import { duplicateWeek, getClassDefinitions, getInstructors, getScheduledClasses } from '@/lib/mockData';
 
 const DAY_NAMES = [
   'Domingo',
@@ -233,10 +229,10 @@ export default function ClassScheduler() {
   return (
     <AdminLayout>
       <div className='mb-6'>
-        <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
+        <h1 className='text-2xl sm:text-3xl font-bold text-ui-text-inverse'>
           Horario de Clases
         </h1>
-        <p className='text-gray-500 mt-1'>
+        <p className='text-ui-text-soft	 mt-1'>
           Gestiona las clases semanales — duplica cualquier semana para
           planificar
         </p>
@@ -252,7 +248,7 @@ export default function ClassScheduler() {
           >
             <ChevronLeft className='w-5 h-5' />
           </button>
-          <h2 className='text-lg sm:text-xl font-bold text-gray-900 min-w-[220px] text-center'>
+          <h2 className='text-lg sm:text-xl font-bold text-ui-text-muted min-w-[220px] text-center'>
             {weekLabel(weekStart)}
           </h2>
           <button
@@ -291,7 +287,7 @@ export default function ClassScheduler() {
       </div>
 
       {/* Stats */}
-      <p className='text-sm text-gray-500 mb-4'>
+      <p className='text-sm text-ui-text-soft	 mb-4'>
         {activeCount} clase{activeCount !== 1 ? 's' : ''} activa
         {activeCount !== 1 ? 's' : ''}
         {cancelledCount > 0 &&
@@ -316,7 +312,7 @@ export default function ClassScheduler() {
               >
                 <h3 className='font-semibold text-gray-900'>
                   {DAY_NAMES[dayNum]}{' '}
-                  <span className='font-normal text-gray-500'>
+                  <span className='font-normal text-ui-text-soft	'>
                     {dayDate.toLocaleDateString('es-ES', {
                       month: 'short',
                       day: 'numeric',
@@ -364,7 +360,7 @@ export default function ClassScheduler() {
                               </span>
                             )}
                           </div>
-                          <div className='flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-1'>
+                          <div className='flex flex-wrap gap-x-4 gap-y-1 text-sm text-ui-text-soft	 mt-1'>
                             <span className='flex items-center gap-1'>
                               <Clock className='w-3.5 h-3.5' />
                               {cls.date.toLocaleTimeString('es-ES', {

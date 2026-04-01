@@ -186,7 +186,7 @@ export default function CalendarView({
         {dayNamesFull.map((name, i) => (
           <div
             key={name + i}
-            className='py-1.5 sm:py-2 text-center text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider'
+            className='py-1.5 sm:py-2 text-center text-[10px] sm:text-xs font-semibold text-ui-text-soft	 uppercase tracking-wider'
           >
             <span className='hidden sm:inline'>{name}</span>
             <span className='sm:hidden'>{dayNamesShort[i]}</span>
@@ -238,7 +238,7 @@ export default function CalendarView({
                   {/* Text badge on sm+ */}
                   <span
                     className={`hidden sm:inline text-xs font-medium rounded-full px-1.5 py-0.5 leading-none
-                      ${outOfMonth ? 'bg-gray-200 text-gray-500' : 'bg-primary-100 text-primary-700'}
+                      ${outOfMonth ? 'bg-gray-200 text-ui-text-soft	' : 'bg-primary-100 text-primary-700'}
                     `}
                   >
                     {count} {count === 1 ? 'clase' : 'clases'}

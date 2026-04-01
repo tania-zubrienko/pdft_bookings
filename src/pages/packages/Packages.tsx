@@ -85,9 +85,8 @@ export default function Packages() {
         {packages.map((pkg) => (
           <div
             key={pkg.id}
-            className={`relative rounded-2xl border-2 bg-white p-6 flex flex-col transition-shadow hover:shadow-lg ${
-              pkg.highlight ? 'border-primary-500 shadow-md' : 'border-gray-200'
-            }`}
+            className={`relative rounded-2xl border-2 bg-white p-6 flex flex-col transition-shadow hover:shadow-lg ${pkg.highlight ? 'border-primary-500 shadow-md' : 'border-gray-200'
+              }`}
           >
             {/* Highlight badge */}
             {pkg.highlight && (
@@ -104,7 +103,7 @@ export default function Packages() {
               <span className='text-5xl font-extrabold text-gray-900'>
                 {pkg.credits}
               </span>
-              <p className='text-sm text-gray-500 mt-1'>
+              <p className='text-sm text-ui-text-soft	 mt-1'>
                 {pkg.credits === 1 ? 'clase' : 'clases'}
               </p>
             </div>
@@ -116,7 +115,7 @@ export default function Packages() {
 
             {/* Description */}
             {pkg.description && (
-              <p className='text-sm text-gray-500 text-center mb-4'>
+              <p className='text-sm text-ui-text-soft	 text-center mb-4'>
                 {pkg.description}
               </p>
             )}
@@ -134,7 +133,7 @@ export default function Packages() {
             </div>
 
             {/* Validity */}
-            <div className='text-center text-sm text-gray-500 mb-6'>
+            <div className='text-center text-sm text-ui-text-soft	 mb-6'>
               Válido por {pkg.validityDays} días
             </div>
 
@@ -157,9 +156,8 @@ export default function Packages() {
 
             {/* Buy Button */}
             <button
-              className={`btn w-full py-3 text-base flex items-center justify-center gap-2 ${
-                pkg.highlight ? 'btn-primary' : 'btn-outline'
-              }`}
+              className={`btn w-full py-3 text-base flex items-center justify-center gap-2 ${pkg.highlight ? 'btn-primary' : 'btn-outline'
+                }`}
               onClick={() =>
                 alert(
                   `Compra ${pkg.name} por ${formatPrice(pkg.price)} (simulación)`,

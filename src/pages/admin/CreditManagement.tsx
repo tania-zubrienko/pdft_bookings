@@ -152,7 +152,7 @@ export default function CreditManagement() {
         <AdminLayout>
             <div className='mb-6'>
                 <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>Gestión de Créditos</h1>
-                <p className='text-gray-500 mt-1'>Asigna créditos manualmente y revisa los pools por alumna</p>
+                <p className='text-ui-text-soft	 mt-1'>Asigna créditos manualmente y revisa los pools por alumna</p>
             </div>
 
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
@@ -308,10 +308,10 @@ export default function CreditManagement() {
 
                                     <span
                                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-fit ${status === 'active'
-                                                ? 'bg-green-100 text-green-700'
-                                                : status === 'future'
-                                                    ? 'bg-amber-100 text-amber-700'
-                                                    : 'bg-gray-200 text-gray-700'
+                                            ? 'bg-green-100 text-green-700'
+                                            : status === 'future'
+                                                ? 'bg-amber-100 text-amber-700'
+                                                : 'bg-gray-200 text-gray-700'
                                             }`}
                                     >
                                         {status === 'active' ? 'Activo' : status === 'future' ? 'Futuro' : 'Expirado'}
