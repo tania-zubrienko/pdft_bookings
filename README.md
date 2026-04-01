@@ -133,6 +133,7 @@ Classes have no individual prices. All bookings consume 1 credit from a pre-purc
 - [x] Package purchase page (4 tiers)
 - [x] Reservation list page
 - [x] Mock data layer
+- [x] Mock credit booking/cancellation logic
 
 ### Phase 1.5: Admin View & Data Model ✅
 

@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getScheduledClassById, getCreditBalance } from '../../lib/mockData';
 import { ScheduledClass, CreditBalance } from '../../types';
 import Layout from '../../components/Layout/Layout';
 import {
   ArrowLeft,
   Calendar,
-  Clock,
   Users,
   AlertCircle,
-  CheckCircle,
   Ticket,
 } from 'lucide-react';
+import { getCreditBalance, getScheduledClassById } from '@/lib/mockData';
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
@@ -120,39 +118,39 @@ export default function ClassDetail() {
 
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
         {/* Main Content */}
-        <div className='lg:col-span-2'>
+        <div className='lg:col-span-2 '>
           {/* Class Info */}
           <h1 className='text-3xl font-bold text-gray-100 mb-4'>
             {classData.classTitle}
           </h1>
 
           {/* Details Grid */}
-          <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-8'>
-            <div className='bg-gray-50 rounded-lg p-4'>
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 '>
+            <div className='card rounded-lg p-4'>
               <div className='flex items-center gap-2'>
                 <Calendar className='w-6 h-6 text-primary-600' />
-                <p className='text-sm text-gray-500'>Fecha</p>
+                <p className='text-sm text-gray-100 '>Fecha</p>
               </div>
-              <p className='font-medium text-gray-900'>
+              <p className='font-medium text-gray-100'>
                 {formatDate(scheduledDate)} - {formatTime(scheduledDate)}
               </p>
             </div>
-            <div className='bg-gray-50 rounded-lg p-4'>
+            <div className='card rounded-lg p-4'>
               <div className='flex items-center gap-2'>
 
                 <Users className='w-6 h-6 text-primary-600 mb-2' />
-                <p className='text-sm text-gray-500'>Plazas</p>
+                <p className='text-sm text-gray-100'>Plazas</p>
               </div>
-              <p className='font-medium text-gray-900'>
+              <p className='font-medium text-gray-100'>
                 {spotsLeft} / {classData.capacity} disponibles
               </p>
-              <p className='text-sm text-gray-500'> Fotos de alumos</p>
+              <p className='text-sm text-gray-100'> Fotos de alumos</p>
             </div>
           </div>
 
           {/* Instructor */}
-          <div className='bg-white rounded-xl border border-gray-200 p-6 mb-6'>
-            <p className='text-sm text-gray-500'>
+          <div className=' card  rounded-xl border p-6 mb-6'>
+            <p className='text-sm text-gray-500 pb-2'>
               Instructor
             </p>
             <div className='flex items-center gap-4'>
@@ -161,7 +159,7 @@ export default function ClassDetail() {
                   {classData.instructorName.charAt(0)}
                 </span>
               </div>
-              <p className='font-medium text-gray-900'>
+              <p className='font-medium text-gray-100'>
                 {classData.instructorName}
               </p>
             </div>
@@ -225,9 +223,6 @@ export default function ClassDetail() {
                 <span>{error}</span>
               </div>
             )}
-
-            {/* Availability Status */}
-
             <>
               {isFull ?? (
                 <div className='flex items-center gap-2'>

@@ -963,7 +963,7 @@ If original pool has expired when cancellation is requested:
 - [ ] Student selector with search
 - [ ] Credit pool creation form (credits, start date, expiration)
 - [ ] Credit pool list view per student
-- [ ] Mock data functions for credit management
+- [x] Mock data functions for credit management
 - [ ] Validation for date ranges and credit amounts
 
 ### Phase 2: Authentication & Firebase

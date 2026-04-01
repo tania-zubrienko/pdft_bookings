@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { getReservations, getScheduledClasses } from '../../lib/mockData';
 import { Reservation } from '../../types';
 import Layout from '../../components/Layout/Layout';
 import { Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ScheduledClass } from '../../types';
+import { getReservations, getScheduledClasses } from '@/lib/mockData';
 
 interface ReservationWithClass extends Reservation {
   scheduledClass?: ScheduledClass;
@@ -88,7 +88,7 @@ export default function MyReservations() {
             >
               <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
                 <div className='flex-1'>
-                  <div className='flex items-center gap-3 mb-2'>
+                  <div className='flex items-center gap-3 '>
                     {getStatusIcon(reservation.status)}
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(reservation.status)}`}
@@ -99,24 +99,13 @@ export default function MyReservations() {
                           ? 'Cancelada'
                           : reservation.status}
                     </span>
-                    <span className='text-sm text-gray-500'>
-                      {reservation.paymentMode === 'credit'
-                        ? '(Crédito)'
-                        : '(Pago Único)'}
-                    </span>
                   </div>
 
-                  <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+                  <h3 className='text-lg font-semibold text-gray-100 mb-2'>
                     {reservation.scheduledClass?.classTitle ?? 'Unknown Class'}
                   </h3>
 
                   <div className='flex flex-wrap gap-4 text-sm text-gray-500'>
-                    <div className='flex items-center gap-1'>
-                      <Calendar className='w-4 h-4' />
-                      <span>
-                        Reservada: {formatDate(reservation.createdAt)}
-                      </span>
-                    </div>
                     {reservation.scheduledClass && (
                       <div className='flex items-center gap-1'>
                         <Calendar className='w-4 h-4' />

@@ -66,7 +66,7 @@ export default function AdminReservations() {
       filtered = filtered.filter(
         (r) =>
           r.studentName.toLowerCase().includes(q) ||
-          r.studentEmail.toLowerCase().includes(q) ||
+          r.studentId.toLowerCase().includes(q) ||
           r.classTitle.toLowerCase().includes(q),
       );
     }
@@ -115,13 +115,13 @@ export default function AdminReservations() {
   const stats = useMemo(() => {
     const total = filteredReservations.length;
     const confirmed = filteredReservations.filter(
-      (r) => r.reservation.status === 'confirmed',
+      (r) => r.status === 'confirmed',
     ).length;
     const cancelled = filteredReservations.filter(
-      (r) => r.reservation.status === 'cancelled',
+      (r) => r.status === 'cancelled',
     ).length;
     const uniqueStudents = new Set(
-      filteredReservations.map((r) => r.reservation.studentId),
+      filteredReservations.map((r) => r.studentId),
     ).size;
     const uniqueClasses = new Set(
       filteredReservations.map((r) => r.scheduledClassId),
@@ -173,9 +173,9 @@ export default function AdminReservations() {
     period === 'week'
       ? `${weekStart.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })} – ${new Date(weekEnd.getTime() - 1).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}`
       : new Date(now.getFullYear(), now.getMonth()).toLocaleString('es-ES', {
-          month: 'long',
-          year: 'numeric',
-        });
+        month: 'long',
+        year: 'numeric',
+      });
 
   return (
     <AdminLayout>
@@ -195,22 +195,20 @@ export default function AdminReservations() {
         <div className='flex gap-2'>
           <button
             onClick={() => setPeriod('week')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              period === 'week'
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${period === 'week'
                 ? 'bg-primary-600 text-white'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <Calendar className='w-4 h-4' />
             Esta Semana
           </button>
           <button
             onClick={() => setPeriod('month')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              period === 'month'
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${period === 'month'
                 ? 'bg-primary-600 text-white'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <CalendarDays className='w-4 h-4' />
             Este Mes
@@ -302,7 +300,7 @@ export default function AdminReservations() {
               <div className='divide-y divide-gray-100'>
                 {group.reservations.map((r) => (
                   <div
-                    key={r.reservation.id}
+                    key={r.id}
                     className='px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4'
                   >
                     <div className='flex items-center gap-3 flex-1 min-w-0'>
@@ -314,14 +312,14 @@ export default function AdminReservations() {
                           {r.studentName}
                         </p>
                         <p className='text-sm text-gray-500 truncate'>
-                          {r.studentEmail}
+                          {r.studentId}
                         </p>
                       </div>
                     </div>
                     <div className='flex items-center gap-3 shrink-0'>
-                      {statusBadge(r.reservation.status)}
+                      {statusBadge(r.status)}
                       <span className='text-xs text-gray-400'>
-                        {r.reservation.paymentMode === 'credit'
+                        {r.paymentMode === 'credit'
                           ? 'Crédito'
                           : 'Individual'}
                       </span>
