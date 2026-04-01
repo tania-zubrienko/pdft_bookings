@@ -78,9 +78,12 @@ export interface CreditPool {
   studentId: string;
   remainingCredits: number;
   totalCredits: number;
+  startDate: Date;
   expiresAt: Date;
-  packageId: string;
+  packageId?: string;
   createdAt: Date;
+  createdBy: string;
+  notes?: string;
 }
 
 /**

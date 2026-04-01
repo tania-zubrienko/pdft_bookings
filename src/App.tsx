@@ -16,6 +16,7 @@ import MyReservations from './pages/reservations/MyReservations';
 // Admin Pages
 import ClassScheduler from './pages/admin/ClassScheduler';
 import AdminReservations from './pages/admin/AdminReservations';
+import CreditManagement from './pages/admin/CreditManagement';
 
 export default function App() {
   return (
@@ -53,6 +54,10 @@ export default function App() {
       <Route
         path='/admin/reservations'
         element={<AdminReservations />}
+      />
+      <Route
+        path='/admin/credits'
+        element={<CreditManagement />}
       />
       <Route
         path='/admin'

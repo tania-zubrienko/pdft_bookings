@@ -957,14 +957,14 @@ If original pool has expired when cancellation is requested:
 - [x] Stats dashboard (total, confirmed, unique students/classes)
 - [x] Admin layout with dark theme
 
-### Phase 1.75: Admin Credit Management 🔄
+### Phase 1.75: Admin Credit Management ✅
 
-- [ ] Credit management page UI
-- [ ] Student selector with search
-- [ ] Credit pool creation form (credits, start date, expiration)
-- [ ] Credit pool list view per student
+- [x] Credit management page UI
+- [x] Student selector with search
+- [x] Credit pool creation form (credits, start date, expiration)
+- [x] Credit pool list view per student
 - [x] Mock data functions for credit management
-- [ ] Validation for date ranges and credit amounts
+- [x] Validation for date ranges and credit amounts
 
 ### Phase 2: Authentication & Firebase
 

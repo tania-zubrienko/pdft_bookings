@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { CalendarDays, ClipboardList, Menu, X, ArrowLeft } from 'lucide-react';
+import {
+  CalendarDays,
+  ClipboardList,
+  Menu,
+  X,
+  ArrowLeft,
+  Coins,
+} from 'lucide-react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -9,6 +16,7 @@ interface AdminLayoutProps {
 const adminLinks = [
   { to: '/admin/schedule', label: 'Horarios', icon: CalendarDays },
   { to: '/admin/reservations', label: 'Reservas', icon: ClipboardList },
+  { to: '/admin/credits', label: 'Créditos', icon: Coins },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -49,11 +57,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className={`flex items-center gap-2 transition-colors ${
-                      isActive
+                    className={`flex items-center gap-2 transition-colors ${isActive
                         ? 'text-primary-400 font-medium'
                         : 'text-gray-300 hover:text-primary-400'
-                    }`}
+                      }`}
                   >
                     <link.icon className='w-5 h-5' />
                     {link.label}
@@ -95,11 +102,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     key={link.to}
                     to={link.to}
                     onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-                      isActive
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${isActive
                         ? 'bg-gray-800 text-primary-400 font-medium'
                         : 'text-gray-300 hover:bg-gray-800 hover:text-primary-400'
-                    }`}
+                      }`}
                   >
                     <link.icon className='w-5 h-5' />
                     {link.label}

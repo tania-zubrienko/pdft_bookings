@@ -146,6 +146,15 @@ Classes have no individual prices. All bookings consume 1 credit from a pre-purc
 - [x] Stats dashboard (total, confirmed, unique students/classes)
 - [x] Admin layout with dark theme
 
+### Phase 1.75: Admin Credit Management ✅
+
+- [x] Credit management page UI
+- [x] Student selector with search
+- [x] Credit pool creation form (credits, start date, expiration)
+- [x] Credit pool list view per student
+- [x] Mock data functions for credit management
+- [x] Validation for date ranges and credit amounts
+
 ### Phase 2: Authentication & Firebase
 
 - [ ] Firebase Auth integration
