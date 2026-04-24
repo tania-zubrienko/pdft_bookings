@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import Layout from '../../components/Layout/Layout';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 
 export default function BookingSuccess() {
   const [status, setStatus] = useState<'success' | 'cancelled' | 'unknown'>(

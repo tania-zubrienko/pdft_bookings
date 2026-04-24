@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Package, CreditBalance } from '../../types';
 import Layout from '../../components/Layout/Layout';
 import { CheckCircle, Ticket, Sparkles, ShoppingCart } from 'lucide-react';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 
 export default function Packages() {
   const { user } = useAuth();

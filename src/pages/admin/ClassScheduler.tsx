@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Plus, Save, X, Copy } from 'lucide-react';
 import scheduleService from '@/services/schedule.service';
 import classDefinitionService from '@/services/class-definition.service';
 import userService from '@/services/user.service';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 import AdminClassCard from './components/AdminClassCard';
 
 // ─── Helpers ──────────────────────────────────────────────────────────

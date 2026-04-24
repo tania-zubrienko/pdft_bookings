@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScheduledClass } from '../../types';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 
 type ViewMode = 'week' | 'month';
 

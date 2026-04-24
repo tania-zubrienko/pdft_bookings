@@ -7,7 +7,7 @@ import { ScheduledClass } from '../../types';
 import reservationService from '@/services/reservation.service';
 import scheduleService from '@/services/schedule.service';
 import { useAuth } from '@/contexts/AuthContext';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 
 interface ReservationWithClass extends Reservation {
   scheduledClass?: ScheduledClass;

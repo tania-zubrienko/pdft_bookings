@@ -5,7 +5,7 @@ import packageService from '@/services/package.service';
 import creditService from '@/services/credit.service';
 import { CreditPool, Package, AppUser } from '../../types';
 import { AlertCircle, CheckCircle2, Coins, Search } from 'lucide-react';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 
 const EXPIRING_SOON_DAYS = 7;
 

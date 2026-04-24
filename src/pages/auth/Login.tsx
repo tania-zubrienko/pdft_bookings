@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 
 interface LocationState {
   from?: string;

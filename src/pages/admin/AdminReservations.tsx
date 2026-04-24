@@ -13,7 +13,7 @@ import {
   SearchX,
   ClipboardX,
 } from 'lucide-react';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 
 type FilterPeriod = 'week' | 'month';
 

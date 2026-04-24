@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Clock, Users } from 'lucide-react';
 import { AppUser, ScheduledClass } from '../../types';
-import UI, { getClassAccent } from '@/lib/styles';
+import UI, { getClassAccent } from '@/styles';
 
 interface ClassCardProps {
   classData: ScheduledClass;

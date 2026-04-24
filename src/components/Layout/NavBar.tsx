@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, User, Menu, X, Shield, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import S from '@/lib/strings';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 
 export default function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);

@@ -1,4 +1,4 @@
-import UI, { getClassAccent } from '@/lib/styles';
+import UI, { getClassAccent } from '@/styles';
 import { ScheduledClass } from '@/types';
 import {
   Clock,

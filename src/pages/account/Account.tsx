@@ -16,7 +16,7 @@ import scheduleService from '@/services/schedule.service';
 import userService from '@/services/user.service';
 import { storage } from '@/lib/firebase';
 import { Reservation, ScheduledClass } from '@/types';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 
 type Tab = 'reservations' | 'profile';
 

@@ -6,7 +6,7 @@ import Layout from '../../components/Layout/Layout';
 import { Calendar } from 'lucide-react';
 import scheduleService from '@/services/schedule.service';
 import userService from '@/services/user.service';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 
 function isSameDay(a: Date, b: Date): boolean {
   return (

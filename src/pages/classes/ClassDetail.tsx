@@ -15,7 +15,7 @@ import scheduleService from '@/services/schedule.service';
 import creditService from '@/services/credit.service';
 import userService from '@/services/user.service';
 import { useAuth } from '@/contexts/AuthContext';
-import UI from '@/lib/styles';
+import UI from '@/styles';
 import reservationService from '@/services/reservation.service';
 
 export default function ClassDetail() {
