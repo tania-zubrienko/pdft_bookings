@@ -11,9 +11,10 @@ import UI from '@/styles';
 export default function Packages() {
   const { user } = useAuth();
   const [packages, setPackages] = useState<Package[]>([]);
-  const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(
-    null,
-  );
+  const [creditBalance, setCreditBalance] = useState<CreditBalance>({
+    remaining: 0,
+    total: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

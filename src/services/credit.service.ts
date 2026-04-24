@@ -5,8 +5,6 @@ import {
   Firestore,
   query,
   where,
-  orderBy,
-  limit,
   addDoc,
   Timestamp,
   doc,
@@ -23,28 +21,28 @@ class CreditService {
     this.db = firestore;
   }
 
-  async getCreditBalance(studentId: string): Promise<CreditPool | null> {
+  async getCreditBalance(studentId: string): Promise<CreditBalance> {
+    const now = Timestamp.now();
     const q = query(
       collection(this.db, this.collectionName),
       where('studentId', '==', studentId),
       where('isActive', '==', true),
-      orderBy('createdAt', 'desc'),
-      limit(1),
+      where('expiresAt', '>', now),
     );
     const snapshot = await getDocs(q);
 
-    if (snapshot.empty) return null;
+    if (snapshot.empty) return { remaining: 0, total: 0 };
 
-    const d = snapshot.docs[0];
-    const data = d.data();
-    console.log(data);
-    return {
-      ...data,
-      id: d.id,
-      startDate: data['startDate']?.toDate?.() ?? new Date(data['startDate']),
-      expiresAt: data['expiresAt']?.toDate?.() ?? new Date(data['expiresAt']),
-      createdAt: data['createdAt']?.toDate?.() ?? new Date(data['createdAt']),
-    } as CreditPool;
+    return snapshot.docs.reduce<CreditBalance>(
+      (acc, d) => {
+        const data = d.data();
+        return {
+          remaining: acc.remaining + (data['remainingCredits'] ?? 0),
+          total: acc.total + (data['totalCredits'] ?? 0),
+        };
+      },
+      { remaining: 0, total: 0 },
+    );
   }
 
   async getCreditPoolsByStudent(studentId: string): Promise<CreditPool[]> {

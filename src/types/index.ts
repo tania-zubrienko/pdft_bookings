@@ -85,7 +85,6 @@ export interface CreditPool {
 export interface CreditBalance {
   remaining: number;
   total: number;
-  id: string;
 }
 
 /**
