@@ -2,32 +2,12 @@ import { useEffect, useState, useMemo } from 'react';
 
 import { ClassDefinition, AppUser, ScheduledClass } from '../../types';
 import AdminLayout from '../../components/Layout/AdminLayout';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Trash2,
-  Save,
-  UserCog,
-  Clock,
-  Users,
-  X,
-  Copy,
-  RotateCcw,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Save, X, Copy } from 'lucide-react';
 import scheduleService from '@/services/schedule.service';
 import classDefinitionService from '@/services/class-definition.service';
 import userService from '@/services/user.service';
-
-const DAY_NAMES = [
-  'Domingo',
-  'Lunes',
-  'Martes',
-  'Miércoles',
-  'Jueves',
-  'Viernes',
-  'Sábado',
-];
+import UI from '@/lib/styles';
+import AdminClassCard from './components/AdminClassCard';
 
 // ─── Helpers ──────────────────────────────────────────────────────────
 
@@ -236,10 +216,8 @@ export default function ClassScheduler() {
   return (
     <AdminLayout>
       <div className='mb-6'>
-        <h1 className='text-2xl sm:text-3xl font-bold text-ui-text-inverse'>
-          Horario de Clases
-        </h1>
-        <p className='text-ui-text-soft	 mt-1'>
+        <h1 className={UI.text.heading}>Horario de Clases</h1>
+        <p className={UI.text.headingDescription}>
           Gestiona las clases semanales — duplica cualquier semana para
           planificar
         </p>
@@ -255,7 +233,9 @@ export default function ClassScheduler() {
           >
             <ChevronLeft className='w-5 h-5' />
           </button>
-          <h2 className='text-lg sm:text-xl font-bold text-ui-text-muted min-w-[220px] text-center'>
+          <h2
+            className={`${UI.text.subheading} text-ui-text-muted min-w-[220px] text-center`}
+          >
             {weekLabel(weekStart)}
           </h2>
           <button
@@ -267,7 +247,7 @@ export default function ClassScheduler() {
           </button>
           <button
             onClick={goToCurrentWeek}
-            className='ml-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors'
+            className={`${UI.button.base} ${UI.button.primary}`}
           >
             Esta Semana
           </button>
@@ -276,7 +256,7 @@ export default function ClassScheduler() {
         <div className='flex items-center gap-2'>
           <button
             onClick={() => openAddClass()}
-            className='btn btn-outline text-sm flex items-center gap-1'
+            className={UI.button.outline}
           >
             <Plus className='w-4 h-4' />
             Añadir Clase
@@ -284,7 +264,7 @@ export default function ClassScheduler() {
           <button
             onClick={handleDuplicateWeek}
             disabled={activeCount === 0}
-            className='btn btn-primary text-sm flex items-center gap-1'
+            className={`${UI.button.base} ${UI.button.primary}`}
             title='Copiar las clases de esta semana a la siguiente (inscripciones reiniciadas)'
           >
             <Copy className='w-4 h-4' />
@@ -308,130 +288,25 @@ export default function ClassScheduler() {
           const isCurrentDay = isSameDay(dayDate, new Date());
           const dayClasses = classesGroupedByDay[dayNum];
 
-          return (
-            <div
-              key={dayNum}
-              className='bg-white rounded-xl border border-gray-200 overflow-hidden'
-            >
-              <div
-                className={`flex items-center justify-between px-4 py-3 border-b border-gray-200 ${
-                  isCurrentDay ? 'bg-primary-50' : 'bg-gray-50'
-                }`}
-              >
-                <h3 className='font-semibold text-gray-900'>
-                  {DAY_NAMES[dayNum]}{' '}
-                  <span className='font-normal text-ui-text-soft	'>
-                    {dayDate.toLocaleDateString('es-ES', {
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </span>
-                  {isCurrentDay && (
-                    <span className='ml-2 text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full'>
-                      Hoy
-                    </span>
-                  )}
-                </h3>
-                <button
-                  onClick={() => openAddClass(dayDate)}
-                  className='flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-medium'
-                >
-                  <Plus className='w-4 h-4' />
-                  Añadir
-                </button>
-              </div>
-
-              {dayClasses.length === 0 ? (
-                <p className='px-4 py-4 text-sm text-gray-400 italic'>
-                  Sin clases programadas
-                </p>
-              ) : (
-                <div className='divide-y divide-gray-100'>
-                  {dayClasses.map((cls) => {
-                    const isCancelled = cls.status === 'cancelled';
-                    return (
-                      <div
-                        key={cls.id}
-                        className={`px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 ${
-                          isCancelled ? 'opacity-50' : 'hover:bg-gray-50'
-                        } transition-colors`}
-                      >
-                        <div className='flex-1 min-w-0'>
-                          <div className='flex items-center gap-2'>
-                            <p
-                              className={`font-medium ${isCancelled ? 'text-gray-400 line-through' : 'text-gray-900'}`}
-                            >
-                              {cls.classTitle}
-                            </p>
-                            {isCancelled && (
-                              <span className='text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium'>
-                                Cancelada
-                              </span>
-                            )}
-                          </div>
-                          <div className='flex flex-wrap gap-x-4 gap-y-1 text-sm text-ui-text-soft	 mt-1'>
-                            <span className='flex items-center gap-1'>
-                              <Clock className='w-3.5 h-3.5' />
-                              {cls.date.toLocaleTimeString('es-ES', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false,
-                              })}{' '}
-                              · {cls.duration}min
-                            </span>
-                            <span className='flex items-center gap-1'>
-                              <UserCog className='w-3.5 h-3.5' />
-                              {cls.instructorName}
-                            </span>
-                            <span className='flex items-center gap-1'>
-                              <Users className='w-3.5 h-3.5' />
-                              {cls.enrolledCount}/{cls.capacity}
-                            </span>
-                          </div>
-                        </div>
-                        <div className='flex items-center gap-2 shrink-0'>
-                          <button
-                            onClick={() => openEditClass(cls)}
-                            className='p-2 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-colors'
-                            title='Edit'
-                          >
-                            <UserCog className='w-4 h-4' />
-                          </button>
-                          {cls.status === 'active' ? (
-                            <button
-                              onClick={() => cancelClass(cls.id)}
-                              className='p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors'
-                              title='Cancelar clase'
-                            >
-                              <Trash2 className='w-4 h-4' />
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => restoreClass(cls.id)}
-                              className='flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium px-2 py-1'
-                              title='Restaurar clase'
-                            >
-                              <RotateCcw className='w-3.5 h-3.5' />
-                              Restaurar
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
+          return AdminClassCard({
+            dayNum,
+            dayDate,
+            dayClasses,
+            isCurrentDay,
+            openAddClass,
+            openEditClass,
+            cancelClass,
+            restoreClass,
+          });
         })}
       </div>
 
       {/* ─────── CLASS EDITOR MODAL ─────── */}
       {showModal && editingClass && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4'>
-          <div className='bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto'>
-            <div className='flex items-center justify-between px-6 py-4 border-b border-gray-200'>
-              <h3 className='text-lg font-bold text-gray-900'>
+        <div className={UI.modal.backdrop}>
+          <div className={UI.card.modal}>
+            <div className={UI.card.modalHeader}>
+              <h3 className={UI.text.subheading}>
                 {allClasses.find((c) => c.id === editingClass.id)
                   ? 'Editar Clase'
                   : 'Añadir Clase'}
@@ -441,18 +316,16 @@ export default function ClassScheduler() {
                   setShowModal(false);
                   setEditingClass(null);
                 }}
-                className='p-1 rounded-lg hover:bg-gray-100'
+                className={UI.button.ghost}
               >
                 <X className='w-5 h-5' />
               </button>
             </div>
 
-            <div className='px-6 py-4 space-y-4'>
+            <div className={UI.card.modalBody}>
               {/* Class Definition picker */}
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Tipo de Clase
-                </label>
+                <label className={UI.text.soft}>Tipo de Clase</label>
                 <select
                   value={editingClass.classId}
                   onChange={(e) => {
@@ -469,7 +342,7 @@ export default function ClassScheduler() {
                       });
                     }
                   }}
-                  className='input'
+                  className={UI.form.select}
                 >
                   {classDefinitions
                     .filter((d) => d.active)
@@ -485,11 +358,9 @@ export default function ClassScheduler() {
               </div>
 
               {/* Date + Time */}
-              <div className='grid grid-cols-2 gap-4'>
+              <div className='grid grid-cols-2 gap-4 '>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Fecha
-                  </label>
+                  <label className={UI.text.soft}>Fecha</label>
                   <input
                     type='date'
                     value={editingClass.date.toISOString().split('T')[0]}
@@ -501,13 +372,11 @@ export default function ClassScheduler() {
                       );
                       setEditingClass({ ...editingClass, date: d });
                     }}
-                    className='input'
+                    className={UI.form.input}
                   />
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Hora
-                  </label>
+                  <label className={UI.text.soft}>Hora</label>
                   <input
                     type='time'
                     value={`${String(editingClass.date.getHours()).padStart(2, '0')}:${String(editingClass.date.getMinutes()).padStart(2, '0')}`}
@@ -517,16 +386,14 @@ export default function ClassScheduler() {
                       d.setHours(h, m, 0, 0);
                       setEditingClass({ ...editingClass, date: d });
                     }}
-                    className='input'
+                    className={UI.form.input}
                   />
                 </div>
               </div>
 
               {/* Duration */}
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Duración (min)
-                </label>
+                <label className={UI.text.soft}>Duración (min)</label>
                 <input
                   type='number'
                   value={editingClass.duration}
@@ -536,7 +403,7 @@ export default function ClassScheduler() {
                       duration: Number(e.target.value),
                     })
                   }
-                  className='input'
+                  className={UI.form.input}
                   min={15}
                   step={15}
                 />
@@ -544,9 +411,7 @@ export default function ClassScheduler() {
 
               {/* User */}
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Instructora
-                </label>
+                <label className={UI.text.soft}>Profesor</label>
                 <select
                   value={editingClass.instructorId}
                   onChange={(e) => {
@@ -559,7 +424,7 @@ export default function ClassScheduler() {
                       instructorName: inst?.name ?? '',
                     });
                   }}
-                  className='input'
+                  className={UI.form.input}
                 >
                   {instructors
                     .filter((i) => i.active)
@@ -568,7 +433,7 @@ export default function ClassScheduler() {
                         key={inst.id}
                         value={inst.id}
                       >
-                        {inst.name} — {inst.specialties?.join(', ') ?? ''}
+                        {inst.name}
                       </option>
                     ))}
                 </select>
@@ -576,9 +441,7 @@ export default function ClassScheduler() {
 
               {/* Capacity */}
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Capacidad
-                </label>
+                <label className={UI.text.soft}>Capacidad</label>
                 <input
                   type='number'
                   value={editingClass.capacity}
@@ -588,13 +451,13 @@ export default function ClassScheduler() {
                       capacity: Number(e.target.value),
                     })
                   }
-                  className='input'
+                  className={UI.form.input}
                   min={1}
                 />
               </div>
             </div>
 
-            <div className='flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200'>
+            <div className={UI.card.modalFooter}>
               <button
                 onClick={() => {
                   setShowModal(false);

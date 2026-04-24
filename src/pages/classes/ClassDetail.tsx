@@ -1,23 +1,31 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ScheduledClass, CreditBalance } from '../../types';
+import { ScheduledClass, CreditPool } from '../../types';
 import Layout from '../../components/Layout/Layout';
-import { ArrowLeft, Calendar, Users, AlertCircle, Ticket } from 'lucide-react';
+import {
+  ArrowLeft,
+  Calendar,
+  Users,
+  AlertCircle,
+  Ticket,
+  CheckCircle,
+} from 'lucide-react';
 import scheduleService from '@/services/schedule.service';
 import creditService from '@/services/credit.service';
 import { useAuth } from '@/contexts/AuthContext';
+import UI from '@/lib/styles';
+import reservationService from '@/services/reservation.service';
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
-  const { user } = useAuth();
+  const { user, appUser } = useAuth();
 
   const [classData, setClassData] = useState<ScheduledClass | null>(null);
-  const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(
-    null,
-  );
+  const [creditBalance, setCreditBalance] = useState<CreditPool | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (!classId) return;
@@ -25,9 +33,7 @@ export default function ClassDetail() {
     const fetchData = async () => {
       const [classResult, balanceResult] = await Promise.all([
         scheduleService.getScheduledClassById(classId),
-        user
-          ? creditService.getCreditBalance(user.uid)
-          : Promise.resolve({ remaining: 0, total: 0 }),
+        user ? creditService.getCreditBalance(user.uid) : null,
       ]);
       setClassData(classResult);
       setCreditBalance(balanceResult);
@@ -37,18 +43,40 @@ export default function ClassDetail() {
   }, [classId, user]);
 
   const handleBookClass = async () => {
-    if (!classData) return;
-
+    if (!classData || !user || !appUser) return;
+    if (classData.studentIds.includes(appUser.id)) return;
     setBookingLoading(true);
     setError('');
+    setSuccess(false);
 
     try {
-      // Mock booking — simulate a short delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert('¡Reserva confirmada! (simulación)');
+      await reservationService.createReservationForStudent(
+        classData,
+        user,
+        creditBalance?.id || null,
+        'credit',
+      );
+
+      const [updatedClass, updatedBalance] = await Promise.all([
+        scheduleService.getScheduledClassById(classData.id),
+        creditService.getCreditBalance(user.uid),
+      ]);
+      if (updatedClass) setClassData(updatedClass);
+      setCreditBalance(updatedBalance);
+      setSuccess(true);
     } catch (err: any) {
+      const errorMessages: Record<string, string> = {
+        CLASS_FULL: 'La clase está completa.',
+        ALREADY_BOOKED: 'Ya tienes una reserva para esta clase.',
+        NO_VALID_CREDITS: 'No tienes créditos disponibles.',
+        CREDIT_POOL_NOT_FOUND: 'No se encontró tu bono de créditos.',
+        CLASS_NOT_FOUND: 'La clase no existe.',
+        USER_NOT_AUTHENTICATED: 'Debes iniciar sesión para reservar.',
+        USER_NOT_FOUND: 'No se encontró tu cuenta de usuario.',
+      };
       setError(
-        err.message || 'Error al reservar la clase. Inténtalo de nuevo.',
+        errorMessages[err.message] ??
+          'Error al reservar la clase. Inténtalo de nuevo.',
       );
     } finally {
       setBookingLoading(false);
@@ -74,8 +102,8 @@ export default function ClassDetail() {
   if (loading) {
     return (
       <Layout>
-        <div className='flex items-center justify-center min-h-[400px]'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600'></div>
+        <div className={UI.loading.container}>
+          <div className={UI.loading.spinner}></div>
         </div>
       </Layout>
     );
@@ -112,7 +140,7 @@ export default function ClassDetail() {
       {/* Back Button */}
       <Link
         to='/classes'
-        className='inline-flex items-center gap-2 text-gray-600 hover:text-primary-600 mb-6 transition-colors'
+        className={`inline-flex items-center gap-2 ${UI.nav.linkInactive} mb-6`}
       >
         <ArrowLeft className='w-5 h-5' />
         Volver a Clases
@@ -122,9 +150,7 @@ export default function ClassDetail() {
         {/* Main Content */}
         <div className='lg:col-span-2 '>
           {/* Class Info */}
-          <h1 className='text-3xl font-bold text-gray-100 mb-4'>
-            {classData.classTitle}
-          </h1>
+          <h1 className={`${UI.text.heading} mb-4`}>{classData.classTitle}</h1>
 
           {/* Details Grid */}
           <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 '>
@@ -169,7 +195,7 @@ export default function ClassDetail() {
         <div className='lg:col-span-1'>
           <div className='card p-6 sticky top-6'>
             {/* Credit Balance */}
-            {creditBalance && creditBalance.total > 0 ? (
+            {creditBalance && creditBalance.remainingCredits > 0 ? (
               <div className='mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg'>
                 <div className='flex items-center gap-2 mb-2'>
                   <Ticket className='w-5 h-5 text-indigo-600' />
@@ -179,10 +205,10 @@ export default function ClassDetail() {
                 </div>
                 <div className='flex items-baseline gap-1'>
                   <span className='text-2xl font-bold text-indigo-700'>
-                    {creditBalance.remaining}
+                    {creditBalance.remainingCredits}
                   </span>
                   <span className='text-sm text-indigo-500'>
-                    / {creditBalance.total} clases restantes
+                    / {creditBalance.remainingCredits} clases restantes
                   </span>
                 </div>
                 {/* Progress bar */}
@@ -190,7 +216,7 @@ export default function ClassDetail() {
                   <div
                     className='h-full bg-indigo-600 rounded-full transition-all'
                     style={{
-                      width: `${(creditBalance.remaining / creditBalance.total) * 100}%`,
+                      width: `${(creditBalance.remainingCredits / creditBalance.totalCredits) * 100}%`,
                     }}
                   />
                 </div>
@@ -215,15 +241,25 @@ export default function ClassDetail() {
               </div>
             )}
 
+            {/* Success Message */}
+            {success && (
+              <div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2'>
+                <CheckCircle className='w-5 h-5 text-green-600 flex-shrink-0' />
+                <span className='font-medium text-green-800'>
+                  ¡Clase reservada con éxito!
+                </span>
+              </div>
+            )}
+
             {/* Error Message */}
             {error && (
-              <div className='mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm'>
+              <div className={`${UI.alert.error} mb-4`}>
                 <AlertCircle className='w-5 h-5 flex-shrink-0' />
                 <span>{error}</span>
               </div>
             )}
             <>
-              {isFull ?? (
+              {isFull && (
                 <div className='flex items-center gap-2'>
                   <AlertCircle className='w-5 h-5 text-red-600' />
                   <span className='font-medium text-red-700'>
@@ -235,7 +271,7 @@ export default function ClassDetail() {
           </div>
 
           {/* Book Button */}
-          {creditBalance && creditBalance.remaining > 0 ? (
+          {creditBalance && creditBalance.remainingCredits > 0 ? (
             <button
               onClick={handleBookClass}
               disabled={isFull || bookingLoading}
@@ -243,7 +279,7 @@ export default function ClassDetail() {
             >
               {bookingLoading ? (
                 <>
-                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
+                  <div className={UI.loading.spinnerSm}></div>
                   Procesando...
                 </>
               ) : isFull ? (

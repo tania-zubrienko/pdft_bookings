@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import Layout from '../../components/Layout/Layout';
+import UI from '@/lib/styles';
 
 export default function BookingSuccess() {
   const [status, setStatus] = useState<'success' | 'cancelled' | 'unknown'>(
@@ -25,11 +26,9 @@ export default function BookingSuccess() {
             <CheckCircle className='w-12 h-12 text-green-600' />
           </div>
 
-          <h1 className='text-3xl font-bold text-gray-900 mb-4'>
-            ¡Reserva Confirmada!
-          </h1>
+          <h1 className={`${UI.text.heading} mb-4`}>¡Reserva Confirmada!</h1>
 
-          <p className='text-gray-600 mb-8'>
+          <p className={`${UI.text.soft} mb-8`}>
             Tu clase ha sido reservada con éxito. Te hemos enviado un correo de
             confirmación con todos los detalles.
           </p>
@@ -63,11 +62,9 @@ export default function BookingSuccess() {
             <XCircle className='w-12 h-12 text-red-600' />
           </div>
 
-          <h1 className='text-3xl font-bold text-gray-900 mb-4'>
-            Reserva Cancelada
-          </h1>
+          <h1 className={`${UI.text.heading} mb-4`}>Reserva Cancelada</h1>
 
-          <p className='text-gray-600 mb-8'>
+          <p className={`${UI.text.soft} mb-8`}>
             Tu pago ha sido cancelado. No se ha realizado ningún cargo. Puedes
             intentarlo de nuevo cuando quieras.
           </p>
@@ -87,8 +84,8 @@ export default function BookingSuccess() {
 
   return (
     <Layout>
-      <div className='flex items-center justify-center min-h-[400px]'>
-        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600'></div>
+      <div className={UI.loading.container}>
+        <div className={UI.loading.spinner}></div>
       </div>
     </Layout>
   );

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, User, Menu, X, Shield, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import S from '@/lib/strings';
-// or the correct path to your strings/translations file
+import UI from '@/lib/styles';
 
 export default function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,17 +19,15 @@ export default function NavBar() {
               to='/classes'
               className='flex items-center gap-2'
             >
-              <div className='w-10 h-10 bg-brand rounded-lg flex items-center justify-center'>
+              <div className={UI.header.logoMark}>
                 <span className='text-white font-bold text-xl'>D</span>
               </div>
-              <span className='font-bold text-xl text-gray-100'>
-                {S.app.name}
-              </span>
+              <span className={UI.header.logoText}>{S.app.name}</span>
             </Link>
             {appUser && 'role' in appUser && appUser.role === 'admin' && (
               <Link
                 to='/admin'
-                className='hidden md:flex items-center gap-2 text-gray-300 hover:text-primary-400 transition-colors'
+                className={`hidden md:flex items-center gap-2 ${UI.nav.linkInactive}`}
               >
                 <Shield className='w-5 h-5' />
                 {S.nav.admin}
@@ -44,14 +42,14 @@ export default function NavBar() {
                     )} */}
             <Link
               to='/classes'
-              className='flex items-center gap-2 text-gray-300 hover:text-primary-400 transition-colors'
+              className={`flex items-center gap-2 ${UI.nav.linkInactive}`}
             >
               <Calendar className='w-5 h-5' />
               {S.nav.classes}
             </Link>
             <Link
               to='/my-reservations'
-              className='flex items-center gap-2 text-gray-300 hover:text-primary-400 transition-colors'
+              className={`flex items-center gap-2 ${UI.nav.linkInactive}`}
             >
               <User className='w-5 h-5' />
               {S.nav.myReservations}
@@ -59,16 +57,15 @@ export default function NavBar() {
 
             <button
               onClick={logout}
-              className='flex items-center gap-2 text-gray-300 hover:text-primary-400 transition-colors'
+              className={`flex items-center gap-2 ${UI.nav.linkInactive}`}
             >
               <LogOut className='w-5 h-5' />
-              {S.nav.logout}
             </button>
           </nav>
 
           {/* Mobile Burger Button */}
           <button
-            className='md:hidden p-2 rounded-lg text-gray-300 hover:bg-ui-input transition-colors'
+            className={`md:hidden ${UI.button.icon}`}
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label='Toggle menu'
           >

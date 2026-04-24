@@ -30,11 +30,6 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? '')
-  .split(',')
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
@@ -88,20 +83,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signOut(auth);
   }, []);
 
-  const isAdmin = useMemo(() => {
-    const email = user?.email?.toLowerCase();
-    console.log('email', email, 'adminEmails', adminEmails);
-    if (!email) return false;
-
-    return adminEmails.includes(email);
-  }, [user]);
+  const isAdmin = useMemo(() => appUser?.role === 'admin', [appUser]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       appUser,
       loading,
-      isAuthenticated: !!user,
+      isAuthenticated: !!appUser,
       isAdmin,
       login,
       signup,

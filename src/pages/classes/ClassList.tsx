@@ -5,6 +5,7 @@ import CalendarView from '../../components/Calendar/CalendarView';
 import Layout from '../../components/Layout/Layout';
 import { Calendar } from 'lucide-react';
 import scheduleService from '@/services/schedule.service';
+import UI from '@/lib/styles';
 
 function isSameDay(a: Date, b: Date): boolean {
   return (
@@ -48,8 +49,8 @@ export default function ClassList() {
   if (loading) {
     return (
       <Layout>
-        <div className='flex items-center justify-center min-h-[400px]'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600'></div>
+        <div className={UI.loading.container}>
+          <div className={UI.loading.spinner}></div>
         </div>
       </Layout>
     );
@@ -59,10 +60,8 @@ export default function ClassList() {
     <Layout>
       {/* Header */}
       <div className='mb-4 sm:mb-6'>
-        <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-1'>
-          Horario de Clases
-        </h1>
-        <p className='text-sm sm:text-base text-gray-600'>
+        <h1 className={`${UI.text.heading} mb-1`}>Horario de Clases</h1>
+        <p className={UI.text.soft}>
           Selecciona un día para ver las clases disponibles
         </p>
       </div>
@@ -81,9 +80,7 @@ export default function ClassList() {
       {/* Classes for selected day */}
       {selectedDate && (
         <div className='mt-8'>
-          <h2 className='text-xl font-semibold text-gray-900 mb-4'>
-            {selectedDayLabel}
-          </h2>
+          <h2 className={`${UI.text.subheading} mb-4`}>{selectedDayLabel}</h2>
 
           {classesForDay.length > 0 ? (
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -95,9 +92,9 @@ export default function ClassList() {
               ))}
             </div>
           ) : (
-            <div className='text-center py-10 bg-white rounded-xl border border-gray-200'>
-              <Calendar className='w-12 h-12 text-gray-300 mx-auto mb-3' />
-              <p className='text-ui-text-soft	'>
+            <div className='text-center py-10 card'>
+              <Calendar className='w-12 h-12 text-gray-400 mx-auto mb-3' />
+              <p className={UI.text.soft}>
                 No hay clases programadas para este día
               </p>
             </div>

@@ -1,23 +1,16 @@
 import { Link } from 'react-router-dom';
 import { Clock, Users } from 'lucide-react';
 import { ScheduledClass } from '../../types';
+import UI, { getClassAccent } from '@/lib/styles';
 
 interface ClassCardProps {
   classData: ScheduledClass;
 }
 
-const CLASS_ACCENT_BAR_CLASSES: Record<string, string> = {
-  'Exotic': 'bg-accent-pink',
-  'Pole Dance': 'bg-accent-blue',
-  'Aro': 'bg-accent-yellow',
-  'Open': 'bg-accent-green',
-};
-
 export default function ClassCard({ classData }: ClassCardProps) {
   const isFull = classData.enrolledCount >= classData.capacity;
   const spotsLeft = classData.capacity - classData.enrolledCount;
-  const accentBarClass =
-    CLASS_ACCENT_BAR_CLASSES[classData.classTitle] ?? 'bg-brand';
+  const accentBarClass = getClassAccent(classData.classTitle);
 
   const formatTime = (date: Date) =>
     date.toLocaleTimeString('es-ES', {
@@ -27,9 +20,11 @@ export default function ClassCard({ classData }: ClassCardProps) {
     });
 
   return (
-    <div className='bg-ui-card rounded-xl border border-ui-border-soft hover:border-brand transition-all duration-200 overflow-hidden relative'>
+    <div className={`${UI.card.interactive} overflow-hidden relative`}>
       {/* Colored accent bar on the left */}
-      <div className={`absolute left-0 top-0 bottom-0 w-1 ${accentBarClass}`}></div>
+      <div
+        className={`absolute left-0 top-0 bottom-0 w-1 ${accentBarClass}`}
+      ></div>
 
       <div className='p-4 flex flex-col gap-3 pl-5'>
         {/* Title + time row */}
@@ -58,7 +53,7 @@ export default function ClassCard({ classData }: ClassCardProps) {
             {classData.enrolledCount} inscritos
           </span>
           <span
-            className={`font-medium ${isFull ? 'text-red-400' : spotsLeft <= 3 ? 'text-amber-400' : 'text-green-400'}`}
+            className={`font-medium ${isFull ? UI.status.full : spotsLeft <= 3 ? UI.status.limited : UI.status.available}`}
           >
             {isFull
               ? 'Completa'

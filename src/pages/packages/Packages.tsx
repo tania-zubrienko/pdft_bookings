@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Package, CreditBalance } from '../../types';
 import Layout from '../../components/Layout/Layout';
 import { CheckCircle, Ticket, Sparkles, ShoppingCart } from 'lucide-react';
+import UI from '@/lib/styles';
 
 export default function Packages() {
   const { user } = useAuth();
@@ -42,8 +43,8 @@ export default function Packages() {
   if (loading) {
     return (
       <Layout>
-        <div className='flex items-center justify-center min-h-[400px]'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600'></div>
+        <div className={UI.loading.container}>
+          <div className={UI.loading.spinner}></div>
         </div>
       </Layout>
     );
@@ -102,8 +103,8 @@ export default function Packages() {
             {/* Highlight badge */}
             {pkg.highlight && (
               <div className='absolute -top-3 left-1/2 -translate-x-1/2'>
-                <span className='inline-flex items-center gap-1 bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full'>
-                  <Sparkles className='w-3 h-3' />
+                <span className={UI.badge.brand}>
+                  <Sparkles className='w-3 h-3 mr-1' />
                   Más Popular
                 </span>
               </div>

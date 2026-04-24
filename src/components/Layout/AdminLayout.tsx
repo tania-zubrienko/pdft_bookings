@@ -10,15 +10,17 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import S from '@/lib/strings';
+import UI from '@/lib/styles';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 const adminLinks = [
-  { to: '/admin/schedule', label: 'Horarios', icon: CalendarDays },
-  { to: '/admin/reservations', label: 'Reservas', icon: ClipboardList },
-  { to: '/admin/credits', label: 'Créditos', icon: Coins },
+  { to: '/admin/schedule', label: S.nav.schedule, icon: CalendarDays },
+  { to: '/admin/reservations', label: S.nav.reserves, icon: ClipboardList },
+  { to: '/admin/credits', label: S.nav.credits, icon: Coins },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -46,7 +48,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     Pole Dance Fit Talavera
                   </span>
                   <span className='text-xs text-gray-400 leading-tight'>
-                    Panel de Admin
+                    {S.nav.admin}
                   </span>
                 </div>
               </Link>
@@ -60,10 +62,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className={`flex items-center gap-2 transition-colors ${isActive
-                      ? 'text-primary-400 font-medium'
-                      : 'text-gray-300 hover:text-primary-400'
-                      }`}
+                    className={`flex items-center gap-2 transition-colors ${
+                      isActive ? UI.nav.linkActive : UI.nav.linkInactive
+                    }`}
                   >
                     <link.icon className='w-5 h-5' />
                     {link.label}
@@ -72,23 +73,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               })}
               <Link
                 to='/classes'
-                className='flex items-center gap-2 text-gray-400 hover:text-white transition-colors ml-4 border-l border-ui-border pl-4'
+                className={`flex items-center gap-2 ${UI.nav.linkInactive} ml-4 border-l border-ui-border pl-4`}
               >
                 <ArrowLeft className='w-4 h-4' />
-                Vista Alumna
+                {S.nav.alumni}
               </Link>
               <button
                 onClick={logout}
-                className='flex items-center gap-2 text-gray-400 hover:text-white transition-colors'
+                className={`flex items-center gap-2 ${UI.nav.linkInactive} ml-4`}
               >
                 <LogOut className='w-4 h-4' />
-                Salir
               </button>
             </nav>
 
             {/* Mobile Burger */}
             <button
-              className='md:hidden p-2 rounded-lg text-gray-300 hover:bg-ui-input transition-colors'
+              className={`md:hidden ${UI.button.icon}`}
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label='Toggle menu'
             >
@@ -112,10 +112,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     key={link.to}
                     to={link.to}
                     onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${isActive
-                      ? 'bg-ui-input text-primary-400 font-medium'
-                      : 'text-gray-300 hover:bg-ui-input hover:text-primary-400'
-                      }`}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-ui-input text-primary-400 font-medium'
+                        : 'text-gray-300 hover:bg-ui-input hover:text-primary-400'
+                    }`}
                   >
                     <link.icon className='w-5 h-5' />
                     {link.label}
@@ -128,7 +129,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 className='flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 hover:bg-ui-input hover:text-white transition-colors border-t border-ui-border mt-2 pt-4'
               >
                 <ArrowLeft className='w-5 h-5' />
-                Vista Alumna
+                {S.nav.alumni}
               </Link>
               <button
                 onClick={() => {

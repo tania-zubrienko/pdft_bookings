@@ -10,7 +10,10 @@ import {
   Search,
   CheckCircle2,
   XCircle,
+  SearchX,
+  ClipboardX,
 } from 'lucide-react';
+import UI from '@/lib/styles';
 
 type FilterPeriod = 'week' | 'month';
 
@@ -133,9 +136,9 @@ export default function AdminReservations() {
   const statusIcon = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <CheckCircle2 className='w-4 h-4 text-green-600' />;
+        return <CheckCircle2 className='w-4 h-4 text-green-400' />;
       case 'cancelled':
-        return <XCircle className='w-4 h-4 text-red-500' />;
+        return <XCircle className='w-4 h-4 text-red-400' />;
       default:
         return null;
     }
@@ -143,8 +146,8 @@ export default function AdminReservations() {
 
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
-      confirmed: 'bg-green-100 text-green-700',
-      cancelled: 'bg-red-100 text-red-700',
+      confirmed: 'bg-green-900/50 text-green-400 border border-green-800',
+      cancelled: 'bg-red-900/50 text-red-400 border border-red-800',
     };
     const labels: Record<string, string> = {
       confirmed: 'Confirmada',
@@ -152,7 +155,7 @@ export default function AdminReservations() {
     };
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] ?? 'bg-gray-100 text-gray-600'}`}
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] ?? 'bg-ui-input text-ui-text-soft'}`}
       >
         {statusIcon(status)}
         {labels[status] ?? status}
@@ -163,8 +166,8 @@ export default function AdminReservations() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className='flex items-center justify-center min-h-[400px]'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600'></div>
+        <div className={UI.loading.container}>
+          <div className={UI.loading.spinner}></div>
         </div>
       </AdminLayout>
     );
@@ -181,10 +184,8 @@ export default function AdminReservations() {
   return (
     <AdminLayout>
       <div className='mb-6'>
-        <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
-          Reservas
-        </h1>
-        <p className='text-ui-text-soft	 mt-1'>
+        <h1 className={UI.text.heading}>Reservas</h1>
+        <p className={UI.text.headingDescription}>
           Consulta quién reservó clases en{' '}
           {period === 'week' ? 'la semana' : 'el mes'} actual
         </p>
@@ -196,22 +197,14 @@ export default function AdminReservations() {
         <div className='flex gap-2'>
           <button
             onClick={() => setPeriod('week')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              period === 'week'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
+            className={`${UI.button.base} ${period === 'week' ? UI.button.primary : UI.button.secondary}`}
           >
             <Calendar className='w-4 h-4' />
             Esta Semana
           </button>
           <button
             onClick={() => setPeriod('month')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              period === 'month'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
+            className={`${UI.button.base} ${period === 'month' ? UI.button.primary : UI.button.secondary}`}
           >
             <CalendarDays className='w-4 h-4' />
             Este Mes
@@ -232,56 +225,77 @@ export default function AdminReservations() {
       </div>
 
       {/* Period label */}
-      <p className='text-sm font-medium text-ui-text-soft	 mb-4'>
-        {periodLabel}
-      </p>
+      <p className={`${UI.text.soft} font-medium mb-4`}>{periodLabel}</p>
 
       {/* Stats row */}
-      <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6'>
-        <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
-          <p className='text-2xl font-bold text-gray-900'>{stats.total}</p>
-          <p className='text-xs text-ui-text-soft	'>Total Reservas</p>
+      <div className={UI.stats.grid}>
+        <div className={UI.stats.card}>
+          <p className={UI.stats.value}>{stats.total}</p>
+          <p className={UI.stats.label}>Total Reservas</p>
         </div>
-        <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
-          <p className='text-2xl font-bold text-green-600'>{stats.confirmed}</p>
-          <p className='text-xs text-ui-text-soft	'>Confirmadas</p>
+        <div className={UI.stats.card}>
+          <p className={UI.stats.valueGreen}>{stats.confirmed}</p>
+          <p className={UI.stats.label}>Confirmadas</p>
         </div>
-        <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
-          <p className='text-2xl font-bold text-gray-900'>
-            {stats.uniqueStudents}
-          </p>
-          <p className='text-xs text-ui-text-soft	'>Alumnas Únicas</p>
+        <div className={UI.stats.card}>
+          <p className={UI.stats.value}>{stats.uniqueStudents}</p>
+          <p className={UI.stats.label}>Alumnas Únicas</p>
         </div>
-        <div className='bg-white rounded-xl border border-gray-200 px-4 py-3'>
-          <p className='text-2xl font-bold text-gray-900'>
-            {stats.uniqueClasses}
-          </p>
-          <p className='text-xs text-ui-text-soft	'>Clases</p>
+        <div className={UI.stats.card}>
+          <p className={UI.stats.value}>{stats.uniqueClasses}</p>
+          <p className={UI.stats.label}>Clases</p>
         </div>
       </div>
 
       {/* Reservation list grouped by class */}
       {groupedByClass.length === 0 ? (
-        <div className='bg-white rounded-xl border border-gray-200 px-6 py-12 text-center'>
-          <Users className='w-10 h-10 text-gray-300 mx-auto mb-3' />
-          <p className='text-ui-text-soft	'>
-            No se encontraron reservas para{' '}
-            {period === 'week' ? 'esta semana' : 'este mes'}.
-          </p>
+        <div className={`${UI.card.base} px-6 py-16 text-center`}>
+          {reservations.length === 0 ? (
+            <>
+              <ClipboardX
+                className={`w-10 h-10 mx-auto mb-3 ${UI.text.muted}`}
+              />
+              <p className={`font-medium mb-1 ${UI.text.body}`}>
+                Sin reservas aún
+              </p>
+              <p className={UI.text.soft}>
+                Cuando las alumnas reserven clases aparecerán aquí.
+              </p>
+            </>
+          ) : searchQuery.trim() ? (
+            <>
+              <SearchX className={`w-10 h-10 mx-auto mb-3 ${UI.text.muted}`} />
+              <p className={`font-medium mb-1 ${UI.text.body}`}>
+                Sin resultados
+              </p>
+              <p className={UI.text.soft}>
+                No hay reservas que coincidan con «{searchQuery}».
+              </p>
+            </>
+          ) : (
+            <>
+              <Users className={`w-10 h-10 mx-auto mb-3 ${UI.text.muted}`} />
+              <p className={`font-medium mb-1 ${UI.text.body}`}>Sin reservas</p>
+              <p className={UI.text.soft}>
+                No hay reservas registradas para{' '}
+                {period === 'week' ? 'esta semana' : 'este mes'}.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className='space-y-4'>
           {groupedByClass.map((group) => (
             <div
               key={group.scheduledClassId}
-              className='bg-white rounded-xl border border-gray-200 overflow-hidden'
+              className={UI.card.base}
             >
-              <div className='px-4 py-3 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1'>
+              <div className='px-4 py-3 bg-ui-input border-b border-ui-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1'>
                 <div>
-                  <h3 className='font-semibold text-gray-900'>
+                  <h3 className='font-semibold text-ui-text'>
                     {group.classTitle}
                   </h3>
-                  <p className='text-sm text-ui-text-soft	'>
+                  <p className={UI.text.soft}>
                     {group.classDate.toLocaleDateString('es-ES', {
                       weekday: 'short',
                       month: 'short',
@@ -295,35 +309,35 @@ export default function AdminReservations() {
                     })}
                   </p>
                 </div>
-                <span className='text-sm font-medium text-primary-600'>
+                <span className={`text-sm font-medium ${UI.text.brand}`}>
                   {group.reservations.length} reservation
                   {group.reservations.length !== 1 ? 's' : ''}
                 </span>
               </div>
 
               {/* Student rows */}
-              <div className='divide-y divide-gray-100'>
+              <div className='divide-y divide-ui-border-soft'>
                 {group.reservations.map((r) => (
                   <div
                     key={r.id}
                     className='px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4'
                   >
                     <div className='flex items-center gap-3 flex-1 min-w-0'>
-                      <div className='w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-bold shrink-0'>
+                      <div className='w-8 h-8 rounded-full bg-brand/20 text-brand-light flex items-center justify-center text-sm font-bold shrink-0'>
                         {r.studentName.charAt(0)}
                       </div>
                       <div className='min-w-0'>
-                        <p className='font-medium text-gray-900 truncate'>
+                        <p className='font-medium text-ui-text truncate'>
                           {r.studentName}
                         </p>
-                        <p className='text-sm text-ui-text-soft	 truncate'>
+                        <p className={`${UI.text.soft} truncate`}>
                           {r.studentId}
                         </p>
                       </div>
                     </div>
                     <div className='flex items-center gap-3 shrink-0'>
                       {statusBadge(r.status)}
-                      <span className='text-xs text-gray-400'>
+                      <span className={UI.text.muted}>
                         {r.paymentMode === 'credit' ? 'Crédito' : 'Individual'}
                       </span>
                     </div>

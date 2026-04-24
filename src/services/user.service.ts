@@ -25,6 +25,8 @@ class UserService {
   }
 
   async createStudent(uid: string, email: string, userName: string) {
+    const existingUser = await this.getUserByEmail(email);
+    if (existingUser !== null) return null;
     await setDoc(
       doc(this.db, this.collectionName, uid),
       {
@@ -54,10 +56,7 @@ class UserService {
   }
 
   async getInstructors(): Promise<AppUser[]> {
-    const q = query(
-      collection(this.db, this.collectionName),
-      where('role', '==', 'instructor'),
-    );
+    const q = query(collection(this.db, 'instructors'));
     const snapshot = await getDocs(q);
     return snapshot.docs.map((d) => ({ ...d.data(), id: d.id }) as AppUser);
   }
@@ -69,6 +68,15 @@ class UserService {
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map((d) => ({ ...d.data(), id: d.id }) as AppUser);
+  }
+
+  async getUserByEmail(email: string) {
+    const q = query(
+      collection(this.db, this.collectionName),
+      where('email', '==', email),
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((d) => ({ ...d.data(), id: d.id }) as AppUser)[0];
   }
 }
 

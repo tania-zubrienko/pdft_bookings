@@ -6,8 +6,9 @@ A reservation and credit-based booking system for a dance academy. Students brow
 
 - **Frontend:** React + TypeScript + Vite
 - **Styling:** Tailwind CSS
-- **Data Layer:** Mock data (in-memory, simulated async) — Firebase integration planned
-- **Authentication:** Not implemented (deferred to future phase)
+- **Data Layer:** Firestore (via typed service classes in `src/services/`)
+- **Authentication:** Firebase Auth (email/password, role-based via `VITE_ADMIN_EMAILS`)
+- **Functions:** Firebase Cloud Functions (prep complete, deployment pending)
 
 ## Implemented Features
 
@@ -34,42 +35,60 @@ A reservation and credit-based booking system for a dance academy. Students brow
 - ✅ Search reservations by student or class
 - ✅ Stats dashboard (total, confirmed, unique students/classes)
 - ✅ Dark-themed admin layout with mobile support
+- ✅ Manual credit management (create pools with custom start/expiration dates)
 
 ## Project Structure
 
 ```
-pd_bookings/
+pdft_bookings/
 ├── src/
 │   ├── components/
+│   │   ├── auth/
+│   │   │   └── RouteGuards.tsx      # Protected + admin route wrappers
 │   │   ├── Calendar/
 │   │   │   └── CalendarView.tsx     # Week/month calendar grid
 │   │   ├── Classes/
 │   │   │   └── ClassCard.tsx        # Compact class card
 │   │   └── Layout/
 │   │       ├── Layout.tsx           # Student header, nav, footer
-│   │       └── AdminLayout.tsx      # Admin dark-themed layout
+│   │       ├── AdminLayout.tsx      # Admin dark-themed layout
+│   │       └── NavBar.tsx           # Shared nav bar
+│   ├── contexts/
+│   │   └── AuthContext.tsx          # Auth state: user, isAdmin, login/signup/logout
 │   ├── lib/
-│   │   ├── firebase.ts             # Firebase config (unused, kept for future)
-│   │   └── mockData.ts             # Mock data layer (replaces Firebase)
+│   │   └── firebase.ts              # Firebase config (auth, db, functions)
 │   ├── pages/
 │   │   ├── admin/
 │   │   │   ├── ClassScheduler.tsx   # Week-based class planner
-│   │   │   └── AdminReservations.tsx# Reservation viewer + stats
+│   │   │   ├── AdminReservations.tsx# Reservation viewer + stats
+│   │   │   └── CreditManagement.tsx # Manual credit pool assignment
+│   │   ├── auth/
+│   │   │   └── Login.tsx            # Login / signup page
 │   │   ├── booking/
 │   │   │   └── BookingResult.tsx    # Success/cancelled feedback
 │   │   ├── classes/
 │   │   │   ├── ClassList.tsx        # Calendar + day class list
 │   │   │   └── ClassDetail.tsx      # Class info + credit booking
 │   │   ├── packages/
-│   │   │   └── Packages.tsx         # Credit packages (4 tiers)
+│   │   │   └── Packages.tsx         # Credit packages (display only)
 │   │   └── reservations/
 │   │       └── MyReservations.tsx   # Student reservation list
+│   ├── services/
+│   │   ├── schedule.service.ts      # ScheduledClass CRUD (Firestore)
+│   │   ├── class-definition.service.ts # ClassDefinition reads
+│   │   ├── user.service.ts          # User reads/writes, instructors, students
+│   │   ├── credit.service.ts        # Credit balance and pools
+│   │   ├── reservation.service.ts   # Reservations by student + admin view
+│   │   ├── package.service.ts       # Package reads
+│   │   └── callable.ts              # Firebase callable function wrappers
 │   ├── types/
-│   │   └── index.ts                # All TypeScript interfaces
-│   ├── App.tsx                     # Routes (student + admin)
-│   └── main.tsx                    # Entry point
-├── functions/                      # Firebase Cloud Functions (future)
-├── AGENTS.md                       # AI agent specifications
+│   │   └── index.ts                 # All TypeScript interfaces
+│   ├── App.tsx                      # Routes (student + admin)
+│   └── main.tsx                     # Entry point
+├── functions/
+│   └── src/index.ts                 # Cloud Functions (types aligned, deployment pending)
+├── AGENTS.md                        # AI agent specifications
+├── CLOUD_MIGRATION.md               # Cloud Functions migration plan
 └── README.md
 ```
 
@@ -78,12 +97,26 @@ pd_bookings/
 ### Prerequisites
 
 - Node.js 18+
+- A Firebase project (or local emulator) with Auth and Firestore enabled
 
 ### Installation
 
 ```bash
-cd pd_bookings
 npm install
+```
+
+### Environment setup
+
+Create a `.env.local` file in the project root:
+
+```env
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_ADMIN_EMAILS=admin@yourdomain.com
 ```
 
 ### Run locally
@@ -92,20 +125,19 @@ npm install
 npm run dev
 ```
 
-The app runs entirely on mock data — no Firebase or Stripe setup required for development.
-
 ## Routes
 
 | Path                  | Component           | Description                   |
 | --------------------- | ------------------- | ----------------------------- |
 | `/classes`            | ClassList           | Calendar + day class list     |
 | `/classes/:classId`   | ClassDetail         | Class detail + credit booking |
-| `/packages`           | Packages            | Credit packages for purchase  |
+| `/packages`           | Packages            | Credit packages (display only) |
 | `/my-reservations`    | MyReservations      | Student reservation list      |
 | `/booking/success`    | BookingResult       | Post-booking success          |
 | `/booking/cancelled`  | BookingResult       | Post-booking cancelled        |
 | `/admin/schedule`     | ClassScheduler      | Week-based class planner      |
 | `/admin/reservations` | AdminReservations   | Reservation viewer            |
+| `/admin/credits`      | CreditManagement    | Manual credit assignment      |
 | `/admin`              | Redirect → schedule | Admin landing                 |
 | `/` or `*`            | Redirect → classes  | Default/fallback              |
 
@@ -142,18 +174,31 @@ The app runs entirely on mock data — no Firebase or Stripe setup required for 
 - [x] Student selector with search
 - [x] Credit pool creation form (credits, start date, expiration)
 - [x] Credit pool list view per student
-- [x] Mock data functions for credit management
 - [x] Validation for date ranges and credit amounts
 
-### Phase 2: Authentication & Firebase
+### Phase 2: Authentication & Firebase ✅
 
 - [x] Firebase Auth integration
-- [ ] Firestore data migration (replace mocks)
+- [x] Firestore service layer (replaces mock data)
+- [x] AuthContext with login/signup/logout
+- [x] Route guards (protected + admin routes)
+- [x] Admin credit pool creation via Firestore
 - [ ] Firestore security rules deployment
 - [ ] User profile page
 
+### Phase 3: Cloud Functions & Security
 
-### Phase 3: Advanced Features
+- [x] Type alignment in `functions/src/index.ts`
+- [ ] `bookWithCredits` Cloud Function
+- [ ] `cancelReservation` Cloud Function
+- [ ] `getStudentCreditBalance` Cloud Function
+- [ ] `adminCreateCreditPool` Cloud Function
+- [ ] Deploy Firestore security rules
+- [ ] Set billing cap with auto-disable
+- [ ] Restrict API key to production domain
+- [ ] Enable Firebase App Check
+
+### Phase 4: Advanced Features
 
 - [ ] Cancellation with credit restore
 - [ ] Expiration handling (scheduled function)

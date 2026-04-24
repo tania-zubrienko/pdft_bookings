@@ -76,6 +76,7 @@ export interface CreditPool {
   createdAt: Date;
   createdBy: string;
   notes?: string;
+  isActive: boolean;
 }
 
 /**
@@ -84,6 +85,7 @@ export interface CreditPool {
 export interface CreditBalance {
   remaining: number;
   total: number;
+  id: string;
 }
 
 /**

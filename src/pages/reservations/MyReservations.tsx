@@ -7,6 +7,7 @@ import { ScheduledClass } from '../../types';
 import reservationService from '@/services/reservation.service';
 import scheduleService from '@/services/schedule.service';
 import { useAuth } from '@/contexts/AuthContext';
+import UI from '@/lib/styles';
 
 interface ReservationWithClass extends Reservation {
   scheduledClass?: ScheduledClass;
@@ -46,11 +47,11 @@ export default function MyReservations() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return 'bg-green-100 text-green-700';
+        return UI.badge.green;
       case 'cancelled':
-        return 'bg-red-100 text-red-700';
+        return UI.badge.red;
       default:
-        return 'bg-gray-100 text-gray-700';
+        return UI.badge.base;
     }
   };
 
@@ -68,8 +69,8 @@ export default function MyReservations() {
   if (loading) {
     return (
       <Layout>
-        <div className='flex items-center justify-center min-h-[400px]'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600'></div>
+        <div className={UI.loading.container}>
+          <div className={UI.loading.spinner}></div>
         </div>
       </Layout>
     );
@@ -78,8 +79,8 @@ export default function MyReservations() {
   return (
     <Layout>
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-900 mb-2'>Mis Reservas</h1>
-        <p className='text-gray-600'>
+        <h1 className={`${UI.text.heading} mb-2`}>Mis Reservas</h1>
+        <p className={UI.text.soft}>
           Consulta y gestiona tus reservas de clases
         </p>
       </div>
@@ -95,9 +96,7 @@ export default function MyReservations() {
                 <div className='flex-1'>
                   <div className='flex items-center gap-3 '>
                     {getStatusIcon(reservation.status)}
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(reservation.status)}`}
-                    >
+                    <span className={getStatusColor(reservation.status)}>
                       {reservation.status === 'confirmed'
                         ? 'Confirmada'
                         : reservation.status === 'cancelled'
@@ -136,11 +135,11 @@ export default function MyReservations() {
         </div>
       ) : (
         <div className='text-center py-12'>
-          <Calendar className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-          <h3 className='text-xl font-medium text-gray-600 mb-2'>
+          <Calendar className='w-16 h-16 text-gray-400 mx-auto mb-4' />
+          <h3 className={`${UI.text.subheading} mb-2`}>
             Aún no tienes reservas
           </h3>
-          <p className='text-ui-text-soft	 mb-6'>
+          <p className={`${UI.text.soft} mb-6`}>
             ¡Reserva tu primera clase de baile para empezar!
           </p>
           <Link

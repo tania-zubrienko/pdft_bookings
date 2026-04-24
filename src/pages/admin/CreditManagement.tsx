@@ -5,6 +5,7 @@ import packageService from '@/services/package.service';
 import creditService from '@/services/credit.service';
 import { CreditPool, Package, AppUser } from '../../types';
 import { AlertCircle, CheckCircle2, Coins, Search } from 'lucide-react';
+import UI from '@/lib/styles';
 
 const EXPIRING_SOON_DAYS = 7;
 
@@ -147,8 +148,8 @@ export default function CreditManagement() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className='flex items-center justify-center min-h-[300px]'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600'></div>
+        <div className={UI.loading.container}>
+          <div className={UI.loading.spinner}></div>
         </div>
       </AdminLayout>
     );
@@ -157,10 +158,8 @@ export default function CreditManagement() {
   return (
     <AdminLayout>
       <div className='mb-6'>
-        <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
-          Gestión de Créditos
-        </h1>
-        <p className='text-ui-text-soft	 mt-1'>
+        <h1 className={UI.text.heading}>Gestión de Créditos</h1>
+        <p className={UI.text.soft}>
           Asigna créditos manualmente y revisa los pools por alumna
         </p>
       </div>
@@ -220,14 +219,14 @@ export default function CreditManagement() {
           </h2>
 
           {formError && (
-            <div className='mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2'>
+            <div className={`${UI.alert.error} mb-4`}>
               <AlertCircle className='w-4 h-4' />
               {formError}
             </div>
           )}
 
           {formSuccess && (
-            <div className='mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm flex items-center gap-2'>
+            <div className={`${UI.alert.success} mb-4`}>
               <CheckCircle2 className='w-4 h-4' />
               {formSuccess}
             </div>
@@ -357,13 +356,13 @@ export default function CreditManagement() {
                   </div>
 
                   <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-fit ${
+                    className={`${
                       status === 'active'
-                        ? 'bg-green-100 text-green-700'
+                        ? UI.badge.green
                         : status === 'future'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-gray-200 text-gray-700'
-                    }`}
+                          ? UI.badge.amber
+                          : UI.badge.base
+                    } w-fit`}
                   >
                     {status === 'active'
                       ? 'Activo'

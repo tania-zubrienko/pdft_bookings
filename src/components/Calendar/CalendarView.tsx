@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScheduledClass } from '../../types';
+import UI from '@/lib/styles';
 
 type ViewMode = 'week' | 'month';
 
@@ -128,53 +129,55 @@ export default function CalendarView({
   const dayNamesShort = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
   return (
-    <div className='bg-white rounded-xl shadow-md overflow-hidden p-3'>
+    <div className='card overflow-hidden p-3'>
       {/* Toolbar */}
-      <div className='flex flex-col sm:flex-row items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200'>
+      <div className='flex flex-col sm:flex-row items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-3 border-b border-ui-border-soft'>
         {/* Navigation */}
         <div className='flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-between sm:justify-start'>
           <button
             onClick={goBack}
-            className='p-2 rounded-lg hover:bg-gray-100 transition-colors active:bg-gray-200'
+            className={UI.button.icon}
             aria-label='Previous'
           >
-            <ChevronLeft className='w-5 h-5 text-gray-600' />
+            <ChevronLeft className='w-5 h-5' />
           </button>
           <h2 className='text-sm sm:text-lg font-semibold text-gray-900 text-center'>
             {headerLabel}
           </h2>
           <button
             onClick={goForward}
-            className='p-2 rounded-lg hover:bg-gray-100 transition-colors active:bg-gray-200'
+            className={UI.button.icon}
             aria-label='Next'
           >
-            <ChevronRight className='w-5 h-5 text-gray-600' />
+            <ChevronRight className='w-5 h-5' />
           </button>
           <button
             onClick={goToday}
-            className='ml-1 sm:ml-2 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 active:bg-gray-100 transition-colors'
+            className='ml-1 sm:ml-2 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-ui-border hover:bg-ui-hover active:bg-ui-hover transition-colors text-gray-300'
           >
             Hoy
           </button>
         </div>
 
         {/* View Toggle */}
-        <div className='flex rounded-lg border border-gray-300 overflow-hidden'>
+        <div className='flex rounded-lg border border-ui-border overflow-hidden'>
           <button
             onClick={() => onChangeViewMode('week')}
-            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${viewMode === 'week'
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${
+              viewMode === 'week'
+                ? 'bg-primary-600 text-white'
+                : 'bg-ui-card text-gray-300 hover:bg-ui-hover'
+            }`}
           >
             Semana
           </button>
           <button
             onClick={() => onChangeViewMode('month')}
-            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${viewMode === 'month'
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${
+              viewMode === 'month'
+                ? 'bg-primary-600 text-white'
+                : 'bg-ui-card text-gray-300 hover:bg-ui-hover'
+            }`}
           >
             Mes
           </button>
@@ -182,7 +185,7 @@ export default function CalendarView({
       </div>
 
       {/* Day-name header */}
-      <div className='grid grid-cols-7 border-b border-gray-200'>
+      <div className='grid grid-cols-7 border-b border-ui-border-soft'>
         {dayNamesFull.map((name, i) => (
           <div
             key={name + i}
