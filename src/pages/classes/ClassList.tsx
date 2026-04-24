@@ -4,7 +4,7 @@ import ClassCard from '../../components/Classes/ClassCard';
 import CalendarView from '../../components/Calendar/CalendarView';
 import Layout from '../../components/Layout/Layout';
 import { Calendar } from 'lucide-react';
-import { getScheduledClasses } from '@/lib/mockData';
+import scheduleService from '@/services/schedule.service';
 
 function isSameDay(a: Date, b: Date): boolean {
   return (
@@ -22,7 +22,7 @@ export default function ClassList() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   useEffect(() => {
-    getScheduledClasses().then((data) => {
+    scheduleService.getAllScheduledClasses().then((data) => {
       setClasses(data);
       setLoading(false);
     });
@@ -39,10 +39,10 @@ export default function ClassList() {
   // Format selected date for the heading
   const selectedDayLabel = selectedDate
     ? selectedDate.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    })
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+      })
     : null;
 
   if (loading) {

@@ -5,8 +5,8 @@
 A reservation and credit-based booking system for a dance academy. Students browse classes via a calendar view and reserve spots using pre-purchased credit packages. Admins manage class schedules via a week-based planner with a "duplicate previous week" strategy.
 
 **Stack:** React + TypeScript + Vite + Tailwind CSS  
-**Data Layer:** Mock data (in-memory, simulated async) — Firebase integration planned for production  
-**Authentication:** Not implemented (deferred to future phase)  
+**Data Layer:** Firestore (via service classes) — mock data layer removed  
+**Authentication:** Firebase Auth (implemented)  
 **Current Scale:** ~20 students  
 **Target Scale:** 500+ students with concurrent bookings
 
@@ -35,49 +35,64 @@ The system currently supports:
 
 ```
 src/
-├── App.tsx                          # Routes (student + admin)
-├── main.tsx                         # Entry (BrowserRouter, no auth)
-├── index.css                        # Tailwind + custom components
-├── types/index.ts                   # All TypeScript interfaces
+├── App.tsx                               # Routes (student + admin)
+├── main.tsx                              # Entry (BrowserRouter + AuthProvider)
+├── index.css                             # Tailwind + custom components
+├── types/index.ts                        # All TypeScript interfaces
 ├── lib/
-│   ├── firebase.ts                  # Firebase config (unused, kept for future)
-│   └── mockData.ts                  # Mock data layer (replaces Firebase)
+│   └── firebase.ts                       # Firebase config (auth, db, functions)
+├── contexts/
+│   └── AuthContext.tsx                   # Auth state, login/signup/logout
 ├── components/
-│   ├── Calendar/CalendarView.tsx    # Week/month calendar grid
-│   ├── Classes/ClassCard.tsx        # Compact class card
+│   ├── auth/
+│   │   └── RouteGuards.tsx               # Protected/admin route wrappers
+│   ├── Calendar/CalendarView.tsx         # Week/month calendar grid
+│   ├── Classes/ClassCard.tsx             # Compact class card
 │   └── Layout/
-│       ├── Layout.tsx               # Student header, nav, footer, mobile menu
-│       └── AdminLayout.tsx          # Admin dark-themed layout
+│       ├── Layout.tsx                    # Student header, nav, footer, mobile menu
+│       ├── AdminLayout.tsx               # Admin dark-themed layout
+│       └── NavBar.tsx                    # Shared nav bar component
+├── services/
+│   ├── schedule.service.ts               # ScheduledClass CRUD (Firestore)
+│   ├── class-definition.service.ts       # ClassDefinition reads (Firestore)
+│   ├── user.service.ts                   # User reads/writes, instructors, students
+│   ├── credit.service.ts                 # Credit balance, pools, creation
+│   ├── reservation.service.ts            # Reservations by student + admin view
+│   ├── package.service.ts                # Package reads (Firestore)
+│   └── callable.ts                       # Firebase callable function wrappers
 └── pages/
     ├── admin/
-    │   ├── ClassScheduler.tsx       # Week-based class planner
-    │   └── AdminReservations.tsx    # Reservation viewer + stats
+    │   ├── ClassScheduler.tsx            # Week-based class planner
+    │   ├── AdminReservations.tsx         # Reservation viewer + stats
+    │   └── CreditManagement.tsx          # Manual credit assignment
+    ├── auth/
+    │   └── Login.tsx                     # Login / signup page
     ├── classes/
-    │   ├── ClassList.tsx            # Main page: calendar + day class list
-    │   └── ClassDetail.tsx          # Class info + credit booking card
+    │   ├── ClassList.tsx                 # Main page: calendar + day class list
+    │   └── ClassDetail.tsx               # Class info + credit booking card
     ├── packages/
-    │   └── Packages.tsx             # Package purchase page (4 tiers)
+    │   └── Packages.tsx                  # Package display page (4 tiers)
     ├── reservations/
-    │   └── MyReservations.tsx       # Reservation list
+    │   └── MyReservations.tsx            # Student's reservation list
     └── booking/
-        └── BookingResult.tsx        # Success/cancelled feedback
+        └── BookingResult.tsx             # Success/cancelled feedback
 ```
 
 ### Routes
 
-| Path                  | Component             | Description                         |
-| --------------------- | --------------------- | ----------------------------------- |
-| `/classes`            | ClassList             | Calendar + day class list (default) |
-| `/classes/:classId`   | ClassDetail           | Class detail + booking              |
-| `/packages`           | Packages              | Credit packages (reference only)    |
-| `/my-reservations`    | MyReservations        | Student's reservation list          |
-| `/booking/success`    | BookingResult         | Post-booking success                |
-| `/booking/cancelled`  | BookingResult         | Post-booking cancelled              |
-| `/admin/schedule`     | ClassScheduler        | Week-based class planner            |
-| `/admin/reservations` | AdminReservations     | Reservation viewer + stats          |
+| Path                  | Component             | Description                          |
+| --------------------- | --------------------- | ------------------------------------ |
+| `/classes`            | ClassList             | Calendar + day class list (default)  |
+| `/classes/:classId`   | ClassDetail           | Class detail + booking               |
+| `/packages`           | Packages              | Credit packages (reference only)     |
+| `/my-reservations`    | MyReservations        | Student's reservation list           |
+| `/booking/success`    | BookingResult         | Post-booking success                 |
+| `/booking/cancelled`  | BookingResult         | Post-booking cancelled               |
+| `/admin/schedule`     | ClassScheduler        | Week-based class planner             |
+| `/admin/reservations` | AdminReservations     | Reservation viewer + stats           |
 | `/admin/credits`      | CreditManagement      | Manual credit assignment to students |
-| `/admin`              | Redirect → schedule   | Admin landing                       |
-| `/` or `*`            | Redirect → `/classes` | Default/fallback                    |
+| `/admin`              | Redirect → schedule   | Admin landing                        |
+| `/` or `*`            | Redirect → `/classes` | Default/fallback                     |
 
 ### Navigation
 
@@ -95,7 +110,7 @@ src/
 - Each credit assignment creates a new credit pool with custom validity dates
 - Admin specifies start date and expiration date for each pool
 - Multiple pools can exist per student
-- Stored in `creditPools` collection (mock data currently)
+- Stored in `creditPools` Firestore collection
 
 ### Booking Flow (Credit-Based)
 
@@ -112,7 +127,7 @@ src/
 2. Views 4 package tiers with pricing and savings
 3. "Buy" button shows alert (no actual purchase flow)
 
-**Note:** Package purchases are **not implemented**. The page exists to display pricing information only. Credit pools must be created manually in mock data or via Firebase console in production.
+**Note:** Package purchases are **not implemented**. The page exists to display pricing information only. Credit pools are created via the admin UI (`/admin/credits`) or directly via Firebase Console/Admin SDK.
 
 ---
 
@@ -199,17 +214,19 @@ interface Reservation {
 - `paymentMode = 'single'` is reserved for future direct payment support
 - `cancelledAt` is set when a reservation is cancelled
 
-### Instructor
+### AppUser (Student / Instructor / Admin)
 
 Path: `users/{userId}`
 
 ```typescript
-interface User {
+interface AppUser {
   id: string;
   name: string;
   email: string;
-  specialties: string[];
   active: boolean;
+  avatar: string;
+  role: 'student' | 'instructor' | 'admin';
+  specialties?: string[]; // Instructors only
 }
 ```
 
@@ -274,35 +291,66 @@ interface CreditBalance {
 
 ---
 
-## Mock Data Layer
+## Service Layer
 
-All data is served from `src/lib/mockData.ts` with simulated async delays (200-300ms).
+All data access goes through typed service classes in `src/services/`. Each service wraps Firestore reads/writes and handles `Timestamp → Date` conversion.
 
-### Available Mock Data
-
-| Data             | Count | Description                                               |
-| ---------------- | ----- | --------------------------------------------------------- |
-| ClassDefinitions | 16    | Reusable class types       |
-| Instructors      | 4     | With email, specialties, active flag                      |
-| Students         | 5     | Basic profiles (name, email)                              |
-| ScheduledClasses | 16    | Spread across days 0-14, various styles/times, studentIds |
-| Reservations     | 11    | All confirmed, credit payment mode                        |
-| Credit Pools     | 1     | 5/10 remaining, expires in 60 days                        |
-| Packages         | 4     | 1/4/8/14 credits at $25/$80/$144/$224                     |
-
-### Exported Functions
+### `scheduleService` (`schedule.service.ts`)
 
 ```typescript
-getClassDefinitions(): Promise<ClassDefinition[]>
-getScheduledClasses(): Promise<ScheduledClass[]>
+getAllScheduledClasses(): Promise<ScheduledClass[]>
 getScheduledClassById(id: string): Promise<ScheduledClass | null>
-getReservations(): Promise<Reservation[]>
-getCreditBalance(): Promise<CreditBalance>
-getPackages(): Promise<Package[]>
-getInstructors(): Promise<Instructor[]>
-getStudents(): Promise<Student[]>
-getAdminReservations(): Promise<AdminReservation[]>
-duplicateWeek(sourceClasses: ScheduledClass[], offsetWeeks: number): ScheduledClass[]
+setScheduledClass(id: string, data: Omit<ScheduledClass, 'id'>): Promise<void>
+cancelScheduledClass(id: string): Promise<void>
+activateScheduledClass(id: string): Promise<void>
+duplicateWeek(sourceClasses: ScheduledClass[], offsetWeeks: number): Promise<void>
+```
+
+### `classDefinitionService` (`class-definition.service.ts`)
+
+```typescript
+getAllClassDefinitions(): Promise<ClassDefinition[]>
+```
+
+### `userService` (`user.service.ts`)
+
+```typescript
+createStudent(uid: string, email: string, userName: string): Promise<void>
+getStudent(uid: string): Promise<AppUser | null>
+getInstructors(): Promise<AppUser[]>
+getStudents(): Promise<AppUser[]>
+```
+
+### `creditService` (`credit.service.ts`)
+
+```typescript
+getCreditBalance(studentId: string): Promise<CreditBalance>
+getCreditPoolsByStudent(studentId: string): Promise<CreditPool[]>
+createCreditPool(params: { studentId, credits, startDate, expiresAt, packageId?, notes?, createdBy }): Promise<void>
+```
+
+### `reservationService` (`reservation.service.ts`)
+
+Also exports the `AdminReservation` interface.
+
+```typescript
+getReservationsByStudent(studentId: string): Promise<Reservation[]>
+getAdminReservations(): Promise<AdminReservation[]>  // joins reservations + scheduledClasses + users
+```
+
+### `packageService` (`package.service.ts`)
+
+```typescript
+getAllPackages(): Promise<Package[]>
+```
+
+### `callable.ts`
+
+Wrappers for Firebase callable Cloud Functions.
+
+```typescript
+createMyReservations(): Promise<CloudReservation[]>
+createCheckoutSession(classId: string): Promise<CreateCheckoutSessionResponse>
 ```
 
 ---
@@ -397,7 +445,7 @@ If any invariant would be violated:
 
 ## Security Boundaries (Production)
 
-> **Note:** Authentication is not yet implemented. These rules apply to the future Firebase production deployment.
+> **Note:** Firestore security rules are not yet deployed. These rules define the target production security posture.
 
 ### Client Trust Model
 
@@ -607,41 +655,31 @@ Admins use the `/admin/credits` page to:
 3. Submit to create credit pool
 4. View and manage existing pools for each student
 
-### Development (Mock Data)
-Update `src/lib/mockData.ts` to add credit pools:
-```typescript
-export const mockCreditPools: CreditPool[] = [
-  {
-    id: 'pool_1',
-    studentId: 'student_1',
-    totalCredits: 10,
-    remainingCredits: 5,
-    startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Started 7 days ago
-    expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // Expires in 60 days
-    packageId: 'pkg_regular',
-    createdAt: new Date(),
-    createdBy: 'admin_1',
-    notes: 'Monthly subscription',
-  },
-];
-```
+### Development (Admin UI or Firebase Console)
+
+Use the `/admin/credits` page to create pools directly against the live Firestore emulator or dev project, or seed via script.
 
 ### Production (Firebase Console / Admin SDK)
+
 Create credit pools via Firebase Console or Admin SDK:
+
 ```typescript
-await admin.firestore().collection('creditPools').add({
-  studentId: 'student_id_here',
-  totalCredits: 10,
-  remainingCredits: 10,
-  startDate: admin.firestore.Timestamp.now(),
-  expiresAt: admin.firestore.Timestamp.fromDate(
-    new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
-  ),
-  packageId: 'custom_monthly', // Optional
-  createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  createdBy: 'admin_user_id',
-  notes: 'Monthly membership credits',
-});
+await admin
+  .firestore()
+  .collection('creditPools')
+  .add({
+    studentId: 'student_id_here',
+    totalCredits: 10,
+    remainingCredits: 10,
+    startDate: admin.firestore.Timestamp.now(),
+    expiresAt: admin.firestore.Timestamp.fromDate(
+      new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+    ),
+    packageId: 'custom_monthly', // Optional
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdBy: 'admin_user_id',
+    notes: 'Monthly membership credits',
+  });
 ```
 
 ---
@@ -697,16 +735,16 @@ The `/packages` page displays pricing information for reference only.
 
 ## Error Codes
 
-| Code                          | Meaning                                  | Client Action             |
-| ----------------------------- | ---------------------------------------- | ------------------------- |
-| `CLASS_FULL`                  | No seats available                       | Show "class full" message |
-| `ALREADY_BOOKED`              | Student already has reservation          | Show existing reservation |
-| `NO_VALID_CREDITS`            | No credits within validity period        | Show "no credits" message |
-| `CREDITS_EXPIRED`             | Selected pool expired during transaction | Retry with fresh query    |
+| Code                          | Meaning                                  | Client Action                 |
+| ----------------------------- | ---------------------------------------- | ----------------------------- |
+| `CLASS_FULL`                  | No seats available                       | Show "class full" message     |
+| `ALREADY_BOOKED`              | Student already has reservation          | Show existing reservation     |
+| `NO_VALID_CREDITS`            | No credits within validity period        | Show "no credits" message     |
+| `CREDITS_EXPIRED`             | Selected pool expired during transaction | Retry with fresh query        |
 | `CREDITS_NOT_YET_VALID`       | Start date is in the future              | Show "not yet active" message |
-| `INVALID_PAYMENT_MODE`        | Unknown payment mode                     | Bug - log and alert       |
-| `CANCELLATION_WINDOW_EXPIRED` | Past allowed cancellation time           | Show policy message       |
-| `POOL_EXPIRED`                | Credit pool expired during restore       | Policy decision required  |
+| `INVALID_PAYMENT_MODE`        | Unknown payment mode                     | Bug - log and alert           |
+| `CANCELLATION_WINDOW_EXPIRED` | Past allowed cancellation time           | Show policy message           |
+| `POOL_EXPIRED`                | Credit pool expired during restore       | Policy decision required      |
 
 ---
 
@@ -817,17 +855,17 @@ When implementing any booking-related feature, verify:
 **Rationale:** Simplifies booking flow, encourages package purchases, enables flexible pricing via package tiers.  
 **Trade-off:** Students must purchase at least 1 credit before reserving.
 
-### ADR-004: Mock Data Layer
+### ADR-004: Service Layer replacing Mock Data
 
-**Decision:** Use in-memory mock data with simulated async delays instead of Firebase during development.  
-**Rationale:** Enables frontend development without backend dependencies. Easy to swap for Firebase later.  
-**Trade-off:** No persistence, no multi-user state.
+**Decision:** Replace in-memory mock data with typed Firestore service classes (`src/services/`).
+**Rationale:** Enables real data persistence, multi-user support, and a clean abstraction boundary. Each service owns one Firestore collection and handles `Timestamp → Date` conversion.
+**Trade-off:** Requires a live Firebase project or local emulator for development.
 
-### ADR-005: No Authentication (MVP)
+### ADR-005: Firebase Auth (Implemented)
 
-**Decision:** Defer authentication to a future phase. All data assumes a single hardcoded student.  
-**Rationale:** Faster iteration on UI/UX. Auth can be layered on top without restructuring.  
-**Trade-off:** Cannot distinguish users; mock studentId used throughout.
+**Decision:** Firebase Auth with email/password, role detection via `VITE_ADMIN_EMAILS` env var, and `AuthContext` providing `user`, `appUser`, `isAdmin`, `login`, `signup`, `logout`.
+**Rationale:** Standard Firebase pattern; allows per-user data scoping for credits and reservations.
+**Trade-off:** Admin role is determined by email list (env var), not a custom claim — suitable for small teams.
 
 ### ADR-006: ClassDefinition + ScheduledClass Split
 
@@ -939,16 +977,17 @@ If original pool has expired when cancellation is requested:
 - [x] Student selector with search
 - [x] Credit pool creation form (credits, start date, expiration)
 - [x] Credit pool list view per student
-- [x] Mock data functions for credit management
 - [x] Validation for date ranges and credit amounts
 
-### Phase 2: Authentication & Firebase
+### Phase 2: Authentication & Firebase ✅
 
 - [x] Firebase Auth integration
-- [ ] Firestore data migration (replace mocks)
+- [x] Firestore service layer (replaces mock data)
+- [x] AuthContext with login/signup/logout
+- [x] Route guards (protected + admin routes)
+- [x] Admin credit pool creation via Firestore
 - [ ] Firestore security rules deployment
 - [ ] User profile page
-- [ ] Admin interface for manual credit pool creation
 
 ### Phase 3: Core Backend Functions
 
@@ -977,19 +1016,19 @@ If original pool has expired when cancellation is requested:
 
 ## Glossary
 
-| Term            | Definition                                                   |
-| --------------- | ------------------------------------------------------------ |
-| Credit Pool     | A bundle of class credits with defined validity period       |
-| FIFO            | First-In-First-Out - consume earliest expiring credits first |
-| Reservation     | A student's booking for a specific class                     |
-| Package         | Display-only pricing reference (not purchasable)             |
-| Capacity        | Maximum students allowed in a class                          |
-| Enrolled Count  | Current number of confirmed students                         |
-| Validity Period | Time window between startDate and expiresAt for credit pool  |
-| Credit Balance  | Aggregated remaining/total from all active pools             |
-| Mock Data       | In-memory simulated data layer for development               |
-| ClassDefinition | A reusable class type (e.g. "Salsa Basics")                  |
-| ScheduledClass  | A concrete class instance planned for a specific date/time   |
-| Duplicate Week  | Admin action to copy a week's classes to the following week  |
-| Start Date      | Date when credit pool becomes valid for use                  |
-| Admin Credit Mgmt | Admin interface for manually assigning credits to students |
+| Term              | Definition                                                   |
+| ----------------- | ------------------------------------------------------------ |
+| Credit Pool       | A bundle of class credits with defined validity period       |
+| FIFO              | First-In-First-Out - consume earliest expiring credits first |
+| Reservation       | A student's booking for a specific class                     |
+| Package           | Display-only pricing reference (not purchasable)             |
+| Capacity          | Maximum students allowed in a class                          |
+| Enrolled Count    | Current number of confirmed students                         |
+| Validity Period   | Time window between startDate and expiresAt for credit pool  |
+| Credit Balance    | Aggregated remaining/total from all active pools             |
+| Mock Data         | In-memory simulated data layer for development               |
+| ClassDefinition   | A reusable class type (e.g. "Salsa Basics")                  |
+| ScheduledClass    | A concrete class instance planned for a specific date/time   |
+| Duplicate Week    | Admin action to copy a week's classes to the following week  |
+| Start Date        | Date when credit pool becomes valid for use                  |
+| Admin Credit Mgmt | Admin interface for manually assigning credits to students   |

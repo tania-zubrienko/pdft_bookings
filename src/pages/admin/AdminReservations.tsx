@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import { getAdminReservations, AdminReservation } from '../../lib/mockData';
+import reservationService, {
+  AdminReservation,
+} from '@/services/reservation.service';
 import AdminLayout from '../../components/Layout/AdminLayout';
 import {
   Calendar,
@@ -19,7 +21,7 @@ export default function AdminReservations() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    getAdminReservations().then((res) => {
+    reservationService.getAdminReservations().then((res) => {
       setReservations(res);
       setLoading(false);
     });
@@ -120,9 +122,8 @@ export default function AdminReservations() {
     const cancelled = filteredReservations.filter(
       (r) => r.status === 'cancelled',
     ).length;
-    const uniqueStudents = new Set(
-      filteredReservations.map((r) => r.studentId),
-    ).size;
+    const uniqueStudents = new Set(filteredReservations.map((r) => r.studentId))
+      .size;
     const uniqueClasses = new Set(
       filteredReservations.map((r) => r.scheduledClassId),
     ).size;
@@ -173,9 +174,9 @@ export default function AdminReservations() {
     period === 'week'
       ? `${weekStart.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })} – ${new Date(weekEnd.getTime() - 1).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}`
       : new Date(now.getFullYear(), now.getMonth()).toLocaleString('es-ES', {
-        month: 'long',
-        year: 'numeric',
-      });
+          month: 'long',
+          year: 'numeric',
+        });
 
   return (
     <AdminLayout>
@@ -195,20 +196,22 @@ export default function AdminReservations() {
         <div className='flex gap-2'>
           <button
             onClick={() => setPeriod('week')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${period === 'week'
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-              }`}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              period === 'week'
+                ? 'bg-primary-600 text-white'
+                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+            }`}
           >
             <Calendar className='w-4 h-4' />
             Esta Semana
           </button>
           <button
             onClick={() => setPeriod('month')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${period === 'month'
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-              }`}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              period === 'month'
+                ? 'bg-primary-600 text-white'
+                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+            }`}
           >
             <CalendarDays className='w-4 h-4' />
             Este Mes
@@ -229,7 +232,9 @@ export default function AdminReservations() {
       </div>
 
       {/* Period label */}
-      <p className='text-sm font-medium text-ui-text-soft	 mb-4'>{periodLabel}</p>
+      <p className='text-sm font-medium text-ui-text-soft	 mb-4'>
+        {periodLabel}
+      </p>
 
       {/* Stats row */}
       <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6'>
@@ -319,9 +324,7 @@ export default function AdminReservations() {
                     <div className='flex items-center gap-3 shrink-0'>
                       {statusBadge(r.status)}
                       <span className='text-xs text-gray-400'>
-                        {r.paymentMode === 'credit'
-                          ? 'Crédito'
-                          : 'Individual'}
+                        {r.paymentMode === 'credit' ? 'Crédito' : 'Individual'}
                       </span>
                     </div>
                   </div>

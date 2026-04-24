@@ -2,17 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ScheduledClass, CreditBalance } from '../../types';
 import Layout from '../../components/Layout/Layout';
-import {
-  ArrowLeft,
-  Calendar,
-  Users,
-  AlertCircle,
-  Ticket,
-} from 'lucide-react';
-import { getCreditBalance, getScheduledClassById } from '@/lib/mockData';
+import { ArrowLeft, Calendar, Users, AlertCircle, Ticket } from 'lucide-react';
+import scheduleService from '@/services/schedule.service';
+import creditService from '@/services/credit.service';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
+  const { user } = useAuth();
 
   const [classData, setClassData] = useState<ScheduledClass | null>(null);
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(
@@ -25,14 +22,19 @@ export default function ClassDetail() {
   useEffect(() => {
     if (!classId) return;
 
-    Promise.all([getScheduledClassById(classId), getCreditBalance()]).then(
-      ([classResult, balanceResult]) => {
-        setClassData(classResult);
-        setCreditBalance(balanceResult);
-        setLoading(false);
-      },
-    );
-  }, [classId]);
+    const fetchData = async () => {
+      const [classResult, balanceResult] = await Promise.all([
+        scheduleService.getScheduledClassById(classId),
+        user
+          ? creditService.getCreditBalance(user.uid)
+          : Promise.resolve({ remaining: 0, total: 0 }),
+      ]);
+      setClassData(classResult);
+      setCreditBalance(balanceResult);
+      setLoading(false);
+    };
+    fetchData();
+  }, [classId, user]);
 
   const handleBookClass = async () => {
     if (!classData) return;
@@ -137,7 +139,6 @@ export default function ClassDetail() {
             </div>
             <div className='card rounded-lg p-4'>
               <div className='flex items-center gap-2'>
-
                 <Users className='w-6 h-6 text-primary-600 mb-2' />
                 <p className='text-sm text-gray-100'>Plazas</p>
               </div>
@@ -150,9 +151,7 @@ export default function ClassDetail() {
 
           {/* User */}
           <div className=' card  rounded-xl border p-6 mb-6'>
-            <p className='text-sm text-ui-text-soft	 pb-2'>
-              Instructor
-            </p>
+            <p className='text-sm text-ui-text-soft	 pb-2'>Instructor</p>
             <div className='flex items-center gap-4'>
               <div className='w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center'>
                 <span className='text-primary-600 font-bold text-lg'>
@@ -269,10 +268,8 @@ export default function ClassDetail() {
           <p className='text-xs text-ui-text-soft	 text-center mt-4'>
             1 crédito = 1 reserva de clase
           </p>
-
         </div>
       </div>
-
     </Layout>
   );
 }

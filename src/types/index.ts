@@ -57,9 +57,9 @@ export interface AppUser {
   email: string;
   active: boolean;
   avatar: string;
-  role: 'student' | 'instructor' | 'admin'
+  role: 'student' | 'instructor' | 'admin';
+  specialties?: string[];
 }
-
 
 /**
  * Credit pool — a bundle of credits from a package purchase.
@@ -109,10 +109,10 @@ export interface CreateCheckoutSessionResponse {
 
 export interface BookingError {
   code:
-  | 'CLASS_FULL'
-  | 'ALREADY_BOOKED'
-  | 'NO_VALID_CREDITS'
-  | 'PAYMENT_REQUIRED'
-  | 'INVALID_PAYMENT_MODE';
+    | 'CLASS_FULL'
+    | 'ALREADY_BOOKED'
+    | 'NO_VALID_CREDITS'
+    | 'PAYMENT_REQUIRED'
+    | 'INVALID_PAYMENT_MODE';
   message: string;
 }

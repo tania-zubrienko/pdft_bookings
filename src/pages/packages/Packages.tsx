@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getPackages, getCreditBalance } from '../../lib/mockData';
+import packageService from '@/services/package.service';
+import creditService from '@/services/credit.service';
+import { useAuth } from '@/contexts/AuthContext';
 import { Package, CreditBalance } from '../../types';
 import Layout from '../../components/Layout/Layout';
 import { CheckCircle, Ticket, Sparkles, ShoppingCart } from 'lucide-react';
 
 export default function Packages() {
+  const { user } = useAuth();
   const [packages, setPackages] = useState<Package[]>([]);
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(
     null,
@@ -13,12 +16,19 @@ export default function Packages() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getPackages(), getCreditBalance()]).then(([pkgs, balance]) => {
+    const fetchData = async () => {
+      const [pkgs, balance] = await Promise.all([
+        packageService.getAllPackages(),
+        user
+          ? creditService.getCreditBalance(user.uid)
+          : Promise.resolve({ remaining: 0, total: 0 }),
+      ]);
       setPackages(pkgs.filter((p) => p.active));
       setCreditBalance(balance);
       setLoading(false);
-    });
-  }, []);
+    };
+    fetchData();
+  }, [user]);
 
   const formatPrice = (cents: number) =>
     new Intl.NumberFormat('es-ES', {
@@ -85,8 +95,9 @@ export default function Packages() {
         {packages.map((pkg) => (
           <div
             key={pkg.id}
-            className={`relative rounded-2xl border-2 bg-white p-6 flex flex-col transition-shadow hover:shadow-lg ${pkg.highlight ? 'border-primary-500 shadow-md' : 'border-gray-200'
-              }`}
+            className={`relative rounded-2xl border-2 bg-white p-6 flex flex-col transition-shadow hover:shadow-lg ${
+              pkg.highlight ? 'border-primary-500 shadow-md' : 'border-gray-200'
+            }`}
           >
             {/* Highlight badge */}
             {pkg.highlight && (
@@ -156,8 +167,9 @@ export default function Packages() {
 
             {/* Buy Button */}
             <button
-              className={`btn w-full py-3 text-base flex items-center justify-center gap-2 ${pkg.highlight ? 'btn-primary' : 'btn-outline'
-                }`}
+              className={`btn w-full py-3 text-base flex items-center justify-center gap-2 ${
+                pkg.highlight ? 'btn-primary' : 'btn-outline'
+              }`}
               onClick={() =>
                 alert(
                   `Compra ${pkg.name} por ${formatPrice(pkg.price)} (simulación)`,

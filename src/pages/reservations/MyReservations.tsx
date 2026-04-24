@@ -4,28 +4,33 @@ import Layout from '../../components/Layout/Layout';
 import { Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ScheduledClass } from '../../types';
-import { getReservations, getScheduledClasses } from '@/lib/mockData';
+import reservationService from '@/services/reservation.service';
+import scheduleService from '@/services/schedule.service';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ReservationWithClass extends Reservation {
   scheduledClass?: ScheduledClass;
 }
 
 export default function MyReservations() {
+  const { user } = useAuth();
   const [reservations, setReservations] = useState<ReservationWithClass[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getReservations(), getScheduledClasses()]).then(
-      ([resData, classData]) => {
-        const enriched = resData.map((r) => ({
-          ...r,
-          scheduledClass: classData.find((c) => c.id === r.scheduledClassId),
-        }));
-        setReservations(enriched);
-        setLoading(false);
-      },
-    );
-  }, []);
+    if (!user) return;
+    Promise.all([
+      reservationService.getReservationsByStudent(user.uid),
+      scheduleService.getAllScheduledClasses(),
+    ]).then(([resData, classData]) => {
+      const enriched = resData.map((r) => ({
+        ...r,
+        scheduledClass: classData.find((c) => c.id === r.scheduledClassId),
+      }));
+      setReservations(enriched);
+      setLoading(false);
+    });
+  }, [user]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

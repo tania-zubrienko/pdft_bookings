@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 
-import { ClassDefinition, User, ScheduledClass } from '../../types';
+import { ClassDefinition, AppUser, ScheduledClass } from '../../types';
 import AdminLayout from '../../components/Layout/AdminLayout';
 import {
   ChevronLeft,
@@ -15,7 +15,9 @@ import {
   Copy,
   RotateCcw,
 } from 'lucide-react';
-import { duplicateWeek, getClassDefinitions, getInstructors, getScheduledClasses } from '@/lib/mockData';
+import scheduleService from '@/services/schedule.service';
+import classDefinitionService from '@/services/class-definition.service';
+import userService from '@/services/user.service';
 
 const DAY_NAMES = [
   'Domingo',
@@ -69,7 +71,7 @@ export default function ClassScheduler() {
   const [classDefinitions, setClassDefinitions] = useState<ClassDefinition[]>(
     [],
   );
-  const [instructors, setInstructors] = useState<User[]>([]);
+  const [instructors, setInstructors] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Week navigation — always tracks the Monday of the viewed week
@@ -81,9 +83,9 @@ export default function ClassScheduler() {
 
   useEffect(() => {
     Promise.all([
-      getScheduledClasses(),
-      getInstructors(),
-      getClassDefinitions(),
+      scheduleService.getAllScheduledClasses(),
+      userService.getInstructors(),
+      classDefinitionService.getAllClassDefinitions(),
     ]).then(([sc, insts, defs]) => {
       setAllClasses(sc);
       setInstructors(insts);
@@ -135,11 +137,12 @@ export default function ClassScheduler() {
 
   // ─── Duplicate week ─────────────────────────────────────────────────
 
-  const handleDuplicateWeek = () => {
+  const handleDuplicateWeek = async () => {
     const activeInWeek = weekClasses.filter((c) => c.status === 'active');
     if (activeInWeek.length === 0) return;
-    const newClasses = duplicateWeek(activeInWeek, 1);
-    setAllClasses((prev) => [...prev, ...newClasses]);
+    await scheduleService.duplicateWeek(activeInWeek, 1);
+    const refreshed = await scheduleService.getAllScheduledClasses();
+    setAllClasses(refreshed);
     // Navigate to the next week
     nextWeek();
   };
@@ -187,8 +190,10 @@ export default function ClassScheduler() {
     setShowModal(true);
   };
 
-  const saveClass = () => {
+  const saveClass = async () => {
     if (!editingClass || !editingClass.classTitle) return;
+    const { id, ...data } = editingClass;
+    await scheduleService.setScheduledClass(id, data);
     setAllClasses((prev) => {
       const exists = prev.find((c) => c.id === editingClass.id);
       if (exists) {
@@ -200,7 +205,8 @@ export default function ClassScheduler() {
     setEditingClass(null);
   };
 
-  const cancelClass = (id: string) => {
+  const cancelClass = async (id: string) => {
+    await scheduleService.cancelScheduledClass(id);
     setAllClasses((prev) =>
       prev.map((c) =>
         c.id === id ? { ...c, status: 'cancelled' as const } : c,
@@ -208,7 +214,8 @@ export default function ClassScheduler() {
     );
   };
 
-  const restoreClass = (id: string) => {
+  const restoreClass = async (id: string) => {
+    await scheduleService.activateScheduledClass(id);
     setAllClasses((prev) =>
       prev.map((c) => (c.id === id ? { ...c, status: 'active' as const } : c)),
     );
@@ -307,8 +314,9 @@ export default function ClassScheduler() {
               className='bg-white rounded-xl border border-gray-200 overflow-hidden'
             >
               <div
-                className={`flex items-center justify-between px-4 py-3 border-b border-gray-200 ${isCurrentDay ? 'bg-primary-50' : 'bg-gray-50'
-                  }`}
+                className={`flex items-center justify-between px-4 py-3 border-b border-gray-200 ${
+                  isCurrentDay ? 'bg-primary-50' : 'bg-gray-50'
+                }`}
               >
                 <h3 className='font-semibold text-gray-900'>
                   {DAY_NAMES[dayNum]}{' '}
@@ -344,8 +352,9 @@ export default function ClassScheduler() {
                     return (
                       <div
                         key={cls.id}
-                        className={`px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 ${isCancelled ? 'opacity-50' : 'hover:bg-gray-50'
-                          } transition-colors`}
+                        className={`px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 ${
+                          isCancelled ? 'opacity-50' : 'hover:bg-gray-50'
+                        } transition-colors`}
                       >
                         <div className='flex-1 min-w-0'>
                           <div className='flex items-center gap-2'>
@@ -559,7 +568,7 @@ export default function ClassScheduler() {
                         key={inst.id}
                         value={inst.id}
                       >
-                        {inst.name} — {inst.specialties.join(', ')}
+                        {inst.name} — {inst.specialties?.join(', ') ?? ''}
                       </option>
                     ))}
                 </select>
