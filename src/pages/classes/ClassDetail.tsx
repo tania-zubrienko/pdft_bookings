@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ScheduledClass, CreditPool } from '../../types';
+import { ScheduledClass, CreditPool, AppUser } from '../../types';
 import Layout from '../../components/Layout/Layout';
 import {
   ArrowLeft,
   Calendar,
+  Clock,
   Users,
   AlertCircle,
   Ticket,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import scheduleService from '@/services/schedule.service';
 import creditService from '@/services/credit.service';
+import userService from '@/services/user.service';
 import { useAuth } from '@/contexts/AuthContext';
 import UI from '@/lib/styles';
 import reservationService from '@/services/reservation.service';
@@ -22,6 +24,7 @@ export default function ClassDetail() {
 
   const [classData, setClassData] = useState<ScheduledClass | null>(null);
   const [creditBalance, setCreditBalance] = useState<CreditPool | null>(null);
+  const [enrolledStudents, setEnrolledStudents] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [error, setError] = useState('');
@@ -31,20 +34,29 @@ export default function ClassDetail() {
     if (!classId) return;
 
     const fetchData = async () => {
-      const [classResult, balanceResult] = await Promise.all([
+      const [classResult, balanceResult, allStudents] = await Promise.all([
         scheduleService.getScheduledClassById(classId),
         user ? creditService.getCreditBalance(user.uid) : null,
+        userService.getStudents(),
       ]);
       setClassData(classResult);
       setCreditBalance(balanceResult);
+      if (classResult) {
+        setEnrolledStudents(
+          allStudents.filter((s) => classResult.studentIds.includes(s.id)),
+        );
+      }
       setLoading(false);
     };
     fetchData();
   }, [classId, user]);
 
+  const alreadyBooked =
+    !!appUser && !!classData && classData.studentIds.includes(appUser.id);
+
   const handleBookClass = async () => {
     if (!classData || !user || !appUser) return;
-    if (classData.studentIds.includes(appUser.id)) return;
+    if (alreadyBooked) return;
     setBookingLoading(true);
     setError('');
     setSuccess(false);
@@ -57,11 +69,17 @@ export default function ClassDetail() {
         'credit',
       );
 
-      const [updatedClass, updatedBalance] = await Promise.all([
+      const [updatedClass, updatedBalance, allStudents] = await Promise.all([
         scheduleService.getScheduledClassById(classData.id),
         creditService.getCreditBalance(user.uid),
+        userService.getStudents(),
       ]);
-      if (updatedClass) setClassData(updatedClass);
+      if (updatedClass) {
+        setClassData(updatedClass);
+        setEnrolledStudents(
+          allStudents.filter((s) => updatedClass.studentIds.includes(s.id)),
+        );
+      }
       setCreditBalance(updatedBalance);
       setSuccess(true);
     } catch (err: any) {
@@ -148,40 +166,62 @@ export default function ClassDetail() {
 
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
         {/* Main Content */}
-        <div className='lg:col-span-2 '>
-          {/* Class Info */}
-          <h1 className={`${UI.text.heading} mb-4`}>{classData.classTitle}</h1>
+        <div className='lg:col-span-2 space-y-6'>
+          <h1 className={UI.text.heading}>{classData.classTitle}</h1>
 
           {/* Details Grid */}
-          <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 '>
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
             <div className='card rounded-lg p-4'>
-              <div className='flex items-center gap-2'>
-                <Calendar className='w-6 h-6 text-primary-600' />
-                <p className='text-sm text-gray-100 '>Fecha</p>
+              <div className='flex items-center gap-2 mb-1'>
+                <Calendar className='w-5 h-5 text-primary-600' />
+                <p className='text-sm text-gray-400'>Fecha</p>
               </div>
               <p className='font-medium text-gray-100'>
-                {formatDate(scheduledDate)} - {formatTime(scheduledDate)}
+                {formatDate(scheduledDate)}
               </p>
             </div>
+
             <div className='card rounded-lg p-4'>
-              <div className='flex items-center gap-2'>
-                <Users className='w-6 h-6 text-primary-600 mb-2' />
-                <p className='text-sm text-gray-100'>Plazas</p>
+              <div className='flex items-center gap-2 mb-1'>
+                <Clock className='w-5 h-5 text-primary-600' />
+                <p className='text-sm text-gray-400'>Hora · Duración</p>
               </div>
               <p className='font-medium text-gray-100'>
-                {spotsLeft} / {classData.capacity} disponibles
+                {formatTime(scheduledDate)} · {classData.duration} min
               </p>
-              <p className='text-sm text-gray-100'> Fotos de alumos</p>
+            </div>
+
+            <div className='card rounded-lg p-4'>
+              <div className='flex items-center gap-2 mb-1'>
+                <Users className='w-5 h-5 text-primary-600' />
+                <p className='text-sm text-gray-400'>Plazas</p>
+              </div>
+              <p className='font-medium text-gray-100'>
+                {classData.enrolledCount} / {classData.capacity} inscritos
+              </p>
+              <p
+                className={`text-sm mt-1 ${
+                  isFull
+                    ? 'text-red-400'
+                    : spotsLeft <= 3
+                      ? 'text-amber-400'
+                      : 'text-green-400'
+                }`}
+              >
+                {isFull
+                  ? 'Completa'
+                  : `${spotsLeft} plaza${spotsLeft !== 1 ? 's' : ''} libre${spotsLeft !== 1 ? 's' : ''}`}
+              </p>
             </div>
           </div>
 
-          {/* User */}
-          <div className=' card  rounded-xl border p-6 mb-6'>
-            <p className='text-sm text-ui-text-soft	 pb-2'>Instructor</p>
+          {/* Instructor */}
+          <div className='card rounded-xl p-6'>
+            <p className='text-sm text-gray-400 pb-2'>Instructor</p>
             <div className='flex items-center gap-4'>
-              <div className='w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center'>
+              <div className='w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0'>
                 <span className='text-primary-600 font-bold text-lg'>
-                  {classData.instructorName.charAt(0)}
+                  {classData.instructorName.charAt(0).toUpperCase()}
                 </span>
               </div>
               <p className='font-medium text-gray-100'>
@@ -189,59 +229,112 @@ export default function ClassDetail() {
               </p>
             </div>
           </div>
+
+          {/* Enrolled Students */}
+          <div className='card rounded-xl p-6'>
+            <p className='text-sm text-gray-400 mb-4'>
+              Alumnos inscritos ({classData.enrolledCount})
+            </p>
+            {enrolledStudents.length === 0 ? (
+              <p className='text-sm text-gray-500'>
+                Aún no hay alumnos inscritos.
+              </p>
+            ) : (
+              <div className='flex flex-wrap gap-4'>
+                {enrolledStudents.map((student) => (
+                  <div
+                    key={student.id}
+                    className='flex items-center gap-2'
+                  >
+                    {student.avatar ? (
+                      <img
+                        src={student.avatar}
+                        alt={student.name}
+                        className='w-9 h-9 rounded-full object-cover'
+                      />
+                    ) : (
+                      <div className='w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0'>
+                        <span className='text-white text-sm font-medium'>
+                          {student.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <span className='text-sm text-gray-300'>
+                      {student.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Booking Card */}
         <div className='lg:col-span-1'>
           <div className='card p-6 sticky top-6'>
-            {/* Credit Balance */}
-            {creditBalance && creditBalance.remainingCredits > 0 ? (
-              <div className='mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <Ticket className='w-5 h-5 text-indigo-600' />
-                  <span className='font-medium text-indigo-900'>
-                    Tu Saldo de Clases
-                  </span>
-                </div>
-                <div className='flex items-baseline gap-1'>
-                  <span className='text-2xl font-bold text-indigo-700'>
-                    {creditBalance.remainingCredits}
-                  </span>
-                  <span className='text-sm text-indigo-500'>
-                    / {creditBalance.remainingCredits} clases restantes
-                  </span>
-                </div>
-                {/* Progress bar */}
-                <div className='mt-2 h-2 bg-indigo-200 rounded-full overflow-hidden'>
-                  <div
-                    className='h-full bg-indigo-600 rounded-full transition-all'
-                    style={{
-                      width: `${(creditBalance.remainingCredits / creditBalance.totalCredits) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className='mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <AlertCircle className='w-5 h-5 text-amber-600' />
-                  <span className='font-medium text-amber-900'>
-                    Sin Créditos Disponibles
-                  </span>
-                </div>
-                <p className='text-sm text-amber-700 mb-3'>
-                  Compra un paquete de clases para reservar.
-                </p>
-                <Link
-                  to='/packages'
-                  className='btn btn-primary text-sm w-full'
-                >
-                  Comprar Créditos
-                </Link>
+            {/* Already enrolled notice */}
+            {alreadyBooked && (
+              <div className='mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2'>
+                <CheckCircle className='w-5 h-5 text-blue-600 flex-shrink-0' />
+                <span className='font-medium text-blue-800'>
+                  Ya estás inscrito en esta clase
+                </span>
               </div>
             )}
 
-            {/* Success Message */}
+            {/* Credit Balance */}
+            {!alreadyBooked &&
+              creditBalance &&
+              creditBalance.remainingCredits > 0 && (
+                <div className='mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg'>
+                  <div className='flex items-center gap-2 mb-2'>
+                    <Ticket className='w-5 h-5 text-indigo-600' />
+                    <span className='font-medium text-indigo-900'>
+                      Tu Saldo de Clases
+                    </span>
+                  </div>
+                  <div className='flex items-baseline gap-1'>
+                    <span className='text-2xl font-bold text-indigo-700'>
+                      {creditBalance.remainingCredits}
+                    </span>
+                    <span className='text-sm text-indigo-500'>
+                      / {creditBalance.totalCredits} clases restantes
+                    </span>
+                  </div>
+                  <div className='mt-2 h-2 bg-indigo-200 rounded-full overflow-hidden'>
+                    <div
+                      className='h-full bg-indigo-600 rounded-full transition-all'
+                      style={{
+                        width: `${(creditBalance.remainingCredits / creditBalance.totalCredits) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+            {/* No credits */}
+            {!alreadyBooked &&
+              (!creditBalance || creditBalance.remainingCredits === 0) && (
+                <div className='mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg'>
+                  <div className='flex items-center gap-2 mb-2'>
+                    <AlertCircle className='w-5 h-5 text-amber-600' />
+                    <span className='font-medium text-amber-900'>
+                      Sin Créditos Disponibles
+                    </span>
+                  </div>
+                  <p className='text-sm text-amber-700 mb-3'>
+                    Compra un paquete de clases para reservar.
+                  </p>
+                  <Link
+                    to='/packages'
+                    className='btn btn-primary text-sm w-full'
+                  >
+                    Comprar Créditos
+                  </Link>
+                </div>
+              )}
+
+            {/* Success */}
             {success && (
               <div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2'>
                 <CheckCircle className='w-5 h-5 text-green-600 flex-shrink-0' />
@@ -251,59 +344,60 @@ export default function ClassDetail() {
               </div>
             )}
 
-            {/* Error Message */}
+            {/* Error */}
             {error && (
               <div className={`${UI.alert.error} mb-4`}>
                 <AlertCircle className='w-5 h-5 flex-shrink-0' />
                 <span>{error}</span>
               </div>
             )}
-            <>
-              {isFull && (
-                <div className='flex items-center gap-2'>
-                  <AlertCircle className='w-5 h-5 text-red-600' />
-                  <span className='font-medium text-red-700'>
-                    Clase Completa
-                  </span>
-                </div>
-              )}
-            </>
+
+            {/* Class full */}
+            {!alreadyBooked && isFull && (
+              <div className='flex items-center gap-2 mb-4'>
+                <AlertCircle className='w-5 h-5 text-red-600' />
+                <span className='font-medium text-red-700'>Clase Completa</span>
+              </div>
+            )}
+
+            {/* Book button */}
+            {!alreadyBooked && (
+              <>
+                {creditBalance && creditBalance.remainingCredits > 0 ? (
+                  <button
+                    onClick={handleBookClass}
+                    disabled={isFull || bookingLoading}
+                    className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
+                  >
+                    {bookingLoading ? (
+                      <>
+                        <div className={UI.loading.spinnerSm}></div>
+                        Procesando...
+                      </>
+                    ) : isFull ? (
+                      'Clase Completa'
+                    ) : (
+                      <>
+                        <Ticket className='w-5 h-5' />
+                        Usar 1 Crédito para Reservar
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    to='/packages'
+                    className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
+                  >
+                    <Ticket className='w-5 h-5' />
+                    Obtén Créditos para Reservar
+                  </Link>
+                )}
+                <p className='text-xs text-ui-text-soft text-center mt-4'>
+                  1 crédito = 1 reserva de clase
+                </p>
+              </>
+            )}
           </div>
-
-          {/* Book Button */}
-          {creditBalance && creditBalance.remainingCredits > 0 ? (
-            <button
-              onClick={handleBookClass}
-              disabled={isFull || bookingLoading}
-              className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
-            >
-              {bookingLoading ? (
-                <>
-                  <div className={UI.loading.spinnerSm}></div>
-                  Procesando...
-                </>
-              ) : isFull ? (
-                'Clase Completa'
-              ) : (
-                <>
-                  <Ticket className='w-5 h-5' />
-                  Usar 1 Crédito para Reservar
-                </>
-              )}
-            </button>
-          ) : (
-            <Link
-              to='/packages'
-              className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
-            >
-              <Ticket className='w-5 h-5' />
-              Obtén Créditos para Reservar
-            </Link>
-          )}
-
-          <p className='text-xs text-ui-text-soft	 text-center mt-4'>
-            1 crédito = 1 reserva de clase
-          </p>
         </div>
       </div>
     </Layout>

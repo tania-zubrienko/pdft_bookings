@@ -127,20 +127,19 @@ npm run dev
 
 ## Routes
 
-| Path                  | Component           | Description                   |
-| --------------------- | ------------------- | ----------------------------- |
-| `/classes`            | ClassList           | Calendar + day class list     |
-| `/classes/:classId`   | ClassDetail         | Class detail + credit booking |
+| Path                  | Component           | Description                    |
+| --------------------- | ------------------- | ------------------------------ |
+| `/classes`            | ClassList           | Calendar + day class list      |
+| `/classes/:classId`   | ClassDetail         | Class detail + credit booking  |
 | `/packages`           | Packages            | Credit packages (display only) |
-| `/my-reservations`    | MyReservations      | Student reservation list      |
-| `/booking/success`    | BookingResult       | Post-booking success          |
-| `/booking/cancelled`  | BookingResult       | Post-booking cancelled        |
-| `/admin/schedule`     | ClassScheduler      | Week-based class planner      |
-| `/admin/reservations` | AdminReservations   | Reservation viewer            |
-| `/admin/credits`      | CreditManagement    | Manual credit assignment      |
-| `/admin`              | Redirect → schedule | Admin landing                 |
-| `/` or `*`            | Redirect → classes  | Default/fallback              |
-
+| `/my-reservations`    | MyReservations      | Student reservation list       |
+| `/booking/success`    | BookingResult       | Post-booking success           |
+| `/booking/cancelled`  | BookingResult       | Post-booking cancelled         |
+| `/admin/schedule`     | ClassScheduler      | Week-based class planner       |
+| `/admin/reservations` | AdminReservations   | Reservation viewer             |
+| `/admin/credits`      | CreditManagement    | Manual credit assignment       |
+| `/admin`              | Redirect → schedule | Admin landing                  |
+| `/` or `*`            | Redirect → classes  | Default/fallback               |
 
 ## Roadmap
 
@@ -204,6 +203,54 @@ npm run dev
 - [ ] Expiration handling (scheduled function)
 - [ ] Booking history
 - [ ] Email notifications
+
+---
+
+## Pending UI/UX Improvements
+
+### 1. Class detail modal — Admin scheduler (`/admin/schedule`)
+
+- Clicking a class card on the scheduler opens a detail modal/panel
+- Shows: class title, instructor, enrolled count vs capacity
+- Lists enrolled students with avatar (or initials placeholder if no avatar)
+
+### 2. Student account page (`/account`)
+
+- New "My Account" tab in the student nav
+- Sections: my reservations (moved from `/my-reservations`), edit display name, edit avatar
+- Route: `/account`
+
+### 3. ✅ Class detail view — Student (`/classes/:classId`)
+
+- Extended `ClassDetail` page with enrolled student list (avatar or initials placeholder)
+- Fixed credit balance display (`remainingCredits / totalCredits`)
+- Cleaner info grid: date, time + duration, spots with colour-coded availability
+- Avatar row also shown on class cards in the day list (`ClassCard`)
+
+### 4. Class detail with student management — Admin reservations (`/admin/reservations`)
+
+- Clicking a scheduled class in the reservations list opens the class detail view
+- Admin can confirm or remove individual student reservations from this view
+- Reuses the shared `ClassDetailPanel` component
+
+### 5. Remove stats from admin reservations (`/admin/reservations`)
+
+- Remove the stats dashboard (total, confirmed, unique students/classes) from `AdminReservations`
+- Keep only the reservation list with search and week/month filter
+
+### 6. Edit credit pools — Admin credits (`/admin/credits`)
+
+- Each credit pool row for a student has an edit button
+- Admin can modify: remaining credits, start date, expiration date, notes
+- Validation: `startDate < expiresAt`, `remainingCredits <= totalCredits`
+
+### 7. ✅ Duplicate reservation guard — Class booking
+
+- `alreadyBooked` flag computed from `scheduledClass.studentIds` before any action
+- If already enrolled: blue notice shown, booking UI hidden — no credits charged, no reservation created
+- Enforces INV-003 on the client side as an early guard (server transaction remains the authoritative check)
+
+---
 
 ## License
 

@@ -78,6 +78,14 @@ class UserService {
     const snapshot = await getDocs(q);
     return snapshot.docs.map((d) => ({ ...d.data(), id: d.id }) as AppUser)[0];
   }
+
+  async updateUserProfile(
+    uid: string,
+    updates: { name?: string; avatar?: string },
+  ): Promise<void> {
+    const ref = doc(this.db, this.collectionName, uid);
+    await setDoc(ref, updates, { merge: true });
+  }
 }
 
 if (!db) {

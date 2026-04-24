@@ -1,16 +1,23 @@
 import { Link } from 'react-router-dom';
 import { Clock, Users } from 'lucide-react';
-import { ScheduledClass } from '../../types';
+import { AppUser, ScheduledClass } from '../../types';
 import UI, { getClassAccent } from '@/lib/styles';
 
 interface ClassCardProps {
   classData: ScheduledClass;
+  students?: AppUser[];
 }
 
-export default function ClassCard({ classData }: ClassCardProps) {
+export default function ClassCard({
+  classData,
+  students = [],
+}: ClassCardProps) {
   const isFull = classData.enrolledCount >= classData.capacity;
   const spotsLeft = classData.capacity - classData.enrolledCount;
   const accentBarClass = getClassAccent(classData.classTitle);
+  const enrolledStudents = students.filter((s) =>
+    classData.studentIds.includes(s.id),
+  );
 
   const formatTime = (date: Date) =>
     date.toLocaleTimeString('es-ES', {
@@ -61,6 +68,38 @@ export default function ClassCard({ classData }: ClassCardProps) {
           </span>
           <span className='text-gray-400'>{classData.duration} min</span>
         </div>
+
+        {/* Enrolled student avatars */}
+        {enrolledStudents.length > 0 && (
+          <div className='flex items-center gap-1'>
+            {enrolledStudents.slice(0, 8).map((student) =>
+              student.avatar ? (
+                <img
+                  key={student.id}
+                  src={student.avatar}
+                  alt={student.name}
+                  title={student.name}
+                  className='w-7 h-7 rounded-full object-cover ring-1 ring-gray-800'
+                />
+              ) : (
+                <div
+                  key={student.id}
+                  title={student.name}
+                  className='w-7 h-7 rounded-full bg-gray-600 flex items-center justify-center ring-1 ring-gray-800 flex-shrink-0'
+                >
+                  <span className='text-white text-xs font-medium'>
+                    {student.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              ),
+            )}
+            {enrolledStudents.length > 8 && (
+              <span className='text-xs text-gray-500 ml-1'>
+                +{enrolledStudents.length - 8}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Footer */}
         <div className='flex items-center justify-end pt-2 border-t border-gray-800'>

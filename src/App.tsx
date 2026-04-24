@@ -10,8 +10,8 @@ import BookingResult from './pages/booking/BookingResult';
 // Package Pages
 import Packages from './pages/packages/Packages';
 
-// Reservation Pages
-import MyReservations from './pages/reservations/MyReservations';
+// Account Pages
+import Account from './pages/account/Account';
 
 // Admin Pages
 import ClassScheduler from './pages/admin/ClassScheduler';
@@ -55,8 +55,17 @@ export default function App() {
       <Route
         path='/my-reservations'
         element={
+          <Navigate
+            to='/account'
+            replace
+          />
+        }
+      />
+      <Route
+        path='/account'
+        element={
           <RequireAuth>
-            <MyReservations />
+            <Account />
           </RequireAuth>
         }
       />

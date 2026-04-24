@@ -48,11 +48,11 @@ export default function NavBar() {
               {S.nav.classes}
             </Link>
             <Link
-              to='/my-reservations'
+              to='/account'
               className={`flex items-center gap-2 ${UI.nav.linkInactive}`}
             >
               <User className='w-5 h-5' />
-              {S.nav.myReservations}
+              {S.nav.myAccount}
             </Link>
 
             <button
@@ -92,12 +92,12 @@ export default function NavBar() {
             </Link>
 
             <Link
-              to='/my-reservations'
+              to='/account'
               onClick={() => setMenuOpen(false)}
               className='flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-ui-input hover:text-primary-400 transition-colors'
             >
               <User className='w-5 h-5' />
-              {S.nav.myReservations}
+              {S.nav.myAccount}
             </Link>
             {appUser && 'role' in appUser && appUser.role === 'admin' && (
               <Link

@@ -141,9 +141,7 @@ export default function CalendarView({
           >
             <ChevronLeft className='w-5 h-5' />
           </button>
-          <h2 className='text-sm sm:text-lg font-semibold text-gray-900 text-center'>
-            {headerLabel}
-          </h2>
+          <h2 className={UI.text.subheading}>{headerLabel}</h2>
           <button
             onClick={goForward}
             className={UI.button.icon}
@@ -216,15 +214,14 @@ export default function CalendarView({
               className={`
                 relative flex flex-col items-center justify-center gap-0.5 sm:gap-1 border border-gray-100 transition-colors min-h-[44px]
                 ${viewMode === 'week' ? 'py-3 sm:py-5' : 'py-1 sm:py-2'}
-                ${outOfMonth ? 'bg-gray-50 text-gray-400' : 'hover:bg-primary-50 active:bg-primary-100'}
-                ${selected ? 'bg-primary-50 ring-2 ring-inset ring-primary-500' : ''}
+                ${outOfMonth ? 'bg-gray-600/50 hover:bg-primary-600/50' : 'hover:bg-primary-600/50 active:bg-primary-100'}
+                ${selected ? 'bg-gray-500 ring-2 ring-inset ring-primary-500' : ''}
               `}
             >
               <span
                 className={`
                   text-xs sm:text-sm font-medium leading-none
                   ${today_ ? 'bg-primary-600 text-white w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full' : ''}
-                  ${selected && !today_ ? 'text-primary-700' : ''}
                   ${outOfMonth ? 'text-gray-400' : ''}
                 `}
               >
@@ -235,14 +232,12 @@ export default function CalendarView({
                   {/* Dot on mobile */}
                   <span
                     className={`sm:hidden w-1.5 h-1.5 rounded-full
-                      ${outOfMonth ? 'bg-gray-300' : 'bg-primary-500'}
+                      ${outOfMonth ? 'bg-gray-300' : 'bg-primary-800'}
                     `}
                   />
                   {/* Text badge on sm+ */}
                   <span
-                    className={`hidden sm:inline text-xs font-medium rounded-full px-1.5 py-0.5 leading-none
-                      ${outOfMonth ? 'bg-gray-200 text-ui-text-soft	' : 'bg-primary-100 text-primary-700'}
-                    `}
+                    className={`hidden sm:inline ${outOfMonth ? `${UI.badge.base} bg-ui-hover text-ui-text-muted` : UI.badge.blue}`}
                   >
                     {count} {count === 1 ? 'clase' : 'clases'}
                   </span>

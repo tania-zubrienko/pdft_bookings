@@ -26,6 +26,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, userName: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshAppUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -83,6 +84,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signOut(auth);
   }, []);
 
+  const refreshAppUser = useCallback(async () => {
+    if (!user) return;
+    try {
+      const userData = await fbService.getStudent(user.uid);
+      setAppUser(userData || null);
+    } catch (error) {
+      console.error('Failed to refresh AppUser:', error);
+    }
+  }, [user]);
+
   const isAdmin = useMemo(() => appUser?.role === 'admin', [appUser]);
 
   const value = useMemo<AuthContextValue>(
@@ -95,8 +106,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       signup,
       logout,
+      refreshAppUser,
     }),
-    [user, appUser, loading, isAdmin, login, signup, logout],
+    [user, appUser, loading, isAdmin, login, signup, logout, refreshAppUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

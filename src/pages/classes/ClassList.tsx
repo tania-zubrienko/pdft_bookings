@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScheduledClass } from '../../types';
+import { AppUser, ScheduledClass } from '../../types';
 import ClassCard from '../../components/Classes/ClassCard';
 import CalendarView from '../../components/Calendar/CalendarView';
 import Layout from '../../components/Layout/Layout';
 import { Calendar } from 'lucide-react';
 import scheduleService from '@/services/schedule.service';
+import userService from '@/services/user.service';
 import UI from '@/lib/styles';
 
 function isSameDay(a: Date, b: Date): boolean {
@@ -17,14 +18,19 @@ function isSameDay(a: Date, b: Date): boolean {
 
 export default function ClassList() {
   const [classes, setClasses] = useState<ScheduledClass[]>([]);
+  const [students, setStudents] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   useEffect(() => {
-    scheduleService.getAllScheduledClasses().then((data) => {
-      setClasses(data);
+    Promise.all([
+      scheduleService.getAllScheduledClasses(),
+      userService.getStudents(),
+    ]).then(([classData, studentData]) => {
+      setClasses(classData);
+      setStudents(studentData);
       setLoading(false);
     });
   }, []);
@@ -88,6 +94,7 @@ export default function ClassList() {
                 <ClassCard
                   key={classData.id}
                   classData={classData}
+                  students={students}
                 />
               ))}
             </div>
