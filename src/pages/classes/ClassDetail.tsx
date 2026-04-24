@@ -34,13 +34,22 @@ export default function ClassDetail() {
     if (!classId) return;
 
     const fetchData = async () => {
-      const [classResult, balanceResult, allStudents] = await Promise.all([
+      const [classResult, allPools, allStudents] = await Promise.all([
         scheduleService.getScheduledClassById(classId),
-        user ? creditService.getCreditBalance(user.uid) : null,
+        user ? creditService.getCreditPoolsByStudent(user.uid) : [],
         userService.getStudents(),
       ]);
       setClassData(classResult);
-      setCreditBalance(balanceResult);
+      const now = new Date();
+      const activePool = allPools
+        .filter(
+          (p) =>
+            p.remainingCredits > 0 &&
+            p.startDate <= now &&
+            p.expiresAt > now,
+        )
+        .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime())[0] ?? null;
+      setCreditBalance(activePool);
       if (classResult) {
         setEnrolledStudents(
           allStudents.filter((s) => classResult.studentIds.includes(s.id)),
@@ -69,9 +78,9 @@ export default function ClassDetail() {
         'credit',
       );
 
-      const [updatedClass, updatedBalance, allStudents] = await Promise.all([
+      const [updatedClass, updatedPools, allStudents] = await Promise.all([
         scheduleService.getScheduledClassById(classData.id),
-        creditService.getCreditBalance(user.uid),
+        creditService.getCreditPoolsByStudent(user.uid),
         userService.getStudents(),
       ]);
       if (updatedClass) {
@@ -80,7 +89,16 @@ export default function ClassDetail() {
           allStudents.filter((s) => updatedClass.studentIds.includes(s.id)),
         );
       }
-      setCreditBalance(updatedBalance);
+      const nowUpdated = new Date();
+      const updatedActivePool = updatedPools
+        .filter(
+          (p) =>
+            p.remainingCredits > 0 &&
+            p.startDate <= nowUpdated &&
+            p.expiresAt > nowUpdated,
+        )
+        .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime())[0] ?? null;
+      setCreditBalance(updatedActivePool);
       setSuccess(true);
     } catch (err: any) {
       const errorMessages: Record<string, string> = {
