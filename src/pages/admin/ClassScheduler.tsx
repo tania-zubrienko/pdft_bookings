@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 
-import { ClassDefinition, Instructor, ScheduledClass } from '../../types';
+import { ClassDefinition, User, ScheduledClass } from '../../types';
 import AdminLayout from '../../components/Layout/AdminLayout';
 import {
   ChevronLeft,
@@ -69,7 +69,7 @@ export default function ClassScheduler() {
   const [classDefinitions, setClassDefinitions] = useState<ClassDefinition[]>(
     [],
   );
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
+  const [instructors, setInstructors] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Week navigation — always tracks the Monday of the viewed week
@@ -533,7 +533,7 @@ export default function ClassScheduler() {
                 />
               </div>
 
-              {/* Instructor */}
+              {/* User */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Instructora

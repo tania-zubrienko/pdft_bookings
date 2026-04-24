@@ -19,7 +19,6 @@ The system currently supports:
 - Credit balance display when reserving
 - Mobile-responsive UI with hamburger menu
 - No per-class pricing — all bookings use credits
-- Package information display (pricing reference only, no purchases)
 - Admin: week-based class scheduling with ClassDefinition picker
 - Admin: "Duplicate to Next Week" for fast schedule planning
 - Admin: cancel/restore individual scheduled classes
@@ -82,24 +81,13 @@ src/
 
 ### Navigation
 
-- **Desktop:** Horizontal nav in header (Classes, Buy Credits, My Reservations)
+- **Desktop:** Horizontal nav in header (Classes, My Reservations)
 - **Mobile:** Hamburger menu (☰/✕ toggle) with same links in dropdown
 - **Admin:** Separate dark-themed layout with Schedule / Reservations / Credits nav
 
 ---
 
 ## Core Domain Concepts
-
-### Payment Model: Credit-Only
-
-Classes do **not** have individual prices. All reservations consume 1 credit from the student's balance. Credits are purchased via packages.
-
-| Package        | Credits | Price   | Per Class | Validity |
-| -------------- | ------- | ------- | --------- | -------- |
-| Single Class   | 1       | $25.00  | $25.00    | 30 days  |
-| Starter Pack   | 4       | $80.00  | $20.00    | 30 days  |
-| Regular Pack   | 8       | $144.00 | $18.00    | 60 days  |
-| Unlimited Pack | 14      | $224.00 | $16.00    | 90 days  |
 
 ### Credit Pools
 
@@ -213,27 +201,15 @@ interface Reservation {
 
 ### Instructor
 
-Path: `instructors/{instructorId}`
+Path: `users/{userId}`
 
 ```typescript
-interface Instructor {
+interface User {
   id: string;
   name: string;
   email: string;
   specialties: string[];
   active: boolean;
-}
-```
-
-### Student
-
-Path: `students/{studentId}`
-
-```typescript
-interface Student {
-  id: string;
-  name: string;
-  email: string;
 }
 ```
 
@@ -306,7 +282,7 @@ All data is served from `src/lib/mockData.ts` with simulated async delays (200-3
 
 | Data             | Count | Description                                               |
 | ---------------- | ----- | --------------------------------------------------------- |
-| ClassDefinitions | 16    | Reusable class types (Salsa, Bachata, Stretch, etc.)      |
+| ClassDefinitions | 16    | Reusable class types       |
 | Instructors      | 4     | With email, specialties, active flag                      |
 | Students         | 5     | Basic profiles (name, email)                              |
 | ScheduledClasses | 16    | Spread across days 0-14, various styles/times, studentIds |

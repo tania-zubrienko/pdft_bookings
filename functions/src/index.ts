@@ -1,16 +1,10 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import Stripe from 'stripe';
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
 const db = admin.firestore();
-
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-});
 
 // Type definitions
 interface Class {
@@ -55,7 +49,7 @@ const ERROR_CODES = {
  * Output: { checkoutUrl: string, reservationId: string }
  */
 export const createSingleClassSession = functions.https.onCall(
-  async (data, context) => {
+  async (data, context: functions.https.CallableContext) => {
     // Authentication required
     if (!context.auth) {
       throw new functions.https.HttpsError(
@@ -195,114 +189,6 @@ export const createSingleClassSession = functions.https.onCall(
   },
 );
 
-/**
- * Stripe webhook handler
- * Processes payment confirmations and updates reservations
- */
-export const stripeWebhook = functions.https.onRequest(async (req, res) => {
-  const sig = req.headers['stripe-signature'] as string;
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-
-  let event: Stripe.Event;
-
-  // 1. Validate webhook signature (MANDATORY)
-  try {
-    event = stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err);
-    res.status(400).send('Webhook signature verification failed');
-    return;
-  }
-
-  // 2. Handle checkout.session.completed event
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const paymentType = session.metadata?.type;
-
-    console.log(
-      'Processing checkout session:',
-      session.id,
-      'Type:',
-      paymentType,
-    );
-
-    if (paymentType === 'single_class') {
-      const reservationId = session.metadata?.reservationId;
-      const classId = session.metadata?.classId;
-      const studentId = session.metadata?.studentId;
-
-      if (!reservationId || !classId || !studentId) {
-        console.error('Missing metadata in session:', session.id);
-        res.status(400).send('Missing metadata');
-        return;
-      }
-
-      try {
-        // Run in transaction for atomicity
-        await db.runTransaction(async (tx) => {
-          const reservationRef = db
-            .collection('reservations')
-            .doc(reservationId);
-          const classRef = db.collection('classes').doc(classId);
-
-          const [reservationDoc, classDoc] = await Promise.all([
-            tx.get(reservationRef),
-            tx.get(classRef),
-          ]);
-
-          // Idempotency check - already processed
-          if (
-            reservationDoc.exists &&
-            reservationDoc.data()?.status === 'paid'
-          ) {
-            console.log('Reservation already processed:', reservationId);
-            return;
-          }
-
-          const classData = classDoc.data() as Class;
-
-          // Final capacity check
-          if (classData.enrolledCount >= classData.capacity) {
-            console.error('Class full during webhook processing:', classId);
-            // TODO: Handle refund scenario
-            return;
-          }
-
-          // Update reservation to paid
-          tx.update(reservationRef, {
-            status: 'paid',
-            paidAt: admin.firestore.Timestamp.now(),
-            paymentIntentId: session.payment_intent as string,
-          });
-
-          // Increment enrollment count
-          tx.update(classRef, {
-            enrolledCount: admin.firestore.FieldValue.increment(1),
-          });
-
-          // Create payment record
-          const paymentRef = db.collection('payments').doc();
-          tx.create(paymentRef, {
-            studentId,
-            amount: session.amount_total,
-            type: 'single_class',
-            stripePaymentIntentId: session.payment_intent,
-            reservationId,
-            createdAt: admin.firestore.Timestamp.now(),
-          });
-        });
-
-        console.log('Successfully processed reservation:', reservationId);
-      } catch (error) {
-        console.error('Error processing webhook:', error);
-        res.status(500).send('Error processing webhook');
-        return;
-      }
-    }
-  }
-
-  res.json({ received: true });
-});
 
 /**
  * Scheduled function to clean up expired pending reservations
@@ -338,7 +224,7 @@ export const cleanupPendingReservations = functions.pubsub
  * Get user's reservations
  */
 export const getMyReservations = functions.https.onCall(
-  async (data, context) => {
+  async (data, context: functions.https.CallableContext) => {
     if (!context.auth) {
       throw new functions.https.HttpsError(
         'unauthenticated',

@@ -14,8 +14,10 @@ export default function Login() {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [userName, setUserName] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [isNew, setIsNew] = useState(false);
 
     const redirectTo = state?.from || '/classes';
 
@@ -39,11 +41,18 @@ export default function Login() {
     };
 
     const register = async () => {
+        if (!isNew) {
+            setIsNew(true);
+            return;
+        }
+        if (!email.trim() || !password.trim() || !userName.trim()) {
+            return;
+        }
         setLoading(true);
         setError('');
 
         try {
-            await signup(email, password);
+            await signup(email, password, userName);
             navigate('/classes', { replace: true });
         } catch (err) {
             setError((err as Error).message || 'No se pudo crear la cuenta.');
@@ -87,7 +96,16 @@ export default function Login() {
                             minLength={6}
                         />
                     </div>
-
+                    {isNew &&
+                        <div>
+                            <label className='block text-sm text-gray-300 mb-1'>Nombre y Apellidos</label>
+                            <input
+                                type='text'
+                                className='input'
+                                value={userName}
+                                onChange={(e) => setUserName(e.target.value)}
+                            />
+                        </div>}
                     <button type='submit' className='btn btn-primary w-full' disabled={loading}>
                         {loading ? 'Entrando...' : 'Entrar'}
                     </button>

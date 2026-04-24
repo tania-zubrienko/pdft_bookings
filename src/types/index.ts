@@ -48,26 +48,18 @@ export interface Reservation {
 }
 
 /**
- * Instructor profile.
- * Path: instructors/{instructorId}
+ * User profile.
+ * Path: users/{userId}
  */
-export interface Instructor {
+export interface AppUser {
   id: string;
   name: string;
   email: string;
-  specialties: string[];
   active: boolean;
+  avatar: string;
+  role: 'student' | 'instructor' | 'admin'
 }
 
-/**
- * Student profile.
- * Path: students/{studentId}
- */
-export interface Student {
-  id: string;
-  name: string;
-  email: string;
-}
 
 /**
  * Credit pool — a bundle of credits from a package purchase.

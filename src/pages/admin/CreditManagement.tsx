@@ -6,7 +6,7 @@ import {
     getPackages,
     getStudents,
 } from '../../lib/mockData';
-import { CreditPool, Package, Student } from '../../types';
+import { CreditPool, Package, User } from '../../types';
 import { AlertCircle, CheckCircle2, Coins, Search } from 'lucide-react';
 
 const EXPIRING_SOON_DAYS = 7;
@@ -23,7 +23,7 @@ function poolStatus(pool: CreditPool): 'active' | 'future' | 'expired' {
 }
 
 export default function CreditManagement() {
-    const [students, setStudents] = useState<Student[]>([]);
+    const [students, setStudents] = useState<User[]>([]);
     const [packages, setPackages] = useState<Package[]>([]);
     const [loading, setLoading] = useState(true);
 

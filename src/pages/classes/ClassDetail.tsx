@@ -148,7 +148,7 @@ export default function ClassDetail() {
             </div>
           </div>
 
-          {/* Instructor */}
+          {/* User */}
           <div className=' card  rounded-xl border p-6 mb-6'>
             <p className='text-sm text-ui-text-soft	 pb-2'>
               Instructor

@@ -109,16 +109,6 @@ The app runs entirely on mock data — no Firebase or Stripe setup required for 
 | `/admin`              | Redirect → schedule | Admin landing                 |
 | `/` or `*`            | Redirect → classes  | Default/fallback              |
 
-## Credit System
-
-Classes have no individual prices. All bookings consume 1 credit from a pre-purchased package.
-
-| Package        | Credits | Price   | Per Class | Validity |
-| -------------- | ------- | ------- | --------- | -------- |
-| Single Class   | 1       | $25.00  | $25.00    | 30 days  |
-| Starter Pack   | 4       | $80.00  | $20.00    | 30 days  |
-| Regular Pack   | 8       | $144.00 | $18.00    | 60 days  |
-| Unlimited Pack | 14      | $224.00 | $16.00    | 90 days  |
 
 ## Roadmap
 
@@ -162,16 +152,8 @@ Classes have no individual prices. All bookings consume 1 credit from a pre-purc
 - [ ] Firestore security rules deployment
 - [ ] User profile page
 
-### Phase 3: Payments & Credits
 
-- [ ] Stripe integration for package purchases
-- [ ] Stripe webhook handler
-- [ ] Credit pool creation on purchase
-- [ ] Credit consumption (bookWithCredits Cloud Function)
-- [ ] FIFO credit enforcement
-- [ ] Expiration validation
-
-### Phase 4: Advanced Features
+### Phase 3: Advanced Features
 
 - [ ] Cancellation with credit restore
 - [ ] Expiration handling (scheduled function)
