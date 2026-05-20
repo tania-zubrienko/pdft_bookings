@@ -1,13 +1,8 @@
 import { CreditBalance } from '@/types';
+import { formatDate } from '@/utils';
 import { Ticket } from 'lucide-react';
 
 export default function CreditBalanceCard(credits: CreditBalance) {
-  function toDateKey(d: Date): string {
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  }
   return (
     <>
       <div className='mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg'>
@@ -35,7 +30,7 @@ export default function CreditBalanceCard(credits: CreditBalance) {
         </div>
         {credits.expirationDate && (
           <div className='mt-2 text-sm text-indigo-500'>
-            <span>Valido hasta: {toDateKey(credits.expirationDate)}</span>
+            <span>Valido hasta: {formatDate(credits.expirationDate)}</span>
           </div>
         )}
       </div>

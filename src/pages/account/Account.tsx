@@ -19,6 +19,7 @@ import { CreditBalance, Reservation, ScheduledClass } from '@/types';
 import UI from '@/styles';
 import creditService from '@/services/credit.service';
 import CreditBalanceCard from '@/components/User/CreditBalance';
+import { formatDate } from '@/utils';
 
 type Tab = 'reservations' | 'profile';
 
@@ -70,19 +71,6 @@ export default function Account() {
       setCredits(creditData);
     });
   }, [user]);
-
-  // ── Helpers ─────────────────────────────────────────────────────────────
-  const formatDate = (timestamp: unknown) => {
-    if (!timestamp) return 'N/D';
-    const date =
-      timestamp instanceof Date ? timestamp : new Date(timestamp as string);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
 
   const getStatusIcon = (status: string) => {
     if (status === 'confirmed')

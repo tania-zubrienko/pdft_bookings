@@ -8,6 +8,7 @@ import reservationService from '@/services/reservation.service';
 import scheduleService from '@/services/schedule.service';
 import { useAuth } from '@/contexts/AuthContext';
 import UI from '@/styles';
+import { formatDate } from '@/utils';
 
 interface ReservationWithClass extends Reservation {
   scheduledClass?: ScheduledClass;
@@ -53,17 +54,6 @@ export default function MyReservations() {
       default:
         return UI.badge.base;
     }
-  };
-
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return 'N/D';
-    const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
   };
 
   if (loading) {
