@@ -39,6 +39,7 @@ class CreditService {
         return {
           remaining: acc.remaining + (data['remainingCredits'] ?? 0),
           total: acc.total + (data['totalCredits'] ?? 0),
+          expirationDate: data['expiresAt']?.toDate?.() ?? undefined,
         };
       },
       { remaining: 0, total: 0 },

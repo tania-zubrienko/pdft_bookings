@@ -311,6 +311,7 @@ export default function ClassDetail() {
                   {...{
                     remaining: creditBalance.remainingCredits,
                     total: creditBalance.totalCredits,
+                    expirationDate: creditBalance.expiresAt,
                   }}
                 />
               )}

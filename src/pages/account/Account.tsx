@@ -15,12 +15,7 @@ import reservationService from '@/services/reservation.service';
 import scheduleService from '@/services/schedule.service';
 import userService from '@/services/user.service';
 import { storage } from '@/lib/firebase';
-import {
-  CreditBalance,
-  CreditPool,
-  Reservation,
-  ScheduledClass,
-} from '@/types';
+import { CreditBalance, Reservation, ScheduledClass } from '@/types';
 import UI from '@/styles';
 import creditService from '@/services/credit.service';
 import CreditBalanceCard from '@/components/User/CreditBalance';
