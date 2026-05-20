@@ -19,6 +19,7 @@ The system currently supports:
 - Credit balance display when reserving
 - Mobile-responsive UI with hamburger menu
 - No per-class pricing — all bookings use credits
+- User account page: reservation history + profile editing (name + avatar upload)
 - Admin: week-based class scheduling with ClassDefinition picker
 - Admin: "Duplicate to Next Week" for fast schedule planning
 - Admin: cancel/restore individual scheduled classes
@@ -38,16 +39,23 @@ src/
 ├── App.tsx                               # Routes (student + admin)
 ├── main.tsx                              # Entry (BrowserRouter + AuthProvider)
 ├── index.css                             # Tailwind + custom components
+├── styles.ts                             # Shared UI style constants
+├── utils.ts                              # Shared utility helpers
 ├── types/index.ts                        # All TypeScript interfaces
 ├── lib/
-│   └── firebase.ts                       # Firebase config (auth, db, functions)
+│   ├── firebase.ts                       # Firebase config (auth, db, storage, functions)
+│   └── strings.ts                        # Localized string constants
 ├── contexts/
 │   └── AuthContext.tsx                   # Auth state, login/signup/logout
 ├── components/
 │   ├── auth/
 │   │   └── RouteGuards.tsx               # Protected/admin route wrappers
 │   ├── Calendar/CalendarView.tsx         # Week/month calendar grid
-│   ├── Classes/ClassCard.tsx             # Compact class card
+│   ├── Classes/
+│   │   ├── ClassCard.tsx                 # Compact class card
+│   │   └── ReservationCard.tsx           # Student reservation card
+│   ├── User/
+│   │   └── CreditBalance.tsx             # Credit balance display card
 │   └── Layout/
 │       ├── Layout.tsx                    # Student header, nav, footer, mobile menu
 │       ├── AdminLayout.tsx               # Admin dark-themed layout
@@ -61,10 +69,14 @@ src/
 │   ├── package.service.ts                # Package reads (Firestore)
 │   └── callable.ts                       # Firebase callable function wrappers
 └── pages/
+    ├── account/
+    │   └── Account.tsx                   # User account: reservations + profile (avatar upload)
     ├── admin/
     │   ├── ClassScheduler.tsx            # Week-based class planner
     │   ├── AdminReservations.tsx         # Reservation viewer + stats
-    │   └── CreditManagement.tsx          # Manual credit assignment
+    │   ├── CreditManagement.tsx          # Manual credit assignment
+    │   └── components/
+    │       └── AdminClassCard.tsx        # Class card used in admin scheduler
     ├── auth/
     │   └── Login.tsx                     # Login / signup page
     ├── classes/
@@ -73,30 +85,31 @@ src/
     ├── packages/
     │   └── Packages.tsx                  # Package display page (4 tiers)
     ├── reservations/
-    │   └── MyReservations.tsx            # Student's reservation list
+    │   └── MyReservations.tsx            # Legacy — redirects to /account
     └── booking/
         └── BookingResult.tsx             # Success/cancelled feedback
 ```
 
 ### Routes
 
-| Path                  | Component             | Description                          |
-| --------------------- | --------------------- | ------------------------------------ |
-| `/classes`            | ClassList             | Calendar + day class list (default)  |
-| `/classes/:classId`   | ClassDetail           | Class detail + booking               |
-| `/packages`           | Packages              | Credit packages (reference only)     |
-| `/my-reservations`    | MyReservations        | Student's reservation list           |
-| `/booking/success`    | BookingResult         | Post-booking success                 |
-| `/booking/cancelled`  | BookingResult         | Post-booking cancelled               |
-| `/admin/schedule`     | ClassScheduler        | Week-based class planner             |
-| `/admin/reservations` | AdminReservations     | Reservation viewer + stats           |
-| `/admin/credits`      | CreditManagement      | Manual credit assignment to students |
-| `/admin`              | Redirect → schedule   | Admin landing                        |
-| `/` or `*`            | Redirect → `/classes` | Default/fallback                     |
+| Path                  | Component             | Description                                   |
+| --------------------- | --------------------- | --------------------------------------------- |
+| `/classes`            | ClassList             | Calendar + day class list (default)           |
+| `/classes/:classId`   | ClassDetail           | Class detail + booking                        |
+| `/packages`           | Packages              | Credit packages (reference only)              |
+| `/account`            | Account               | Reservations + profile editing (avatar, name) |
+| `/my-reservations`    | Redirect → `/account` | Legacy redirect                               |
+| `/booking/success`    | BookingResult         | Post-booking success                          |
+| `/booking/cancelled`  | BookingResult         | Post-booking cancelled                        |
+| `/admin/schedule`     | ClassScheduler        | Week-based class planner                      |
+| `/admin/reservations` | AdminReservations     | Reservation viewer + stats                    |
+| `/admin/credits`      | CreditManagement      | Manual credit assignment to students          |
+| `/admin`              | Redirect → schedule   | Admin landing                                 |
+| `/` or `*`            | Redirect → `/classes` | Default/fallback                              |
 
 ### Navigation
 
-- **Desktop:** Horizontal nav in header (Classes, My Reservations)
+- **Desktop:** Horizontal nav in header (Classes, Account/My Reservations)
 - **Mobile:** Hamburger menu (☰/✕ toggle) with same links in dropdown
 - **Admin:** Separate dark-themed layout with Schedule / Reservations / Credits nav
 
@@ -979,31 +992,36 @@ If original pool has expired when cancellation is requested:
 - [x] Credit pool list view per student
 - [x] Validation for date ranges and credit amounts
 
-### Phase 2: Authentication & Firebase ✅
+### Phase 2: Authentication & Firebase
 
 - [x] Firebase Auth integration
 - [x] Firestore service layer (replaces mock data)
 - [x] AuthContext with login/signup/logout
 - [x] Route guards (protected + admin routes)
 - [x] Admin credit pool creation via Firestore
-- [ ] Firestore security rules deployment
-- [ ] User profile page
+- [x] User profile page (`/account` — reservations tab + profile tab with avatar upload)
+- [ ] Firestore security rules deployment (rules written in `firestore.rules`; not yet deployed to Firebase)
 
 ### Phase 3: Core Backend Functions
 
-- [ ] Credit consumption (bookWithCredits Cloud Function)
-- [ ] FIFO enforcement
-- [ ] Expiration validation
-- [ ] Transaction-based booking flow
-- [ ] Admin SDK for credit pool management
+> See `CLOUD_MIGRATION.md` for detailed specs and implementation checklist.
+
+- [~] `getMyReservations` CF — stub exists, missing class details join
+- [ ] `bookWithCredits` Cloud Function (transaction: capacity check, FIFO credit FIFO, reservation creation)
+- [ ] `cancelReservation` Cloud Function (credit restore, enrolledCount decrement)
+- [ ] `getStudentCreditBalance` CF (aggregate all valid pools server-side)
+- [ ] `adminCreateCreditPool` CF (replaces direct Firestore write with role-checked CF)
+- [ ] FIFO credit consumption enforcement (server-side, earliest `expiresAt` first)
+- [ ] Expiration validation (server-side `startDate ≤ now ≤ expiresAt`)
+- [ ] Client callable wrappers in `src/services/callable.ts`
+- [ ] Remove client-side writes to `creditPools` and `reservations` (security cleanup)
 
 ### Phase 4: Advanced Features
 
-- [ ] Cancellation with credit restore logic
-- [ ] Expiration handling (scheduled function)
+- [ ] Cancellation with credit restore logic (policy decision: restore to expired pool or deny)
+- [ ] Expiration handling (scheduled Cloud Function to mark/clean expired pools)
 - [ ] Admin dashboard for credit pool management
-- [ ] Booking history
-- [ ] Email notifications
+- [ ] Email notifications (booking confirmation, cancellation, expiry warning)
 
 ### Future Consideration: Payment Integration
 

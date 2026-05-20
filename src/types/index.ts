@@ -40,12 +40,20 @@ export interface Reservation {
   id: string;
   studentId: string;
   scheduledClassId: string; // → scheduledClasses/{id}
-  status: 'confirmed' | 'cancelled';
+  status: ReservationStatus;
   paymentMode: 'single' | 'credit';
   createdAt: Date;
   cancelledAt?: Date;
   creditPoolId?: string;
 }
+
+export const ReservationStatus = {
+  Confirmed: 'confirmed',
+  Cancelled: 'cancelled',
+} as const;
+
+export type ReservationStatus =
+  (typeof ReservationStatus)[keyof typeof ReservationStatus];
 
 export interface ReservationWithClass extends Reservation {
   scheduledClass?: ScheduledClass;

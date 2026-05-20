@@ -326,15 +326,6 @@ export default function ClassDetail() {
                       Sin Créditos Disponibles
                     </span>
                   </div>
-                  <p className='text-sm text-amber-700 mb-3'>
-                    Compra un paquete de clases para reservar.
-                  </p>
-                  <Link
-                    to='/packages'
-                    className='btn btn-primary text-sm w-full'
-                  >
-                    Comprar Créditos
-                  </Link>
                 </div>
               )}
 
@@ -367,7 +358,7 @@ export default function ClassDetail() {
             {/* Book button */}
             {!alreadyBooked && (
               <>
-                {creditBalance && creditBalance.remainingCredits > 0 ? (
+                {creditBalance && creditBalance.remainingCredits > 0 && (
                   <button
                     onClick={handleBookClass}
                     disabled={isFull || bookingLoading}
@@ -387,14 +378,6 @@ export default function ClassDetail() {
                       </>
                     )}
                   </button>
-                ) : (
-                  <Link
-                    to='/packages'
-                    className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
-                  >
-                    <Ticket className='w-5 h-5' />
-                    Obtén Créditos para Reservar
-                  </Link>
                 )}
                 <p className='text-xs text-ui-text-soft text-center mt-4'>
                   1 crédito = 1 reserva de clase

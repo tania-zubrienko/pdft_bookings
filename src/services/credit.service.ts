@@ -116,6 +116,49 @@ class CreditService {
       } as CreditBalance;
     });
   }
+
+  /// Returns one credit to the current credit pool and returns the updated instance of the document
+  async returnCredit(studentId: string): Promise<CreditBalance> {
+    try {
+      const creditPools = await this.getCreditPoolsByStudent(studentId);
+      console.log(creditPools);
+
+      const activeCreditPool = creditPools.filter(
+        (p) => p.expiresAt > new Date(),
+      )[0];
+
+      let creditPoolId;
+      if (!!activeCreditPool) {
+        creditPoolId = activeCreditPool.id;
+      }
+      if (!creditPoolId) throw new Error('NO_ACTIVE_CREDITS');
+
+      const poolRef = doc(this.db, this.collectionName, creditPoolId);
+
+      return runTransaction(this.db, async (tx) => {
+        const poolDoc = await tx.get(poolRef);
+
+        if (!poolDoc.exists()) {
+          throw new Error('CREDIT_POOL_NOT_FOUND');
+        }
+        const data = poolDoc.data();
+
+        tx.update(poolRef, {
+          isActive: true,
+          remainingCredits: increment(1),
+        });
+        const remaining: number = data['remainingCredits'] ?? 0;
+
+        return {
+          remaining: remaining + 1,
+          total: data['totalCredits'] ?? 0,
+        } as CreditBalance;
+      });
+    } catch (err) {
+      console.error(err);
+      throw new Error('RETURN_CREDIT_ERROR');
+    }
+  }
 }
 
 if (!db) {

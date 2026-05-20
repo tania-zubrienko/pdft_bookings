@@ -1,10 +1,16 @@
 import UI from '@/styles';
-import { ReservationWithClass } from '@/types';
+import { ReservationStatus, ReservationWithClass } from '@/types';
 import { formatDate } from '@/utils';
 import { Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export default function ReservationCard(reservation: ReservationWithClass) {
+export default function ReservationCard({
+  reservation,
+  onCancel,
+}: {
+  reservation: ReservationWithClass;
+  onCancel?: (reservation: ReservationWithClass) => void;
+}) {
   const getStatusIcon = (status: string) => {
     if (status === 'confirmed')
       return <CheckCircle className='w-5 h-5 text-green-500' />;
@@ -53,12 +59,20 @@ export default function ReservationCard(reservation: ReservationWithClass) {
           </div>
         </div>
         <div className='flex gap-2'>
+          {onCancel && reservation.status === ReservationStatus.Confirmed && (
+            <button
+              className={UI.button.danger}
+              onClick={() => onCancel(reservation)}
+            >
+              Cancelar
+            </button>
+          )}
           <Link
             to={`/classes/${reservation.scheduledClassId}`}
-            className='btn btn-secondary'
+            className={`${UI.button.primary}`}
           >
             Ver Clase
-          </Link>
+          </Link>{' '}
         </div>
       </div>
     </div>

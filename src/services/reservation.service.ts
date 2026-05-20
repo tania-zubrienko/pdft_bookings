@@ -1,4 +1,9 @@
-import { Reservation, ScheduledClass } from '@/types';
+import {
+  Reservation,
+  ReservationStatus,
+  ReservationWithClass,
+  ScheduledClass,
+} from '@/types';
 import {
   collection,
   getDocs,
@@ -14,6 +19,7 @@ import { db } from '../lib/firebase';
 import scheduleService from './schedule.service';
 import userService from './user.service';
 import { User } from 'firebase/auth';
+import creditService from './credit.service';
 
 export interface AdminReservation {
   id: string;
@@ -22,7 +28,7 @@ export interface AdminReservation {
   scheduledClassId: string;
   classTitle: string;
   classDate: Date;
-  status: 'confirmed' | 'cancelled';
+  status: ReservationStatus;
   paymentMode: 'single' | 'credit';
   createdAt: Date;
 }
@@ -155,7 +161,11 @@ class ReservationService {
       }
 
       const existingRes = await tx.get(reservationRef);
-      if (existingRes.exists()) throw new Error('ALREADY_BOOKED');
+      if (
+        existingRes.exists() &&
+        existingRes.data()['status'] === ReservationStatus.Confirmed
+      )
+        throw new Error('ALREADY_BOOKED');
 
       if (paymentType === 'credit' && creditPoolId) {
         const poolRef = doc(this.db, 'creditPools', creditPoolId);
@@ -176,7 +186,7 @@ class ReservationService {
         scheduledClassId: classData.id,
         classTitle: classData.classTitle,
         classDate: classData.date,
-        status: 'confirmed',
+        status: ReservationStatus.Confirmed,
         paymentMode: paymentType,
         creditPoolId: creditPoolId ?? null,
         createdAt: new Date(),
@@ -189,6 +199,56 @@ class ReservationService {
     });
 
     return true;
+  }
+
+  async cancelReservationForStudent(
+    reservation: ReservationWithClass,
+  ): Promise<boolean> {
+    const studentId = reservation.studentId;
+    console.log(
+      'student',
+      studentId,
+      'reservation',
+      reservation.id,
+      'schClass',
+      reservation.scheduledClassId,
+    );
+    try {
+      const reservationRef = doc(this.db, this.collectionName, reservation.id);
+      const classRef = doc(
+        this.db,
+        'scheduledClasses',
+        reservation.scheduledClassId,
+      );
+
+      await runTransaction(this.db, async (tx) => {
+        const classDoc = await tx.get(classRef);
+        if (!classDoc.exists()) throw new Error('CLASS_NOT_FOUND');
+
+        const classSnapshot = classDoc.data();
+        const enrolledStudents = classSnapshot['studentIds'] as string[];
+        if (!enrolledStudents?.includes(studentId)) {
+          throw new Error('NOT_ENROLLED');
+        }
+
+        const reservationDoc = await tx.get(reservationRef);
+        if (!reservationDoc.exists()) throw new Error('Reservation_NOT_FOUND');
+
+        // Delete student id from class
+        tx.update(classRef, {
+          studentIds: [...enrolledStudents.filter((s) => s != studentId)],
+          enrolledCount: enrolledStudents.length - 1,
+        });
+        // Cancel reservation
+        tx.update(reservationRef, { status: ReservationStatus.Cancelled });
+        // Return Credit to student (if valid)
+        creditService.returnCredit(studentId);
+      });
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   }
 }
 

@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Calendar,
-  CheckCircle,
-  XCircle,
-  User,
-  Save,
-  Camera,
-} from 'lucide-react';
+import { Calendar, User, Save, Camera } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Layout from '@/components/Layout/Layout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +12,6 @@ import { CreditBalance, ReservationWithClass } from '@/types';
 import UI from '@/styles';
 import creditService from '@/services/credit.service';
 import CreditBalanceCard from '@/components/User/CreditBalance';
-import { formatDate } from '@/utils';
 import ReservationCard from '@/components/Classes/ReservationCard';
 
 type Tab = 'reservations' | 'profile';
@@ -149,7 +141,11 @@ export default function Account() {
       (r) => !!r.scheduledClass?.date && r.scheduledClass?.date < new Date(),
     );
   };
-
+  const cancelReservation = async (reservedClass: ReservationWithClass) => {
+    const isSuccess =
+      await reservationService.cancelReservationForStudent(reservedClass);
+    alert(isSuccess);
+  };
   return (
     <Layout>
       {/* Page header */}
@@ -197,12 +193,15 @@ export default function Account() {
               {/* Current reservations*/}
               <p className={UI.text.label}>Reservas en curso</p>
               {getActiveReserves().map((reservation) => (
-                <ReservationCard {...reservation} />
+                <ReservationCard
+                  reservation={reservation}
+                  onCancel={cancelReservation}
+                />
               ))}
               <p className={UI.text.label}>Reservas finalizadas</p>
               {/* Passed reservations*/}
               {getPassedReserves().map((reservation) => (
-                <ReservationCard {...reservation} />
+                <ReservationCard reservation={reservation} />
               ))}
             </div>
           ) : (

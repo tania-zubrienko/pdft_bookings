@@ -12,16 +12,17 @@
 const UI = {
   // ─── Buttons ─────────────────────────────────────────────────────────────
   button: {
-    base: 'btn btn-primary flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+    base: 'btn btn-primary flex items-center gap-1.5 px-4 py-2 rounded-lg text-lg',
     /** Solid brand button — primary CTA */
-    primary: 'bg-primary-600 text-gray-300',
+    primary:
+      'btn btn-primary flex items-center gap-1.5 px-4 py-2 rounded-lg hover:bg-blue-500',
     /** Muted surface button — secondary action */
     secondary: 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50',
     /** Transparent with brand border */
     outline: 'btn btn-outline text-sm flex items-center gap-1',
     /** Destructive / danger action */
     danger:
-      'btn bg-red-600 text-white hover:bg-red-700 active:bg-red-700 border border-red-700',
+      'btn bg-red-900/50 text-white hover:bg-red-700/60 active:bg-red-700 border border-red-700',
     /** Ghost — no background, just text */
     ghost:
       'btn bg-transparent flex items-center gap-1.5 px-4 py-2 text-gray-300 hover:text-white hover:bg-ui-hover',
