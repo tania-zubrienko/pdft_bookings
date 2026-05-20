@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ScheduledClass, CreditPool, AppUser } from '../../types';
+import { ScheduledClass, AppUser, CreditPool } from '../../types';
 import Layout from '../../components/Layout/Layout';
 import {
   ArrowLeft,
@@ -17,6 +17,7 @@ import userService from '@/services/user.service';
 import { useAuth } from '@/contexts/AuthContext';
 import UI from '@/styles';
 import reservationService from '@/services/reservation.service';
+import CreditBalanceCard from '@/components/User/CreditBalance';
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
@@ -41,14 +42,14 @@ export default function ClassDetail() {
       ]);
       setClassData(classResult);
       const now = new Date();
-      const activePool = allPools
-        .filter(
-          (p) =>
-            p.remainingCredits > 0 &&
-            p.startDate <= now &&
-            p.expiresAt > now,
-        )
-        .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime())[0] ?? null;
+      const activePool =
+        allPools
+          .filter(
+            (p) =>
+              p.remainingCredits > 0 && p.startDate <= now && p.expiresAt > now,
+          )
+          .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime())[0] ??
+        null;
       setCreditBalance(activePool);
       if (classResult) {
         setEnrolledStudents(
@@ -90,14 +91,16 @@ export default function ClassDetail() {
         );
       }
       const nowUpdated = new Date();
-      const updatedActivePool = updatedPools
-        .filter(
-          (p) =>
-            p.remainingCredits > 0 &&
-            p.startDate <= nowUpdated &&
-            p.expiresAt > nowUpdated,
-        )
-        .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime())[0] ?? null;
+      const updatedActivePool =
+        updatedPools
+          .filter(
+            (p) =>
+              p.remainingCredits > 0 &&
+              p.startDate <= nowUpdated &&
+              p.expiresAt > nowUpdated,
+          )
+          .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime())[0] ??
+        null;
       setCreditBalance(updatedActivePool);
       setSuccess(true);
     } catch (err: any) {
@@ -304,30 +307,12 @@ export default function ClassDetail() {
             {!alreadyBooked &&
               creditBalance &&
               creditBalance.remainingCredits > 0 && (
-                <div className='mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg'>
-                  <div className='flex items-center gap-2 mb-2'>
-                    <Ticket className='w-5 h-5 text-indigo-600' />
-                    <span className='font-medium text-indigo-900'>
-                      Tu Saldo de Clases
-                    </span>
-                  </div>
-                  <div className='flex items-baseline gap-1'>
-                    <span className='text-2xl font-bold text-indigo-700'>
-                      {creditBalance.remainingCredits}
-                    </span>
-                    <span className='text-sm text-indigo-500'>
-                      / {creditBalance.totalCredits} clases restantes
-                    </span>
-                  </div>
-                  <div className='mt-2 h-2 bg-indigo-200 rounded-full overflow-hidden'>
-                    <div
-                      className='h-full bg-indigo-600 rounded-full transition-all'
-                      style={{
-                        width: `${(creditBalance.remainingCredits / creditBalance.totalCredits) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
+                <CreditBalanceCard
+                  {...{
+                    remaining: creditBalance.remainingCredits,
+                    total: creditBalance.totalCredits,
+                  }}
+                />
               )}
 
             {/* No credits */}

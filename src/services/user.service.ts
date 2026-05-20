@@ -26,7 +26,7 @@ class UserService {
 
   async createStudent(uid: string, email: string, userName: string) {
     const existingUser = await this.getUserByEmail(email);
-    if (existingUser !== null) return null;
+    if (!!existingUser) return null;
     await setDoc(
       doc(this.db, this.collectionName, uid),
       {

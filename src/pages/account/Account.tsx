@@ -15,8 +15,15 @@ import reservationService from '@/services/reservation.service';
 import scheduleService from '@/services/schedule.service';
 import userService from '@/services/user.service';
 import { storage } from '@/lib/firebase';
-import { Reservation, ScheduledClass } from '@/types';
+import {
+  CreditBalance,
+  CreditPool,
+  Reservation,
+  ScheduledClass,
+} from '@/types';
 import UI from '@/styles';
+import creditService from '@/services/credit.service';
+import CreditBalanceCard from '@/components/User/CreditBalance';
 
 type Tab = 'reservations' | 'profile';
 
@@ -31,6 +38,7 @@ export default function Account() {
   // ── Reservations tab state ──────────────────────────────────────────────
   const [reservations, setReservations] = useState<ReservationWithClass[]>([]);
   const [reservationsLoading, setReservationsLoading] = useState(true);
+  const [credits, setCredits] = useState<CreditBalance | null>(null);
 
   // ── Profile tab state ───────────────────────────────────────────────────
   const [displayName, setDisplayName] = useState('');
@@ -56,13 +64,15 @@ export default function Account() {
     Promise.all([
       reservationService.getReservationsByStudent(user.uid),
       scheduleService.getAllScheduledClasses(),
-    ]).then(([resData, classData]) => {
-      const enriched = resData.map((r) => ({
+      creditService.getCreditBalance(user.uid),
+    ]).then(([resData, classData, creditData]) => {
+      const enriched = resData.map((r: any) => ({
         ...r,
-        scheduledClass: classData.find((c) => c.id === r.scheduledClassId),
+        scheduledClass: classData.find((c: any) => c.id === r.scheduledClassId),
       }));
       setReservations(enriched);
       setReservationsLoading(false);
+      setCredits(creditData);
     });
   }, [user]);
 
@@ -171,6 +181,10 @@ export default function Account() {
         <p className={UI.text.soft}>Gestiona tu perfil y reservas</p>
       </div>
 
+      {/* Credits pool */}
+      <div className='mb-6'>
+        {credits && <CreditBalanceCard {...credits} />}
+      </div>
       {/* Tab bar */}
       <div className='flex border-b border-ui-border-soft mb-6'>
         <button
