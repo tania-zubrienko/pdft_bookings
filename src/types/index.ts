@@ -47,6 +47,10 @@ export interface Reservation {
   creditPoolId?: string;
 }
 
+export interface ReservationWithClass extends Reservation {
+  scheduledClass?: ScheduledClass;
+}
+
 /**
  * User profile.
  * Path: users/{userId}
