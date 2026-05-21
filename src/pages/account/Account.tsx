@@ -13,7 +13,6 @@ import UI from '@/styles';
 import creditService from '@/services/credit.service';
 import CreditBalanceCard from '@/components/User/CreditBalance';
 import ReservationCard from '@/components/Classes/ReservationCard';
-import { sendEmailVerification } from 'firebase/auth';
 
 type Tab = 'reservations' | 'profile';
 
