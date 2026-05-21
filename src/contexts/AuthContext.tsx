@@ -13,6 +13,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   sendEmailVerification,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import fbService from '@/services/user.service';
@@ -24,10 +25,13 @@ interface AuthContextValue {
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isVerified: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, userName: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAppUser: () => Promise<void>;
+  resendVerificationEmail: (email: string, password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -76,6 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       );
       await fbService.createStudent(credential.user.uid, email, userName);
+      await sendEmailVerification(credential.user);
+      await signOut(auth); // Sign out until email is verified
     },
     [],
   );
@@ -83,6 +89,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     if (!auth) return;
     await signOut(auth);
+  }, []);
+
+  const resendVerificationEmail = useCallback(
+    async (email: string, password: string) => {
+      if (!auth) throw new Error('Firebase Auth no está configurado.');
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      if (credential.user.emailVerified) {
+        await signOut(auth);
+        throw new Error('EMAIL_ALREADY_VERIFIED');
+      }
+      await sendEmailVerification(credential.user);
+      await signOut(auth);
+    },
+    [],
+  );
+
+  const resetPassword = useCallback(async (email: string) => {
+    if (!auth) throw new Error('Firebase Auth no está configurado.');
+    await sendPasswordResetEmail(auth, email);
   }, []);
 
   const refreshAppUser = useCallback(async () => {
@@ -96,20 +125,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const isAdmin = useMemo(() => appUser?.role === 'admin', [appUser]);
+  const isVerified = useMemo(() => user?.emailVerified ?? false, [user]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       appUser,
       loading,
-      isAuthenticated: !!appUser,
+      isAuthenticated: !!appUser && (user?.emailVerified ?? false),
       isAdmin,
+      isVerified,
       login,
       signup,
       logout,
       refreshAppUser,
+      resendVerificationEmail,
+      resetPassword,
     }),
-    [user, appUser, loading, isAdmin, login, signup, logout, refreshAppUser],
+    [
+      user,
+      appUser,
+      loading,
+      isAdmin,
+      isVerified,
+      login,
+      signup,
+      logout,
+      refreshAppUser,
+      resendVerificationEmail,
+      resetPassword,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

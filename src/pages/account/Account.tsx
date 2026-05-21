@@ -13,6 +13,7 @@ import UI from '@/styles';
 import creditService from '@/services/credit.service';
 import CreditBalanceCard from '@/components/User/CreditBalance';
 import ReservationCard from '@/components/Classes/ReservationCard';
+import { sendEmailVerification } from 'firebase/auth';
 
 type Tab = 'reservations' | 'profile';
 
@@ -46,6 +47,7 @@ export default function Account() {
   // Load reservations once
   useEffect(() => {
     if (!user) return;
+
     Promise.all([
       reservationService.getReservationsByStudent(user.uid),
       scheduleService.getAllScheduledClasses(),
@@ -59,6 +61,7 @@ export default function Account() {
       setReservationsLoading(false);
       setCredits(creditData);
     });
+    console.log(user);
   }, [user]);
 
   const avatarInitial = (name: string) =>
