@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 
 // Class Pages
 import ClassList from './pages/classes/ClassList';
@@ -22,11 +22,13 @@ import { RequireAdmin, RequireAuth } from './components/auth/RouteGuards';
 import PasswordReset from './pages/auth/PasswordReset';
 
 export default function App() {
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get('mode');
   return (
     <Routes>
       <Route
         path='/login'
-        element={<Login />}
+        element={mode === 'resetPassword' ? <PasswordReset /> : <Login />}
       />
       <Route
         path='/reset-password'
