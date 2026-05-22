@@ -19,6 +19,7 @@ import AdminReservations from './pages/admin/AdminReservations';
 import CreditManagement from './pages/admin/CreditManagement';
 import Login from './pages/auth/Login';
 import { RequireAdmin, RequireAuth } from './components/auth/RouteGuards';
+import PasswordReset from './pages/auth/PasswordReset';
 
 export default function App() {
   return (
@@ -26,6 +27,10 @@ export default function App() {
       <Route
         path='/login'
         element={<Login />}
+      />
+      <Route
+        path='/reset-password'
+        element={<PasswordReset />}
       />
 
       <Route
