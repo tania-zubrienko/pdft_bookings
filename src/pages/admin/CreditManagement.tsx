@@ -1,17 +1,14 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../components/Layout/AdminLayout';
 import userService from '@/services/user.service';
-import packageService from '@/services/package.service';
 import creditService from '@/services/credit.service';
-import { CreditPool, Package, AppUser } from '../../types';
-import { AlertCircle, CheckCircle2, Coins, Search } from 'lucide-react';
+import { CreditPool, AppUser } from '../../types';
+import { AlertCircle, CheckCircle2, Search } from 'lucide-react';
 import UI from '@/styles';
+import CreditForm from './components/CreditForm';
+import CreditModalDialog from './components/CreditModalDialog';
 
 const EXPIRING_SOON_DAYS = 7;
-
-function formatDateInput(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
 
 function poolStatus(pool: CreditPool): 'active' | 'future' | 'expired' {
   const now = new Date();
@@ -22,8 +19,9 @@ function poolStatus(pool: CreditPool): 'active' | 'future' | 'expired' {
 
 export default function CreditManagement() {
   const [students, setStudents] = useState<AppUser[]>([]);
-  const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedPool, setSelectedPool] = useState<CreditPool | null>(null);
 
   const [searchStudent, setSearchStudent] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -31,23 +29,12 @@ export default function CreditManagement() {
   const [pools, setPools] = useState<CreditPool[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const [credits, setCredits] = useState(4);
-  const [startDate, setStartDate] = useState(formatDateInput(new Date()));
-  const [expiresAt, setExpiresAt] = useState(
-    formatDateInput(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
-  );
-  const [packageId, setPackageId] = useState('');
-  const [notes, setNotes] = useState('');
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
   useEffect(() => {
-    Promise.all([
-      userService.getStudents(),
-      packageService.getAllPackages(),
-    ]).then(([studentsRes, packagesRes]) => {
+    Promise.all([userService.getStudents()]).then(([studentsRes]) => {
       setStudents(studentsRes);
-      setPackages(packagesRes);
       if (studentsRes.length > 0) setSelectedStudentId(studentsRes[0].id);
       setLoading(false);
     });
@@ -93,8 +80,14 @@ export default function CreditManagement() {
 
   const selectedStudent = students.find((s) => s.id === selectedStudentId);
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleFormSubmit = async (data: {
+    credits: number;
+    remainingCredits?: number;
+    startDate: string;
+    expiresAt: string;
+    notes: string;
+    id?: string;
+  }) => {
     setFormError('');
     setFormSuccess('');
 
@@ -103,13 +96,13 @@ export default function CreditManagement() {
       return;
     }
 
-    if (!Number.isInteger(credits) || credits <= 0) {
+    if (!Number.isInteger(data.credits) || data.credits <= 0) {
       setFormError('Los créditos deben ser un número entero mayor que 0.');
       return;
     }
 
-    const start = new Date(`${startDate}T00:00:00`);
-    const end = new Date(`${expiresAt}T23:59:59`);
+    const start = new Date(`${data.startDate}T00:00:00`);
+    const end = new Date(`${data.expiresAt}T23:59:59`);
 
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
       setFormError('Las fechas no son válidas.');
@@ -125,20 +118,32 @@ export default function CreditManagement() {
 
     setSaving(true);
     try {
+      if (data.id) {
+        await creditService.updateCreditPool(data.id, {
+          totalCredits: data.credits,
+          remainingCredits: data.remainingCredits ?? data.credits,
+          startDate: start,
+          expiresAt: end,
+          notes: data.notes,
+        });
+        const refreshed =
+          await creditService.getCreditPoolsByStudent(selectedStudentId);
+        setPools(refreshed);
+        setFormSuccess('Créditos actualizados correctamente.');
+        return;
+      }
       await creditService.createCreditPool({
         studentId: selectedStudentId,
-        credits,
+        credits: data.credits,
         startDate: start,
         expiresAt: end,
-        packageId: packageId || undefined,
-        notes,
+        notes: data.notes,
         createdBy: 'admin_1',
       });
 
       const refreshed =
         await creditService.getCreditPoolsByStudent(selectedStudentId);
       setPools(refreshed);
-      setNotes('');
       setFormSuccess('Créditos asignados correctamente.');
     } finally {
       setSaving(false);
@@ -214,10 +219,6 @@ export default function CreditManagement() {
         </section>
 
         <section className='card p-5 lg:col-span-2'>
-          <h2 className='text-lg font-semibold text-gray-100 mb-4'>
-            Crear pool de créditos
-          </h2>
-
           {formError && (
             <div className={`${UI.alert.error} mb-4`}>
               <AlertCircle className='w-4 h-4' />
@@ -231,93 +232,10 @@ export default function CreditManagement() {
               {formSuccess}
             </div>
           )}
-
-          <form
-            onSubmit={submit}
-            className='grid grid-cols-1 md:grid-cols-2 gap-4'
-          >
-            <div>
-              <label className='block text-sm text-gray-300 mb-1'>
-                Créditos
-              </label>
-              <input
-                type='number'
-                min={1}
-                step={1}
-                className='input'
-                value={credits}
-                onChange={(e) => setCredits(Number(e.target.value))}
-              />
-            </div>
-
-            <div>
-              <label className='block text-sm text-gray-300 mb-1'>
-                Referencia de paquete (opcional)
-              </label>
-              <select
-                className='input'
-                value={packageId}
-                onChange={(e) => setPackageId(e.target.value)}
-              >
-                <option value=''>Sin referencia</option>
-                {packages.map((p) => (
-                  <option
-                    key={p.id}
-                    value={p.id}
-                  >
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className='block text-sm text-gray-300 mb-1'>
-                Fecha de inicio
-              </label>
-              <input
-                type='date'
-                className='input'
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className='block text-sm text-gray-300 mb-1'>
-                Fecha de expiración
-              </label>
-              <input
-                type='date'
-                className='input'
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-              />
-            </div>
-
-            <div className='md:col-span-2'>
-              <label className='block text-sm text-gray-300 mb-1'>
-                Notas (opcional)
-              </label>
-              <textarea
-                className='input min-h-[84px]'
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder='Ej. Crédito por promoción o compensación'
-              />
-            </div>
-
-            <div className='md:col-span-2 flex justify-end'>
-              <button
-                type='submit'
-                className='btn btn-primary inline-flex items-center gap-2'
-                disabled={saving}
-              >
-                <Coins className='w-4 h-4' />
-                {saving ? 'Guardando...' : 'Asignar Créditos'}
-              </button>
-            </div>
-          </form>
+          <CreditForm
+            onSubmit={handleFormSubmit}
+            saving={saving}
+          />
         </section>
       </div>
 
@@ -370,11 +288,29 @@ export default function CreditManagement() {
                         ? 'Futuro'
                         : 'Expirado'}
                   </span>
+                  <button
+                    onClick={() => {
+                      setShowDialog(true);
+                      setSelectedPool(pool);
+                    }}
+                  >
+                    {' '}
+                    Editar
+                  </button>
                 </div>
               );
             })}
           </div>
         )}
+      </section>
+
+      <section>
+        <CreditModalDialog
+          creditPool={selectedPool}
+          isVisible={showDialog}
+          onClose={() => setShowDialog(false)}
+          onSave={handleFormSubmit}
+        />
       </section>
     </AdminLayout>
   );

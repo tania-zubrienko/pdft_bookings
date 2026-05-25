@@ -10,6 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.10",
     "@stripe/stripe-js": "^2.4.0",
     "firebase": "^10.14.1",
     "firebase-admin": "^13.7.0",

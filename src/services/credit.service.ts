@@ -87,6 +87,27 @@ class CreditService {
     });
   }
 
+  async updateCreditPool(
+    id: string,
+    params: {
+      totalCredits: number;
+      remainingCredits: number;
+      startDate: Date;
+      expiresAt: Date;
+      notes?: string;
+    },
+  ): Promise<void> {
+    const { updateDoc, doc: firestoreDoc } = await import('firebase/firestore');
+    const poolRef = firestoreDoc(this.db, this.collectionName, id);
+    await updateDoc(poolRef, {
+      totalCredits: params.totalCredits,
+      remainingCredits: params.remainingCredits,
+      startDate: Timestamp.fromDate(params.startDate),
+      expiresAt: Timestamp.fromDate(params.expiresAt),
+      notes: params.notes ?? '',
+    });
+  }
+
   /// withdraws one credit of the current credit pool and returns the updated instance of the document
   async withdrawCredit(creditPoolId: string): Promise<CreditBalance> {
     const poolRef = doc(this.db, this.collectionName, creditPoolId);

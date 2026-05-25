@@ -14,6 +14,7 @@ import {
   runTransaction,
   increment,
   arrayUnion,
+  arrayRemove,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import scheduleService from './schedule.service';
@@ -25,6 +26,7 @@ export interface AdminReservation {
   id: string;
   studentId: string;
   studentName: string;
+  studentAvatar?: string;
   scheduledClassId: string;
   classTitle: string;
   classDate: Date;
@@ -119,6 +121,7 @@ class ReservationService {
           id: d.id,
           studentId: data['studentId'],
           studentName: student?.name ?? data['studentId'],
+          studentAvatar: student?.avatar,
           scheduledClassId: data['scheduledClassId'],
           classTitle: sc?.classTitle ?? 'Desconocida',
           classDate: sc?.date ?? new Date(),
@@ -248,6 +251,45 @@ class ReservationService {
     } catch (err) {
       console.error(err);
       return false;
+    }
+  }
+  /** Cancels a reservation from the admin view.
+   * Marks the reservation as cancelled, decrements enrolledCount,
+   * removes student from studentIds, and returns 1 credit if paymentMode is 'credit'. */
+  async adminCancelReservation(
+    reservationId: string,
+    studentId: string,
+    scheduledClassId: string,
+    paymentMode: 'single' | 'credit',
+  ): Promise<void> {
+    const reservationRef = doc(this.db, this.collectionName, reservationId);
+    const classRef = doc(this.db, 'scheduledClasses', scheduledClassId);
+
+    await runTransaction(this.db, async (tx) => {
+      const [reservationDoc, classDoc] = await Promise.all([
+        tx.get(reservationRef),
+        tx.get(classRef),
+      ]);
+
+      if (!reservationDoc.exists()) throw new Error('RESERVATION_NOT_FOUND');
+      if (reservationDoc.data()['status'] !== ReservationStatus.Confirmed)
+        throw new Error('RESERVATION_NOT_ACTIVE');
+      if (!classDoc.exists()) throw new Error('CLASS_NOT_FOUND');
+
+      tx.update(reservationRef, {
+        status: ReservationStatus.Cancelled,
+        cancelledAt: new Date(),
+      });
+
+      tx.update(classRef, {
+        enrolledCount: increment(-1),
+        studentIds: arrayRemove(studentId),
+      });
+    });
+
+    // Return credit outside the transaction (follows same pattern as existing cancelReservationForStudent)
+    if (paymentMode === 'credit') {
+      await creditService.returnCredit(studentId);
     }
   }
 }
