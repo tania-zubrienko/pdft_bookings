@@ -13,6 +13,8 @@ interface CalendarViewProps {
   onSelectDate: (date: Date) => void;
   onChangeDate: (date: Date) => void;
   onChangeViewMode: (mode: ViewMode) => void;
+  /** IDs of ScheduledClass documents the student has a confirmed reservation for */
+  reservedClassIds?: Set<string>;
 }
 
 // ---- helpers ----
@@ -50,6 +52,7 @@ export default function CalendarView({
   onSelectDate,
   onChangeDate,
   onChangeViewMode,
+  reservedClassIds,
 }: CalendarViewProps) {
   // Map date-key → class count
   const classCountByDay = useMemo(() => {
@@ -60,6 +63,16 @@ export default function CalendarView({
     }
     return map;
   }, [classes]);
+
+  // Map date-key → whether the student has a reservation on that day
+  const reservedDays = useMemo(() => {
+    const set = new Set<string>();
+    if (!reservedClassIds) return set;
+    for (const c of classes) {
+      if (reservedClassIds.has(c.id)) set.add(toDateKey(c.date));
+    }
+    return set;
+  }, [classes, reservedClassIds]);
 
   // Build the grid of dates
   const calendarDays = useMemo(() => {
@@ -202,6 +215,7 @@ export default function CalendarView({
         {calendarDays.map((day, idx) => {
           const key = toDateKey(day);
           const count = classCountByDay.get(key) ?? 0;
+          const hasReservation = reservedDays.has(key);
           const selected = selectedDate ? isSameDay(day, selectedDate) : false;
           const today_ = isToday(day);
           const isCurrentMonth = day.getMonth() === currentDate.getMonth();
@@ -229,18 +243,30 @@ export default function CalendarView({
               </span>
               {count > 0 && (
                 <>
-                  {/* Dot on mobile */}
-                  <span
-                    className={`sm:hidden w-1.5 h-1.5 rounded-full
-                      ${outOfMonth ? 'bg-gray-300' : 'bg-primary-800'}
-                    `}
-                  />
+                  {/* Dots on mobile */}
+                  <span className='sm:hidden flex gap-0.5'>
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full
+                        ${outOfMonth ? 'bg-gray-300' : 'bg-primary-800'}
+                      `}
+                    />
+                    {hasReservation && (
+                      <span className='w-1.5 h-1.5 rounded-full bg-green-400' />
+                    )}
+                  </span>
                   {/* Text badge on sm+ */}
                   <span
                     className={`hidden sm:inline ${outOfMonth ? `${UI.badge.base} bg-ui-hover text-ui-text-muted` : UI.badge.blue}`}
                   >
                     {count} {count === 1 ? 'clase' : 'clases'}
                   </span>
+                  {hasReservation && (
+                    <span
+                      className={`hidden sm:inline ${UI.badge.green} ml-0.5`}
+                    >
+                      ✓ reservada
+                    </span>
+                  )}
                 </>
               )}
             </button>

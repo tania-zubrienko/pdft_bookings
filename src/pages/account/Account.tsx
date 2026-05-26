@@ -1,6 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, User, Save, Camera } from 'lucide-react';
+import {
+  Calendar,
+  User,
+  Save,
+  Camera,
+  CheckCircle,
+  Clock,
+  Users,
+  ChevronDown,
+} from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Layout from '@/components/Layout/Layout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,11 +17,12 @@ import reservationService from '@/services/reservation.service';
 import scheduleService from '@/services/schedule.service';
 import userService from '@/services/user.service';
 import { storage } from '@/lib/firebase';
-import { CreditBalance, ReservationWithClass } from '@/types';
+import { CreditBalance, ReservationWithClass, ScheduledClass } from '@/types';
 import UI from '@/styles';
 import creditService from '@/services/credit.service';
 import CreditBalanceCard from '@/components/User/CreditBalance';
 import ReservationCard from '@/components/Classes/ReservationCard';
+import CalendarView from '@/components/Calendar/CalendarView';
 
 type Tab = 'reservations' | 'profile';
 
@@ -22,8 +32,18 @@ export default function Account() {
 
   // ── Reservations tab state ──────────────────────────────────────────────
   const [reservations, setReservations] = useState<ReservationWithClass[]>([]);
+  const [allScheduledClasses, setAllScheduledClasses] = useState<
+    ScheduledClass[]
+  >([]);
   const [reservationsLoading, setReservationsLoading] = useState(true);
   const [credits, setCredits] = useState<CreditBalance | null>(null);
+
+  // ── Calendar state ──────────────────────────────────────────────────────
+  const [calendarViewMode, setCalendarViewMode] = useState<'week' | 'month'>(
+    'month',
+  );
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   // ── Profile tab state ───────────────────────────────────────────────────
   const [displayName, setDisplayName] = useState('');
@@ -57,6 +77,7 @@ export default function Account() {
         scheduledClass: classData.find((c: any) => c.id === r.scheduledClassId),
       }));
       setReservations(enriched);
+      setAllScheduledClasses(classData);
       setReservationsLoading(false);
       setCredits(creditData);
     });
@@ -143,6 +164,32 @@ export default function Account() {
       (r) => !!r.scheduledClass?.date && r.scheduledClass?.date < new Date(),
     );
   };
+
+  const [pastReservationsOpen, setPastReservationsOpen] = useState(false);
+
+  // IDs of scheduled classes with a confirmed reservation
+  const reservedClassIds = useMemo(() => {
+    return new Set(
+      reservations
+        .filter((r) => r.status === 'confirmed')
+        .map((r) => r.scheduledClassId),
+    );
+  }, [reservations]);
+
+  // Classes on the selected calendar day
+  const classesForSelectedDay = useMemo(() => {
+    if (!selectedDate) return [];
+    return allScheduledClasses
+      .filter((c) => {
+        const d = c.date;
+        return (
+          d.getFullYear() === selectedDate.getFullYear() &&
+          d.getMonth() === selectedDate.getMonth() &&
+          d.getDate() === selectedDate.getDate()
+        );
+      })
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [allScheduledClasses, selectedDate]);
   const cancelReservation = async (reservedClass: ReservationWithClass) => {
     const isSuccess =
       await reservationService.cancelReservationForStudent(reservedClass);
@@ -190,37 +237,151 @@ export default function Account() {
             <div className={UI.loading.container}>
               <div className={UI.loading.spinner} />
             </div>
-          ) : reservations.length > 0 ? (
-            <div className='space-y-4'>
-              {/* Current reservations*/}
-              <p className={UI.text.label}>Reservas en curso</p>
-              {getActiveReserves().map((reservation) => (
-                <ReservationCard
-                  reservation={reservation}
-                  onCancel={cancelReservation}
-                />
-              ))}
-              <p className={UI.text.label}>Reservas finalizadas</p>
-              {/* Passed reservations*/}
-              {getPassedReserves().map((reservation) => (
-                <ReservationCard reservation={reservation} />
-              ))}
-            </div>
           ) : (
-            <div className='text-center py-12'>
-              <Calendar className='w-16 h-16 text-gray-400 mx-auto mb-4' />
-              <h3 className={`${UI.text.subheading} mb-2`}>
-                Aún no tienes reservas
-              </h3>
-              <p className={`${UI.text.soft} mb-6`}>
-                ¡Reserva tu primera clase de baile para empezar!
-              </p>
-              <Link
-                to='/classes'
-                className='btn btn-primary'
-              >
-                Explorar Clases
-              </Link>
+            <div className='space-y-6'>
+              {/* Calendar */}
+              <CalendarView
+                classes={allScheduledClasses}
+                viewMode={calendarViewMode}
+                currentDate={calendarDate}
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+                onChangeDate={setCalendarDate}
+                onChangeViewMode={setCalendarViewMode}
+                reservedClassIds={reservedClassIds}
+              />
+
+              {/* Day detail */}
+              {selectedDate && (
+                <div>
+                  <p className={`${UI.text.label} mb-3`}>
+                    {selectedDate.toLocaleDateString('es-ES', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                    })}
+                  </p>
+                  {classesForSelectedDay.length === 0 ? (
+                    <p className={UI.text.soft}>No hay clases este día.</p>
+                  ) : (
+                    <div className='space-y-3'>
+                      {classesForSelectedDay.map((cls) => {
+                        const isReserved = reservedClassIds.has(cls.id);
+                        return (
+                          <div
+                            key={cls.id}
+                            className={`card p-4 flex items-center justify-between gap-4 ${
+                              isReserved ? 'ring-2 ring-green-500/60' : ''
+                            }`}
+                          >
+                            <div className='flex items-center gap-3 min-w-0'>
+                              {isReserved && (
+                                <CheckCircle className='w-5 h-5 text-green-400 shrink-0' />
+                              )}
+                              <div className='min-w-0'>
+                                <p className='text-sm font-semibold text-gray-100 truncate'>
+                                  {cls.classTitle}
+                                </p>
+                                <p className='text-xs text-gray-400'>
+                                  {cls.instructorName}
+                                </p>
+                              </div>
+                            </div>
+                            <div className='flex items-center gap-4 shrink-0 text-xs text-gray-400'>
+                              <span className='flex items-center gap-1'>
+                                <Clock className='w-3.5 h-3.5' />
+                                {cls.date.toLocaleTimeString('es-ES', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: false,
+                                })}
+                              </span>
+                              <span className='flex items-center gap-1'>
+                                <Users className='w-3.5 h-3.5' />
+                                {cls.enrolledCount}/{cls.capacity}
+                              </span>
+                              {isReserved ? (
+                                <span className={UI.badge.green}>
+                                  Reservada
+                                </span>
+                              ) : cls.status === 'cancelled' ? (
+                                <span className={UI.badge.red}>Cancelada</span>
+                              ) : cls.enrolledCount >= cls.capacity ? (
+                                <span className={UI.badge.base}>Completa</span>
+                              ) : (
+                                <Link
+                                  to={`/classes/${cls.id}`}
+                                  className='btn btn-primary py-1 px-3 text-xs'
+                                >
+                                  Reservar
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Reservation history */}
+              {reservations.length > 0 && (
+                <div>
+                  <p className={`${UI.text.label} mb-3`}>
+                    Historial de reservas
+                  </p>
+                  <div className='space-y-4'>
+                    <p className={UI.text.label}>Reservas en curso</p>
+                    {getActiveReserves().map((reservation) => (
+                      <ReservationCard
+                        key={reservation.id}
+                        reservation={reservation}
+                        onCancel={cancelReservation}
+                      />
+                    ))}
+                    <button
+                      className='flex items-center justify-between w-full text-left py-2'
+                      onClick={() => setPastReservationsOpen((v) => !v)}
+                    >
+                      <span className={UI.text.label}>
+                        Reservas finalizadas ({getPassedReserves().length})
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-gray-400 transition-transform ${pastReservationsOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                    {pastReservationsOpen && (
+                      <div className='space-y-4'>
+                        {getPassedReserves().map((reservation) => (
+                          <ReservationCard
+                            key={reservation.id}
+                            reservation={reservation}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {reservations.length === 0 && (
+                <div className='text-center py-12'>
+                  <Calendar className='w-16 h-16 text-gray-400 mx-auto mb-4' />
+                  <h3 className={`${UI.text.subheading} mb-2`}>
+                    Aún no tienes reservas
+                  </h3>
+                  <p className={`${UI.text.soft} mb-6`}>
+                    ¡Reserva tu primera clase de baile para empezar!
+                  </p>
+                  <Link
+                    to='/classes'
+                    className='btn btn-primary'
+                  >
+                    Explorar Clases
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </>
