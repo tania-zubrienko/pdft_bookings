@@ -152,11 +152,11 @@ export default function ClassDetail() {
     return (
       <Layout>
         <div className='text-center py-12'>
-          <AlertCircle className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-          <h2 className='text-2xl font-bold text-gray-900 mb-2'>
+          <AlertCircle className='w-16 h-16 text-ui-text-muted mx-auto mb-4' />
+          <h2 className='text-2xl font-bold text-ui-text mb-2'>
             Clase No Encontrada
           </h2>
-          <p className='text-gray-600 mb-6'>
+          <p className='text-ui-text-soft mb-6'>
             La clase que buscas no existe o ha sido eliminada.
           </p>
           <Link
@@ -194,30 +194,30 @@ export default function ClassDetail() {
           <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
             <div className='card rounded-lg p-4'>
               <div className='flex items-center gap-2 mb-1'>
-                <Calendar className='w-5 h-5 text-primary-600' />
-                <p className='text-sm text-gray-400'>Fecha</p>
+                <Calendar className='w-5 h-5 text-brand' />
+                <p className='text-sm text-ui-text-muted'>Fecha</p>
               </div>
-              <p className='font-medium text-gray-100'>
+              <p className='font-medium text-ui-text'>
                 {formatDate(scheduledDate)}
               </p>
             </div>
 
             <div className='card rounded-lg p-4'>
               <div className='flex items-center gap-2 mb-1'>
-                <Clock className='w-5 h-5 text-primary-600' />
-                <p className='text-sm text-gray-400'>Hora · Duración</p>
+                <Clock className='w-5 h-5 text-brand' />
+                <p className='text-sm text-ui-text-muted'>Hora · Duración</p>
               </div>
-              <p className='font-medium text-gray-100'>
+              <p className='font-medium text-ui-text'>
                 {formatTime(scheduledDate)} · {classData.duration} min
               </p>
             </div>
 
             <div className='card rounded-lg p-4'>
               <div className='flex items-center gap-2 mb-1'>
-                <Users className='w-5 h-5 text-primary-600' />
-                <p className='text-sm text-gray-400'>Plazas</p>
+                <Users className='w-5 h-5 text-brand' />
+                <p className='text-sm text-ui-text-muted'>Plazas</p>
               </div>
-              <p className='font-medium text-gray-100'>
+              <p className='font-medium text-ui-text'>
                 {classData.enrolledCount} / {classData.capacity} inscritos
               </p>
               <p
@@ -238,14 +238,14 @@ export default function ClassDetail() {
 
           {/* Instructor */}
           <div className='card rounded-xl p-6'>
-            <p className='text-sm text-gray-400 pb-2'>Instructor</p>
+            <p className='text-sm text-ui-text-muted pb-2'>Instructor</p>
             <div className='flex items-center gap-4'>
-              <div className='w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0'>
-                <span className='text-primary-600 font-bold text-lg'>
+              <div className='w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center flex-shrink-0'>
+                <span className='text-brand font-bold text-lg'>
                   {classData.instructorName.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <p className='font-medium text-gray-100'>
+              <p className='font-medium text-ui-text'>
                 {classData.instructorName}
               </p>
             </div>
@@ -253,11 +253,11 @@ export default function ClassDetail() {
 
           {/* Enrolled Students */}
           <div className='card rounded-xl p-6'>
-            <p className='text-sm text-gray-400 mb-4'>
+            <p className='text-sm text-ui-text-muted mb-4'>
               Alumnos inscritos ({classData.enrolledCount})
             </p>
             {enrolledStudents.length === 0 ? (
-              <p className='text-sm text-gray-500'>
+              <p className='text-sm text-ui-text-muted'>
                 Aún no hay alumnos inscritos.
               </p>
             ) : (
@@ -274,13 +274,13 @@ export default function ClassDetail() {
                         className='w-9 h-9 rounded-full object-cover'
                       />
                     ) : (
-                      <div className='w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0'>
+                      <div className='w-9 h-9 rounded-full bg-ui-input flex items-center justify-center flex-shrink-0'>
                         <span className='text-white text-sm font-medium'>
                           {student.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
-                    <span className='text-sm text-gray-300'>
+                    <span className='text-sm text-ui-text-soft'>
                       {student.name}
                     </span>
                   </div>
@@ -295,9 +295,9 @@ export default function ClassDetail() {
           <div className='card p-6 sticky top-6'>
             {/* Already enrolled notice */}
             {alreadyBooked && (
-              <div className='mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2'>
-                <CheckCircle className='w-5 h-5 text-blue-600 flex-shrink-0' />
-                <span className='font-medium text-blue-800'>
+              <div className='mb-4 p-4 bg-brand/10 border border-brand/30 rounded-lg flex items-center gap-2'>
+                <CheckCircle className='w-5 h-5 text-brand flex-shrink-0' />
+                <span className='font-medium text-brand-light'>
                   Ya estás inscrito en esta clase
                 </span>
               </div>

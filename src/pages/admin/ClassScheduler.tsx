@@ -207,7 +207,7 @@ export default function ClassScheduler() {
     return (
       <AdminLayout>
         <div className='flex items-center justify-center min-h-[400px]'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600'></div>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-brand'></div>
         </div>
       </AdminLayout>
     );
@@ -228,7 +228,7 @@ export default function ClassScheduler() {
         <div className='flex items-center gap-2'>
           <button
             onClick={prevWeek}
-            className='p-2 rounded-lg hover:bg-gray-200 transition-colors'
+            className='p-2 rounded-lg hover:bg-ui-hover transition-colors'
             aria-label='Previous week'
           >
             <ChevronLeft className='w-5 h-5' />
@@ -240,7 +240,7 @@ export default function ClassScheduler() {
           </h2>
           <button
             onClick={nextWeek}
-            className='p-2 rounded-lg hover:bg-gray-200 transition-colors'
+            className='p-2 rounded-lg hover:bg-ui-hover transition-colors'
             aria-label='Next week'
           >
             <ChevronRight className='w-5 h-5' />

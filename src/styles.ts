@@ -15,9 +15,10 @@ const UI = {
     base: 'btn btn-primary flex items-center gap-1.5 px-4 py-2 rounded-lg text-lg',
     /** Solid brand button — primary CTA */
     primary:
-      'btn btn-primary flex items-center gap-1.5 px-4 py-2 rounded-lg hover:bg-blue-500',
+      'btn btn-primary flex items-center gap-1.5 px-4 py-2 rounded-lg hover:bg-brand',
     /** Muted surface button — secondary action */
-    secondary: 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50',
+    secondary:
+      'bg-ui-input text-ui-text-soft border border-ui-border hover:bg-ui-hover',
     /** Transparent with brand border */
     outline: 'btn btn-outline text-sm flex items-center gap-1',
     /** Destructive / danger action */
@@ -25,9 +26,9 @@ const UI = {
       'btn bg-red-900/50 text-white hover:bg-red-700/60 active:bg-red-700 border border-red-700',
     /** Ghost — no background, just text */
     ghost:
-      'btn bg-transparent flex items-center gap-1.5 px-4 py-2 text-gray-300 hover:text-white hover:bg-ui-hover',
+      'btn bg-transparent flex items-center gap-1.5 px-4 py-2 text-ui-text-soft hover:text-ui-text-inverse hover:bg-ui-hover',
     /** Icon-only button wrapper */
-    icon: 'p-2 rounded-lg text-gray-300 hover:text-white hover:bg-ui-hover transition-colors',
+    icon: 'p-2 rounded-lg text-ui-text-soft hover:text-ui-text-inverse hover:bg-ui-hover transition-colors',
     /** Full-width variant (combine with any button style) */
     full: 'w-full',
   },
@@ -35,17 +36,17 @@ const UI = {
   // ─── Text ─────────────────────────────────────────────────────────────────
   text: {
     /** Page / section heading */
-    heading: 'text-2xl sm:text-3xl font-bold text-gray-400',
+    heading: 'text-2xl sm:text-3xl font-bold text-ui-text-soft',
     /** Section heading muted description */
-    headingDescription: 'text-ui-text-soft mt-1 text-gray-900',
+    headingDescription: 'text-ui-text-soft mt-1',
     /** Sub-heading / card title */
-    subheading: 'text-lg sm:text-xl font-semibold text-gray-400',
+    subheading: 'text-lg sm:text-xl font-semibold text-ui-text-soft',
     /** Standard body copy */
-    body: 'text-m text-gray-300',
+    body: 'text-m text-ui-text',
     /** Secondary / meta information */
     soft: 'text-m text-ui-text-soft',
     /** Placeholder / disabled / hint text */
-    muted: 'text-sm text-gray-200',
+    muted: 'text-sm text-ui-text-soft',
     /** Labels (form fields, detail grid) */
     label: 'text-xs font-medium text-ui-text-muted uppercase tracking-wide',
     /** Inline error message */
@@ -96,31 +97,31 @@ const UI = {
     // ── Inverse (light / modal) variants ──────────────────────────────────
     /** Modal/dialog container — light surface */
     modal:
-      'bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto',
+      'bg-ui-card rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto',
     /** Modal header bar */
-    modalHeader: `flex items-center justify-between px-6 py-4 border-b border-gray-200`,
+    modalHeader: `flex items-center justify-between px-6 py-4 border-b border-ui-border`,
     /** Modal scrollable body */
     modalBody: 'px-6 py-4 space-y-4',
     /** Modal footer actions bar */
     modalFooter:
-      'flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200',
+      'flex items-center justify-end gap-3 px-6 py-4 border-t border-ui-border',
   },
 
   // ─── Forms ────────────────────────────────────────────────────────────────
   form: {
     /** Text / email / number / date input */
-    input: 'input bg-gray-700',
+    input: 'input bg-ui-input',
     /** <select> element */
-    select: 'input cursor-pointer bg-gray-700',
+    select: 'input cursor-pointer bg-ui-input',
     /** <textarea> */
-    textarea: 'input resize-none bg-gray-700',
+    textarea: 'input resize-none bg-ui-input',
     /** Wrapper that stacks label + control */
-    field: 'flex flex-col gap-1 bg-gray-700',
+    field: 'flex flex-col gap-1',
     /** Form section with multiple fields */
-    group: 'flex flex-col gap-4 bg-gray-700',
+    group: 'flex flex-col gap-4',
     /** Inline error below an input */
     inputError:
-      'w-full px-4 py-2 bg-ui-input border border-red-500 text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500',
+      'w-full px-4 py-2 bg-ui-input border border-red-500 text-ui-text rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500',
     /** Form section divider */
     divider: 'border-t border-ui-border-soft my-4',
   },
@@ -145,7 +146,7 @@ const UI = {
     /** Red — error / full / expired / cancelled */
     red: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/50 text-red-400 border border-red-800',
     /** Blue — future / informational */
-    blue: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-600/50 text-gray-200 border border-blue-800',
+    blue: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand/30 text-ui-text border border-ui-border',
     /** Brand — featured / highlighted */
     brand:
       'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand text-white',
@@ -162,23 +163,23 @@ const UI = {
     /** Active credit pool */
     active: 'text-green-400',
     /** Future / not-yet-valid credit pool */
-    future: 'text-blue-400',
+    future: 'text-brand-light',
     /** Expired credit pool */
-    expired: 'text-gray-500',
+    expired: 'text-ui-text-muted',
   },
 
   // ─── Navigation ───────────────────────────────────────────────────────────
   nav: {
     /** Active desktop nav link */
-    linkActive: 'text-primary-400 font-medium',
+    linkActive: 'text-brand-light font-medium',
     /** Inactive desktop nav link */
-    linkInactive: 'text-gray-300 hover:text-primary-400 transition-colors',
+    linkInactive: 'text-ui-text hover:text-brand-light transition-colors',
     /** Mobile menu item */
     mobileLink:
-      'block px-4 py-3 text-gray-300 hover:text-white hover:bg-ui-hover rounded-lg transition-colors',
+      'block px-4 py-3 text-ui-text hover:text-ui-text-inverse hover:bg-ui-hover rounded-lg transition-colors',
     /** Mobile menu item — active */
     mobileLinkActive:
-      'block px-4 py-3 text-primary-400 font-medium bg-ui-input rounded-lg',
+      'block px-4 py-3 text-brand-light font-medium bg-ui-input rounded-lg',
   },
 
   // ─── Feedback / Alerts ────────────────────────────────────────────────────
@@ -201,8 +202,7 @@ const UI = {
     /** Centred full-area spinner container */
     container: 'flex items-center justify-center min-h-[400px]',
     /** Spinner ring */
-    spinner:
-      'animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600',
+    spinner: 'animate-spin rounded-full h-12 w-12 border-b-2 border-brand',
     /** Inline small spinner */
     spinnerSm: 'animate-spin rounded-full h-5 w-5 border-b-2 border-white',
   },
@@ -219,7 +219,7 @@ const UI = {
     /** App name text */
     logoText: 'font-bold text-lg text-white leading-tight',
     /** App subtitle / role text */
-    logoSub: 'text-xs text-gray-400 leading-tight',
+    logoSub: 'text-xs text-ui-text-muted leading-tight',
   },
 
   // ─── Stats rows ───────────────────────────────────────────────────────────

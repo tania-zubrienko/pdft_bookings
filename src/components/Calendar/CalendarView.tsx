@@ -164,7 +164,7 @@ export default function CalendarView({
           </button>
           <button
             onClick={goToday}
-            className='ml-1 sm:ml-2 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-ui-border hover:bg-ui-hover active:bg-ui-hover transition-colors text-gray-300'
+            className='ml-1 sm:ml-2 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-ui-border hover:bg-ui-hover active:bg-ui-hover transition-colors text-ui-text'
           >
             Hoy
           </button>
@@ -176,8 +176,8 @@ export default function CalendarView({
             onClick={() => onChangeViewMode('week')}
             className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${
               viewMode === 'week'
-                ? 'bg-primary-600 text-white'
-                : 'bg-ui-card text-gray-300 hover:bg-ui-hover'
+                ? 'bg-brand text-ui-text-inverse'
+                : 'bg-ui-card text-ui-text hover:bg-ui-hover'
             }`}
           >
             Semana
@@ -186,8 +186,8 @@ export default function CalendarView({
             onClick={() => onChangeViewMode('month')}
             className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${
               viewMode === 'month'
-                ? 'bg-primary-600 text-white'
-                : 'bg-ui-card text-gray-300 hover:bg-ui-hover'
+                ? 'bg-brand text-ui-text-inverse'
+                : 'bg-ui-card text-ui-text hover:bg-ui-hover'
             }`}
           >
             Mes
@@ -226,17 +226,17 @@ export default function CalendarView({
               key={idx}
               onClick={() => onSelectDate(day)}
               className={`
-                relative flex flex-col items-center justify-center gap-0.5 sm:gap-1 border border-gray-100 transition-colors min-h-[44px]
+                relative flex flex-col items-center justify-center gap-0.5 sm:gap-1 border border-ui-border-soft transition-colors min-h-[44px]
                 ${viewMode === 'week' ? 'py-3 sm:py-5' : 'py-1 sm:py-2'}
-                ${outOfMonth ? 'bg-gray-600/50 hover:bg-primary-600/50' : 'hover:bg-primary-600/50 active:bg-primary-100'}
-                ${selected ? 'bg-gray-500 ring-2 ring-inset ring-primary-500' : ''}
+                ${outOfMonth ? 'bg-ui-hover/50 hover:bg-brand/20' : 'hover:bg-brand/20 active:bg-brand/30'}
+                ${selected ? 'bg-ui-input ring-2 ring-inset ring-brand' : ''}
               `}
             >
               <span
                 className={`
                   text-xs sm:text-sm font-medium leading-none
-                  ${today_ ? 'bg-primary-600 text-white w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full' : ''}
-                  ${outOfMonth ? 'text-gray-400' : ''}
+                  ${today_ ? 'bg-brand text-ui-text-inverse w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full' : ''}
+                  ${outOfMonth ? 'text-ui-text-muted' : ''}
                 `}
               >
                 {day.getDate()}
@@ -247,7 +247,7 @@ export default function CalendarView({
                   <span className='sm:hidden flex gap-0.5'>
                     <span
                       className={`w-1.5 h-1.5 rounded-full
-                        ${outOfMonth ? 'bg-gray-300' : 'bg-primary-800'}
+                      ${outOfMonth ? 'bg-ui-text-muted' : 'bg-brand'}
                       `}
                     />
                     {hasReservation && (

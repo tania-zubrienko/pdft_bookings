@@ -3,31 +3,31 @@
 // └─────────────────────────────────────────────────────────────────────────┘
 const THEME = {
   // Brand ────────────────────────────────────────────────────────────────
-  brand: '#162dc9',   // logo, buttons, active-nav highlight
-  brandLight: '#818cf8',   // lighter brand for text on dark backgrounds
+  brand: '#c526ce', // logo, buttons, active-nav highlight
+  brandLight: '#e060e8', // lighter brand for text on dark backgrounds
 
   // Background layers (dark → light) ────────────────────────────────────
-  pageBg: '#030712',   // body / page background          (bg-ui-page)
-  headerBg: '#000000', // header + footer                 (bg-ui-header)
-  cardBg: '#111827',   // cards, panels                   (bg-ui-card)
-  inputBg: '#1f2937',  // inputs, secondary buttons       (bg-ui-input)
-  hoverBg: '#374151',  // hover / active states           (bg-ui-hover)
+  pageBg: '#0d0511', // body / page background          (bg-ui-page)
+  headerBg: '#080210', // header + footer                 (bg-ui-header)
+  cardBg: '#170d1e', // cards, panels                   (bg-ui-card)
+  inputBg: '#231530', // inputs, secondary buttons       (bg-ui-input)
+  hoverBg: '#33203d', // hover / active states           (bg-ui-hover)
 
   // Borders ─────────────────────────────────────────────────────────────
-  borderStrong: '#374151', // visible borders                 (border-ui-border)
-  borderSoft: '#1f2937',   // subtle / divider borders        (border-ui-border-soft)
+  borderStrong: '#5F2960', // visible borders                 (border-ui-border)
+  borderSoft: '#3a1840', // subtle / divider borders        (border-ui-border-soft)
 
   // Class accent bar colours ────────────────────────────────────────────
-  accentBlue: '#3b82f6',   // Pole Dance classes
-  accentGreen: '#10b981',  // Open / Stretching classes
-  accentPink: '#ec4899',   // Exotic classes
-  accentYellow: '#eab308', // Aro / calendar selected day
+  accentBlue: '#5810B5', // Pole Dance classes  (deep violet)
+  accentGreen: '#4DB510', // Open / Stretching classes  (lime green)
+  accentPink: '#c526ce', // Exotic classes  (magenta)
+  accentYellow: '#e8a020', // Aro / calendar selected day
 
   // Text colours ────────────────────────────────────────────────────────
-  textPrimary: '#f9fafb',  // main body text               (text-ui-text)
-  textSecondary: '#9ca3af',  // subtitles, meta info         (text-ui-text-soft)
-  textMuted: '#6b7280',  // placeholders, disabled       (text-ui-text-muted)
-  textInverse: '#ffffff',  // text on brand-coloured bg    (text-ui-text-inverse)
+  textPrimary: '#f2eaf5', // main body text               (text-ui-text)
+  textSecondary: '#c4a8cc', // subtitles, meta info         (text-ui-text-soft)
+  textMuted: '#8a6a90', // placeholders, disabled       (text-ui-text-muted)
+  textInverse: '#ffffff', // text on brand-coloured bg    (text-ui-text-inverse)
 };
 
 /** @type {import('tailwindcss').Config} */
@@ -70,11 +70,11 @@ export default {
           200: '#c7d2fe',
           300: '#a5b4fc',
           400: THEME.brandLight,
-          500: '#4f46e5',
+          500: '#811987',
           600: THEME.brand,
           700: THEME.brand,
           800: THEME.brand,
-          900: '#1e1b4b',
+          900: '#4b1b49',
         },
 
         // ── Class-type accent bar colours ─────────────────────────────────

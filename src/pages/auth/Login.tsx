@@ -163,8 +163,8 @@ export default function Login() {
   const tabClass = (tab: Tab) =>
     `px-6 py-2 text-m font-medium border-b-2 transition-colors ${
       activeTab === tab
-        ? 'border-primary-500 text-primary-400'
-        : 'border-transparent text-ui-text-soft hover:text-gray-200'
+        ? 'border-brand text-brand-light'
+        : 'border-transparent text-ui-text-soft hover:text-ui-text'
     }`;
   return (
     <>
@@ -211,7 +211,7 @@ export default function Login() {
               <h2 className={UI.text.heading}>¡Revisa tu correo!</h2>
               <p className={UI.text.soft}>
                 Te hemos enviado un enlace de confirmación a{' '}
-                <span className='text-gray-200 font-medium'>{email}</span>.
+                <span className='text-ui-text font-medium'>{email}</span>.
                 Confirma tu cuenta y luego inicia sesión.
               </p>
               <button
@@ -285,7 +285,7 @@ export default function Login() {
                     ) : (
                       <button
                         type='button'
-                        className='text-sm text-primary-400 hover:text-primary-300 underline disabled:opacity-50'
+                        className='text-sm text-brand-light hover:text-brand underline disabled:opacity-50'
                         onClick={handleResend}
                         disabled={resendLoading}
                       >
@@ -302,7 +302,7 @@ export default function Login() {
                   className='space-y-4'
                 >
                   <div>
-                    <label className='block text-sm text-gray-300 mb-1'>
+                    <label className='block text-sm text-ui-text-soft mb-1'>
                       Email
                     </label>
                     <input
@@ -315,7 +315,7 @@ export default function Login() {
                   </div>
 
                   <div>
-                    <label className='block text-sm text-gray-300 mb-1'>
+                    <label className='block text-sm text-ui-text-soft mb-1'>
                       Contraseña
                     </label>
                     <input
@@ -331,7 +331,7 @@ export default function Login() {
                     <div className='flex justify-center'>
                       <button
                         type='button'
-                        className='text-xs text-ui-text-soft hover:text-primary-400 flex items-center gap-1 mt-1 disabled:opacity-50'
+                        className='text-xs text-ui-text-soft hover:text-brand-light flex items-center gap-1 mt-1 disabled:opacity-50'
                         onClick={handleResetPassword}
                         disabled={resetLoading}
                       >
@@ -344,7 +344,7 @@ export default function Login() {
                   )}
                   {activeTab === 'sign_up' && (
                     <div>
-                      <label className='block text-sm text-gray-300 mb-1'>
+                      <label className='block text-sm text-ui-text-soft mb-1'>
                         Nombre y Apellidos
                       </label>
                       <input
@@ -378,7 +378,7 @@ export default function Login() {
               <h2 className={UI.text.heading}>Revisa tu correo</h2>
               <p className={UI.text.soft}>
                 Te enviamos un enlace para restablecer la contraseña a{' '}
-                <span className='text-gray-200 font-medium'>{email}</span>.
+                <span className='text-ui-text font-medium'>{email}</span>.
               </p>
               <p className={UI.text.soft}>
                 Si no lo ves, revisa la carpeta de spam o correo no deseado.

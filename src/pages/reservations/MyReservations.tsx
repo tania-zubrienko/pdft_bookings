@@ -95,7 +95,7 @@ export default function MyReservations() {
                     </span>
                   </div>
 
-                  <h3 className='text-lg font-semibold text-gray-100 mb-2'>
+                  <h3 className='text-lg font-semibold text-ui-text mb-2'>
                     {reservation.scheduledClass?.classTitle ?? 'Unknown Class'}
                   </h3>
 
@@ -125,7 +125,7 @@ export default function MyReservations() {
         </div>
       ) : (
         <div className='text-center py-12'>
-          <Calendar className='w-16 h-16 text-gray-400 mx-auto mb-4' />
+          <Calendar className='w-16 h-16 text-ui-text-muted mx-auto mb-4' />
           <h3 className={`${UI.text.subheading} mb-2`}>
             Aún no tienes reservas
           </h3>

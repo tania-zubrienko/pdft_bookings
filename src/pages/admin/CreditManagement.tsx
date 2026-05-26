@@ -272,31 +272,35 @@ export default function CreditManagement() {
                       <p className='text-gray-400'>Notas: {pool.notes}</p>
                     )}
                   </div>
-
-                  <span
-                    className={`${
-                      status === 'active'
-                        ? UI.badge.green
+                  <div className='flex flex-col md:flex-row md:items-center md:justify-end gap-3'>
+                    <span
+                      className={`${
+                        status === 'active'
+                          ? UI.badge.green
+                          : status === 'future'
+                            ? UI.badge.amber
+                            : status === 'expired'
+                              ? UI.badge.red
+                              : UI.badge.base
+                      } w-fit`}
+                    >
+                      {status === 'active'
+                        ? 'Activo'
                         : status === 'future'
-                          ? UI.badge.amber
-                          : UI.badge.base
-                    } w-fit`}
-                  >
-                    {status === 'active'
-                      ? 'Activo'
-                      : status === 'future'
-                        ? 'Futuro'
-                        : 'Expirado'}
-                  </span>
-                  <button
-                    onClick={() => {
-                      setShowDialog(true);
-                      setSelectedPool(pool);
-                    }}
-                  >
-                    {' '}
-                    Editar
-                  </button>
+                          ? 'Futuro'
+                          : 'Expirado'}
+                    </span>
+                    <button
+                      className={UI.button.primary}
+                      onClick={() => {
+                        setShowDialog(true);
+                        setSelectedPool(pool);
+                      }}
+                    >
+                      {' '}
+                      Editar
+                    </button>
+                  </div>
                 </div>
               );
             })}

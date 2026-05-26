@@ -55,10 +55,10 @@ export default function Packages() {
     <Layout>
       {/* Header */}
       <div className='text-center mb-10'>
-        <h1 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-3'>
+        <h1 className='text-3xl sm:text-4xl font-bold text-ui-text mb-3'>
           Paquetes de Clases
         </h1>
-        <p className='text-gray-600 text-lg max-w-2xl mx-auto'>
+        <p className='text-ui-text-soft text-lg max-w-2xl mx-auto'>
           Compra créditos para reservar clases. Cuantos más compres, más
           ahorras.
         </p>
@@ -66,24 +66,22 @@ export default function Packages() {
 
       {/* Current Balance */}
       {creditBalance && creditBalance.total > 0 && (
-        <div className='max-w-md mx-auto mb-10 p-5 bg-indigo-50 border border-indigo-200 rounded-xl'>
+        <div className='max-w-md mx-auto mb-10 p-5 bg-ui-card border border-ui-border rounded-xl'>
           <div className='flex items-center gap-2 mb-2'>
-            <Ticket className='w-5 h-5 text-indigo-600' />
-            <span className='font-semibold text-indigo-900'>
-              Tu Saldo Actual
-            </span>
+            <Ticket className='w-5 h-5 text-brand' />
+            <span className='font-semibold text-ui-text'>Tu Saldo Actual</span>
           </div>
           <div className='flex items-baseline gap-1'>
-            <span className='text-3xl font-bold text-indigo-700'>
+            <span className='text-3xl font-bold text-brand'>
               {creditBalance.remaining}
             </span>
-            <span className='text-sm text-indigo-500'>
+            <span className='text-sm text-ui-text-soft'>
               / {creditBalance.total} clases restantes
             </span>
           </div>
-          <div className='mt-2 h-2 bg-indigo-200 rounded-full overflow-hidden'>
+          <div className='mt-2 h-2 bg-ui-input rounded-full overflow-hidden'>
             <div
-              className='h-full bg-indigo-600 rounded-full transition-all'
+              className='h-full bg-brand rounded-full transition-all'
               style={{
                 width: `${(creditBalance.remaining / creditBalance.total) * 100}%`,
               }}
@@ -97,8 +95,8 @@ export default function Packages() {
         {packages.map((pkg) => (
           <div
             key={pkg.id}
-            className={`relative rounded-2xl border-2 bg-white p-6 flex flex-col transition-shadow hover:shadow-lg ${
-              pkg.highlight ? 'border-primary-500 shadow-md' : 'border-gray-200'
+            className={`relative rounded-2xl border-2 bg-ui-card p-6 flex flex-col transition-shadow hover:shadow-lg ${
+              pkg.highlight ? 'border-brand shadow-md' : 'border-ui-border-soft'
             }`}
           >
             {/* Highlight badge */}
@@ -113,7 +111,7 @@ export default function Packages() {
 
             {/* Credits count */}
             <div className='text-center mb-4'>
-              <span className='text-5xl font-extrabold text-gray-900'>
+              <span className='text-5xl font-extrabold text-ui-text'>
                 {pkg.credits}
               </span>
               <p className='text-sm text-ui-text-soft	 mt-1'>
@@ -122,7 +120,7 @@ export default function Packages() {
             </div>
 
             {/* Package name */}
-            <h3 className='text-lg font-bold text-gray-900 text-center mb-1'>
+            <h3 className='text-lg font-bold text-ui-text text-center mb-1'>
               {pkg.name}
             </h3>
 
@@ -135,11 +133,11 @@ export default function Packages() {
 
             {/* Price */}
             <div className='text-center mb-4'>
-              <span className='text-3xl font-bold text-primary-600'>
+              <span className='text-3xl font-bold text-brand'>
                 {formatPrice(pkg.price)}
               </span>
               {pkg.credits > 1 && (
-                <p className='text-xs text-gray-400 mt-1'>
+                <p className='text-xs text-ui-text-muted mt-1'>
                   {pricePerClass(pkg)} por clase
                 </p>
               )}
@@ -151,7 +149,7 @@ export default function Packages() {
             </div>
 
             {/* Features */}
-            <ul className='space-y-2 text-sm text-gray-600 mb-6 flex-1'>
+            <ul className='space-y-2 text-sm text-ui-text-soft mb-6 flex-1'>
               <li className='flex items-center gap-2'>
                 <CheckCircle className='w-4 h-4 text-green-500 shrink-0' />
                 {pkg.credits} {pkg.credits === 1 ? 'crédito' : 'créditos'} de
@@ -189,7 +187,7 @@ export default function Packages() {
       <div className='text-center mt-10'>
         <Link
           to='/classes'
-          className='text-primary-600 hover:text-primary-700 font-medium transition-colors'
+          className='text-brand hover:text-brand-light font-medium transition-colors'
         >
           ← Volver a Clases
         </Link>

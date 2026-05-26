@@ -100,7 +100,7 @@ export default function ClassList() {
             </div>
           ) : (
             <div className='text-center py-10 card'>
-              <Calendar className='w-12 h-12 text-gray-400 mx-auto mb-3' />
+              <Calendar className='w-12 h-12 text-ui-text-muted mx-auto mb-3' />
               <p className={UI.text.soft}>
                 No hay clases programadas para este día
               </p>

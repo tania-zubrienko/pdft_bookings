@@ -43,15 +43,15 @@ body {
   }
 
   .btn-secondary {
-    @apply bg-ui-input text-gray-100 hover:bg-ui-hover active:bg-ui-hover border border-ui-border;
+    @apply bg-ui-input text-ui-text hover:bg-ui-hover active:bg-ui-hover border border-ui-border;
   }
 
   .btn-outline {
-    @apply border-2 border-brand text-brand hover:bg-primary-50;
+    @apply border-2 border-brand text-brand hover:bg-ui-hover;
   }
 
   .input {
-    @apply w-full px-4 py-2 bg-ui-input border border-ui-border text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply w-full px-4 py-2 bg-ui-input border border-ui-border text-ui-text rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent;
   }
 
   .card {
