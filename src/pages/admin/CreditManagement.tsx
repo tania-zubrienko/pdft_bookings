@@ -116,6 +116,21 @@ export default function CreditManagement() {
       return;
     }
 
+    const hasOverlap = pools.some((pool) => {
+      if (data.id && pool.id === data.id) return false;
+      if (!pool.isActive || pool.remainingCredits <= 0) return false;
+
+      const overlaps = start < pool.expiresAt && end > pool.startDate;
+      return overlaps;
+    });
+
+    if (hasOverlap) {
+      setFormError(
+        'No se puede guardar: existe otro pool activo con fechas solapadas para esta alumna.',
+      );
+      return;
+    }
+
     setSaving(true);
     try {
       if (data.id) {

@@ -7,9 +7,6 @@ import ClassDetail from './pages/classes/ClassDetail';
 // Booking Pages
 import BookingResult from './pages/booking/BookingResult';
 
-// Package Pages
-import Packages from './pages/packages/Packages';
-
 // Account Pages
 import Account from './pages/account/Account';
 
@@ -51,14 +48,7 @@ export default function App() {
           </RequireAuth>
         }
       />
-      <Route
-        path='/packages'
-        element={
-          <RequireAuth>
-            <Packages />
-          </RequireAuth>
-        }
-      />
+
       <Route
         path='/my-reservations'
         element={

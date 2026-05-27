@@ -3,6 +3,11 @@ import { formatDate } from '@/utils';
 import { Ticket } from 'lucide-react';
 
 export default function CreditBalanceCard(credits: CreditBalance) {
+  const progress =
+    credits.total > 0
+      ? Math.min(100, Math.max(0, (credits.remaining / credits.total) * 100))
+      : 0;
+
   return (
     <>
       <div className='mb-4 p-4 bg-ui-card border border-ui-border rounded-lg'>
@@ -22,7 +27,7 @@ export default function CreditBalanceCard(credits: CreditBalance) {
           <div
             className='h-full bg-brand rounded-full transition-all'
             style={{
-              width: `${(credits.remaining / credits.total) * 100}%`,
+              width: `${progress}%`,
             }}
           />
         </div>

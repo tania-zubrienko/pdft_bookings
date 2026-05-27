@@ -26,7 +26,10 @@ export default function Account() {
     ScheduledClass[]
   >([]);
   const [reservationsLoading, setReservationsLoading] = useState(true);
-  const [credits, setCredits] = useState<CreditBalance | null>(null);
+  const [credits, setCredits] = useState<CreditBalance>({
+    remaining: 0,
+    total: 0,
+  });
 
   // ── Calendar state ──────────────────────────────────────────────────────
   const [calendarViewMode, setCalendarViewMode] = useState<'week' | 'month'>(
@@ -69,7 +72,7 @@ export default function Account() {
       setReservations(enriched);
       setAllScheduledClasses(classData);
       setReservationsLoading(false);
-      setCredits(creditData);
+      setCredits(creditData ?? { remaining: 0, total: 0 });
     });
   }, [user]);
 
@@ -164,7 +167,7 @@ export default function Account() {
 
       {/* Credits pool */}
       <div className='mb-6'>
-        {credits && <CreditBalanceCard {...credits} />}
+        <CreditBalanceCard {...credits} />
       </div>
 
       {/* Tab bar */}

@@ -21,29 +21,63 @@ class CreditService {
     this.db = firestore;
   }
 
+  private toCreditPool(docData: Record<string, any>, id: string): CreditPool {
+    return {
+      ...docData,
+      id,
+      startDate:
+        docData['startDate']?.toDate?.() ?? new Date(docData['startDate']),
+      expiresAt:
+        docData['expiresAt']?.toDate?.() ?? new Date(docData['expiresAt']),
+      createdAt:
+        docData['createdAt']?.toDate?.() ?? new Date(docData['createdAt']),
+    } as CreditPool;
+  }
+
+  private isPoolValidNow(pool: CreditPool, now: Date): boolean {
+    return (
+      pool.isActive === true &&
+      pool.remainingCredits > 0 &&
+      pool.startDate <= now &&
+      pool.expiresAt > now
+    );
+  }
+
+  private selectCurrentPool(pools: CreditPool[], now: Date): CreditPool | null {
+    return (
+      pools
+        .filter((pool) => this.isPoolValidNow(pool, now))
+        .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime())[0] ??
+      null
+    );
+  }
+
   async getCreditBalance(studentId: string): Promise<CreditBalance> {
-    const now = Timestamp.now();
     const q = query(
       collection(this.db, this.collectionName),
       where('studentId', '==', studentId),
-      where('isActive', '==', true),
-      where('expiresAt', '>', now),
     );
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) return { remaining: 0, total: 0 };
 
-    return snapshot.docs.reduce<CreditBalance>(
-      (acc, d) => {
-        const data = d.data();
-        return {
-          remaining: acc.remaining + (data['remainingCredits'] ?? 0),
-          total: acc.total + (data['totalCredits'] ?? 0),
-          expirationDate: data['expiresAt']?.toDate?.() ?? undefined,
-        };
-      },
-      { remaining: 0, total: 0 },
-    );
+    const pools = snapshot.docs.map((d) => this.toCreditPool(d.data(), d.id));
+    const currentPool = this.selectCurrentPool(pools, new Date());
+
+    if (!currentPool) {
+      return { remaining: 0, total: 0 };
+    }
+
+    return {
+      remaining: currentPool.remainingCredits,
+      total: currentPool.totalCredits,
+      expirationDate: currentPool.expiresAt,
+    };
+  }
+
+  async getCurrentPoolByStudent(studentId: string): Promise<CreditPool | null> {
+    const pools = await this.getCreditPoolsByStudent(studentId);
+    return this.selectCurrentPool(pools, new Date());
   }
 
   async getCreditPoolsByStudent(studentId: string): Promise<CreditPool[]> {
@@ -52,16 +86,7 @@ class CreditService {
       where('studentId', '==', studentId),
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((d) => {
-      const data = d.data();
-      return {
-        ...data,
-        id: d.id,
-        startDate: data['startDate']?.toDate?.() ?? new Date(data['startDate']),
-        expiresAt: data['expiresAt']?.toDate?.() ?? new Date(data['expiresAt']),
-        createdAt: data['createdAt']?.toDate?.() ?? new Date(data['createdAt']),
-      } as CreditPool;
-    });
+    return snapshot.docs.map((d) => this.toCreditPool(d.data(), d.id));
   }
 
   async createCreditPool(params: {

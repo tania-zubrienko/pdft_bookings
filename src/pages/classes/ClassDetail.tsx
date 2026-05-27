@@ -45,24 +45,15 @@ export default function ClassDetail() {
     if (!classId) return;
 
     const fetchData = async () => {
-      const [classResult, allPools, allStudents, studentReservations] =
+      const [classResult, currentPool, allStudents, studentReservations] =
         await Promise.all([
           scheduleService.getScheduledClassById(classId),
-          user ? creditService.getCreditPoolsByStudent(user.uid) : [],
+          user ? creditService.getCurrentPoolByStudent(user.uid) : null,
           userService.getStudents(),
           user ? reservationService.getReservationsByStudent(user.uid) : [],
         ]);
       setClassData(classResult);
-      const now = new Date();
-      const activePool =
-        allPools
-          .filter(
-            (p) =>
-              p.remainingCredits > 0 && p.startDate <= now && p.expiresAt > now,
-          )
-          .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime())[0] ??
-        null;
-      setCreditBalance(activePool);
+      setCreditBalance(currentPool);
       if (classResult) {
         setEnrolledStudents(
           allStudents.filter((s) => classResult.studentIds.includes(s.id)),
@@ -98,10 +89,10 @@ export default function ClassDetail() {
         'credit',
       );
 
-      const [updatedClass, updatedPools, allStudents, updatedReservations] =
+      const [updatedClass, updatedPool, allStudents, updatedReservations] =
         await Promise.all([
           scheduleService.getScheduledClassById(classData.id),
-          creditService.getCreditPoolsByStudent(user.uid),
+          creditService.getCurrentPoolByStudent(user.uid),
           userService.getStudents(),
           reservationService.getReservationsByStudent(user.uid),
         ]);
@@ -118,18 +109,7 @@ export default function ClassDetail() {
             r.status === ReservationStatus.Confirmed,
         ) ?? null;
       setExistingReservation(updatedRes);
-      const nowUpdated = new Date();
-      const updatedActivePool =
-        updatedPools
-          .filter(
-            (p) =>
-              p.remainingCredits > 0 &&
-              p.startDate <= nowUpdated &&
-              p.expiresAt > nowUpdated,
-          )
-          .sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime())[0] ??
-        null;
-      setCreditBalance(updatedActivePool);
+      setCreditBalance(updatedPool);
       setSuccess(true);
     } catch (err: any) {
       const errorMessages: Record<string, string> = {

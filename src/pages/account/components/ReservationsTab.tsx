@@ -3,7 +3,7 @@ import { Calendar } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import CalendarView from '@/components/Calendar/CalendarView';
 import BookingListButton from '@/pages/reservations/components/BookingListButton';
-import ScheduledClassCard from '@/pages/classes/components/SchedulledClassCard';
+import ScheduledClassCard from '@/pages/classes/components/ScheduledClassCard';
 import { ReservationWithClass, ScheduledClass } from '@/types';
 import UI from '@/styles';
 
