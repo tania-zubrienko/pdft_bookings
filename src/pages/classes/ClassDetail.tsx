@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ScheduledClass, AppUser, CreditPool } from '../../types';
+import {
+  ScheduledClass,
+  AppUser,
+  CreditPool,
+  Reservation,
+  ReservationStatus,
+} from '../../types';
 import Layout from '../../components/Layout/Layout';
 import {
   ArrowLeft,
@@ -10,6 +16,7 @@ import {
   AlertCircle,
   Ticket,
   CheckCircle,
+  XCircle,
 } from 'lucide-react';
 import scheduleService from '@/services/schedule.service';
 import creditService from '@/services/credit.service';
@@ -17,7 +24,7 @@ import userService from '@/services/user.service';
 import { useAuth } from '@/contexts/AuthContext';
 import UI from '@/styles';
 import reservationService from '@/services/reservation.service';
-import CreditBalanceCard from '@/components/User/CreditBalance';
+import CreditBalanceCard from '@/pages/account/components/CreditBalance';
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
@@ -28,18 +35,23 @@ export default function ClassDetail() {
   const [enrolledStudents, setEnrolledStudents] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [existingReservation, setExistingReservation] =
+    useState<Reservation | null>(null);
 
   useEffect(() => {
     if (!classId) return;
 
     const fetchData = async () => {
-      const [classResult, allPools, allStudents] = await Promise.all([
-        scheduleService.getScheduledClassById(classId),
-        user ? creditService.getCreditPoolsByStudent(user.uid) : [],
-        userService.getStudents(),
-      ]);
+      const [classResult, allPools, allStudents, studentReservations] =
+        await Promise.all([
+          scheduleService.getScheduledClassById(classId),
+          user ? creditService.getCreditPoolsByStudent(user.uid) : [],
+          userService.getStudents(),
+          user ? reservationService.getReservationsByStudent(user.uid) : [],
+        ]);
       setClassData(classResult);
       const now = new Date();
       const activePool =
@@ -55,6 +67,13 @@ export default function ClassDetail() {
         setEnrolledStudents(
           allStudents.filter((s) => classResult.studentIds.includes(s.id)),
         );
+        const res =
+          studentReservations.find(
+            (r) =>
+              r.scheduledClassId === classId &&
+              r.status === ReservationStatus.Confirmed,
+          ) ?? null;
+        setExistingReservation(res);
       }
       setLoading(false);
     };
@@ -79,17 +98,26 @@ export default function ClassDetail() {
         'credit',
       );
 
-      const [updatedClass, updatedPools, allStudents] = await Promise.all([
-        scheduleService.getScheduledClassById(classData.id),
-        creditService.getCreditPoolsByStudent(user.uid),
-        userService.getStudents(),
-      ]);
+      const [updatedClass, updatedPools, allStudents, updatedReservations] =
+        await Promise.all([
+          scheduleService.getScheduledClassById(classData.id),
+          creditService.getCreditPoolsByStudent(user.uid),
+          userService.getStudents(),
+          reservationService.getReservationsByStudent(user.uid),
+        ]);
       if (updatedClass) {
         setClassData(updatedClass);
         setEnrolledStudents(
           allStudents.filter((s) => updatedClass.studentIds.includes(s.id)),
         );
       }
+      const updatedRes =
+        updatedReservations.find(
+          (r) =>
+            r.scheduledClassId === classData.id &&
+            r.status === ReservationStatus.Confirmed,
+        ) ?? null;
+      setExistingReservation(updatedRes);
       const nowUpdated = new Date();
       const updatedActivePool =
         updatedPools
@@ -119,6 +147,42 @@ export default function ClassDetail() {
       );
     } finally {
       setBookingLoading(false);
+    }
+  };
+
+  const handleCancelReservation = async () => {
+    if (!classData || !user || !appUser || !existingReservation) return;
+    setCancelLoading(true);
+    setError('');
+    try {
+      const success = await reservationService.cancelReservationForStudent({
+        ...existingReservation,
+      });
+      if (!success) throw new Error('CANCEL_FAILED');
+      const [updatedClass, allStudents, updatedReservations] =
+        await Promise.all([
+          scheduleService.getScheduledClassById(classData.id),
+          userService.getStudents(),
+          reservationService.getReservationsByStudent(user.uid),
+        ]);
+      if (updatedClass) {
+        setClassData(updatedClass);
+        setEnrolledStudents(
+          allStudents.filter((s) => updatedClass.studentIds.includes(s.id)),
+        );
+      }
+      const updatedRes =
+        updatedReservations.find(
+          (r) =>
+            r.scheduledClassId === classData.id &&
+            r.status === ReservationStatus.Confirmed,
+        ) ?? null;
+      setExistingReservation(updatedRes);
+      setSuccess(false);
+    } catch {
+      setError('Error al cancelar la reserva. Inténtalo de nuevo.');
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -293,71 +357,96 @@ export default function ClassDetail() {
         {/* Booking Card */}
         <div className='lg:col-span-1'>
           <div className='card p-6 sticky top-6'>
-            {/* Already enrolled notice */}
-            {alreadyBooked && (
-              <div className='mb-4 p-4 bg-brand/10 border border-brand/30 rounded-lg flex items-center gap-2'>
-                <CheckCircle className='w-5 h-5 text-brand flex-shrink-0' />
-                <span className='font-medium text-brand-light'>
-                  Ya estás inscrito en esta clase
-                </span>
+            {/* Already enrolled: badge + cancel */}
+            {alreadyBooked ? (
+              <div className='space-y-4'>
+                <div className='flex items-center gap-2 px-3 py-2 bg-brand/10 border border-brand/30 rounded-full w-fit'>
+                  <CheckCircle className='w-4 h-4 text-brand flex-shrink-0' />
+                  <span className='text-sm font-semibold text-brand-light'>
+                    Apuntado
+                  </span>
+                </div>
+                <p className='text-sm text-ui-text-soft'>
+                  Ya estás inscrito en esta clase.
+                </p>
+                {error && (
+                  <div className={`${UI.alert.error} mb-2`}>
+                    <AlertCircle className='w-5 h-5 flex-shrink-0' />
+                    <span>{error}</span>
+                  </div>
+                )}
+                <button
+                  onClick={handleCancelReservation}
+                  disabled={cancelLoading}
+                  className='btn w-full py-3 flex items-center justify-center gap-2 border border-red-400 text-red-400 hover:bg-red-400/10 transition-colors rounded-lg'
+                >
+                  {cancelLoading ? (
+                    <>
+                      <div className={UI.loading.spinnerSm}></div>
+                      Cancelando...
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className='w-5 h-5' />
+                      Cancelar Reserva
+                    </>
+                  )}
+                </button>
               </div>
-            )}
+            ) : (
+              <>
+                {/* Credit Balance */}
+                {creditBalance && creditBalance.remainingCredits > 0 && (
+                  <CreditBalanceCard
+                    {...{
+                      remaining: creditBalance.remainingCredits,
+                      total: creditBalance.totalCredits,
+                      expirationDate: creditBalance.expiresAt,
+                    }}
+                  />
+                )}
 
-            {/* Credit Balance */}
-            {!alreadyBooked &&
-              creditBalance &&
-              creditBalance.remainingCredits > 0 && (
-                <CreditBalanceCard
-                  {...{
-                    remaining: creditBalance.remainingCredits,
-                    total: creditBalance.totalCredits,
-                    expirationDate: creditBalance.expiresAt,
-                  }}
-                />
-              )}
+                {/* No credits */}
+                {(!creditBalance || creditBalance.remainingCredits === 0) && (
+                  <div className='mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg'>
+                    <div className='flex items-center gap-2 mb-2'>
+                      <AlertCircle className='w-5 h-5 text-amber-600' />
+                      <span className='font-medium text-amber-900'>
+                        Sin Créditos Disponibles
+                      </span>
+                    </div>
+                  </div>
+                )}
 
-            {/* No credits */}
-            {!alreadyBooked &&
-              (!creditBalance || creditBalance.remainingCredits === 0) && (
-                <div className='mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg'>
-                  <div className='flex items-center gap-2 mb-2'>
-                    <AlertCircle className='w-5 h-5 text-amber-600' />
-                    <span className='font-medium text-amber-900'>
-                      Sin Créditos Disponibles
+                {/* Success */}
+                {success && (
+                  <div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2'>
+                    <CheckCircle className='w-5 h-5 text-green-600 flex-shrink-0' />
+                    <span className='font-medium text-green-800'>
+                      ¡Clase reservada con éxito!
                     </span>
                   </div>
-                </div>
-              )}
+                )}
 
-            {/* Success */}
-            {success && (
-              <div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2'>
-                <CheckCircle className='w-5 h-5 text-green-600 flex-shrink-0' />
-                <span className='font-medium text-green-800'>
-                  ¡Clase reservada con éxito!
-                </span>
-              </div>
-            )}
+                {/* Error */}
+                {error && (
+                  <div className={`${UI.alert.error} mb-4`}>
+                    <AlertCircle className='w-5 h-5 flex-shrink-0' />
+                    <span>{error}</span>
+                  </div>
+                )}
 
-            {/* Error */}
-            {error && (
-              <div className={`${UI.alert.error} mb-4`}>
-                <AlertCircle className='w-5 h-5 flex-shrink-0' />
-                <span>{error}</span>
-              </div>
-            )}
+                {/* Class full */}
+                {isFull && (
+                  <div className='flex items-center gap-2 mb-4'>
+                    <AlertCircle className='w-5 h-5 text-red-600' />
+                    <span className='font-medium text-red-700'>
+                      Clase Completa
+                    </span>
+                  </div>
+                )}
 
-            {/* Class full */}
-            {!alreadyBooked && isFull && (
-              <div className='flex items-center gap-2 mb-4'>
-                <AlertCircle className='w-5 h-5 text-red-600' />
-                <span className='font-medium text-red-700'>Clase Completa</span>
-              </div>
-            )}
-
-            {/* Book button */}
-            {!alreadyBooked && (
-              <>
+                {/* Book button */}
                 {creditBalance && creditBalance.remainingCredits > 0 && (
                   <button
                     onClick={handleBookClass}

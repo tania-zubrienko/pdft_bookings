@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AppUser, ScheduledClass } from '../../types';
-import ClassCard from '../../components/Classes/ClassCard';
+import ClassCard from '../reservations/components/ClassCard';
 import CalendarView from '../../components/Calendar/CalendarView';
 import Layout from '../../components/Layout/Layout';
 import { Calendar } from 'lucide-react';

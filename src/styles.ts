@@ -146,7 +146,7 @@ const UI = {
     /** Red — error / full / expired / cancelled */
     red: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/50 text-red-400 border border-red-800',
     /** Blue — future / informational */
-    blue: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand/30 text-ui-text border border-ui-border',
+    blue: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-ui-text border border-blue-800',
     /** Brand — featured / highlighted */
     brand:
       'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand text-white',
