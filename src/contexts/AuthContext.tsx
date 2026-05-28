@@ -79,8 +79,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
       );
-      await fbService.createStudent(credential.user.uid, email, userName);
       await sendEmailVerification(credential.user);
+      await fbService.createStudent(credential.user.uid, email, userName);
       await signOut(auth); // Sign out until email is verified
     },
     [],

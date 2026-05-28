@@ -12,7 +12,7 @@ interface ProfileTabProps {
   saving: boolean;
   saveError: string;
   saveSuccess: boolean;
-  fileInputRef: RefObject<HTMLInputElement | null>;
+  fileInputRef: RefObject<HTMLInputElement>;
   onDisplayNameChange: (value: string) => void;
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSaveProfile: () => void;
