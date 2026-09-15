@@ -4,8 +4,8 @@ import {
   ScheduledClass,
   AppUser,
   CreditPool,
-  Reservation,
   ReservationStatus,
+  ReservationWithClass,
 } from '../../types';
 import Layout from '../../components/Layout/Layout';
 import {
@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import UI from '@/styles';
 import reservationService from '@/services/reservation.service';
 import CreditBalanceCard from '@/pages/account/components/CreditBalance';
+import { canBeCancelled, formatDate, formatTime } from '@/utils';
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
@@ -39,7 +40,7 @@ export default function ClassDetail() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [existingReservation, setExistingReservation] =
-    useState<Reservation | null>(null);
+    useState<ReservationWithClass | null>(null);
 
   useEffect(() => {
     if (!classId) return;
@@ -63,7 +64,16 @@ export default function ClassDetail() {
             (r) =>
               r.scheduledClassId === classId &&
               r.status === ReservationStatus.Confirmed,
-          ) ?? null;
+          )
+            ? {
+              ...studentReservations.find(
+                (r) =>
+                  r.scheduledClassId === classId &&
+                  r.status === ReservationStatus.Confirmed,
+              )!,
+              scheduledClass: classResult,
+            }
+            : null;
         setExistingReservation(res);
       }
       setLoading(false);
@@ -102,12 +112,15 @@ export default function ClassDetail() {
           allStudents.filter((s) => updatedClass.studentIds.includes(s.id)),
         );
       }
+      const updatedReservation = updatedReservations.find(
+        (r) =>
+          r.scheduledClassId === classData.id &&
+          r.status === ReservationStatus.Confirmed,
+      );
       const updatedRes =
-        updatedReservations.find(
-          (r) =>
-            r.scheduledClassId === classData.id &&
-            r.status === ReservationStatus.Confirmed,
-        ) ?? null;
+        updatedReservation && updatedClass
+          ? { ...updatedReservation, scheduledClass: updatedClass }
+          : null;
       setExistingReservation(updatedRes);
       setCreditBalance(updatedPool);
       setSuccess(true);
@@ -123,7 +136,7 @@ export default function ClassDetail() {
       };
       setError(
         errorMessages[err.message] ??
-          'Error al reservar la clase. Inténtalo de nuevo.',
+        'Error al reservar la clase. Inténtalo de nuevo.',
       );
     } finally {
       setBookingLoading(false);
@@ -132,12 +145,11 @@ export default function ClassDetail() {
 
   const handleCancelReservation = async () => {
     if (!classData || !user || !appUser || !existingReservation) return;
+    if (!canBeCancelled(existingReservation.scheduledClass.date)) return;
     setCancelLoading(true);
     setError('');
     try {
-      const success = await reservationService.cancelReservationForStudent({
-        ...existingReservation,
-      });
+      const success = await reservationService.cancelReservationForStudent(existingReservation);
       if (!success) throw new Error('CANCEL_FAILED');
       const [updatedClass, allStudents, updatedReservations] =
         await Promise.all([
@@ -151,37 +163,47 @@ export default function ClassDetail() {
           allStudents.filter((s) => updatedClass.studentIds.includes(s.id)),
         );
       }
+      const updatedReservation = updatedReservations.find(
+        (r) =>
+          r.scheduledClassId === classData.id &&
+          r.status === ReservationStatus.Confirmed,
+      );
       const updatedRes =
-        updatedReservations.find(
-          (r) =>
-            r.scheduledClassId === classData.id &&
-            r.status === ReservationStatus.Confirmed,
-        ) ?? null;
+        updatedReservation && updatedClass
+          ? { ...updatedReservation, scheduledClass: updatedClass }
+          : null;
       setExistingReservation(updatedRes);
       setSuccess(false);
-    } catch {
+    } catch (err) {
+      console.log(err)
+
       setError('Error al cancelar la reserva. Inténtalo de nuevo.');
     } finally {
       setCancelLoading(false);
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+  const _getButtonTitle = () => {
+    console.log('GET TITLE', existingReservation, classData)
+    if (existingReservation && classData) {
+      return canBeCancelled(classData!.date) ? 'Cancelar' : 'Ya no puedes cancelar'
+    }
+    else if (bookingLoading) {
+      return <>
+        <div className={UI.loading.spinnerSm}></div>
+        Procesando...
+      </>
+    }
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-  };
+    return isFull ? (
+      'Clase Completa'
+    ) :
+      <>
+        <Ticket className='w-5 h-5' />
+        Reservar
+      </>
 
+  }
   if (loading) {
     return (
       <Layout>
@@ -265,13 +287,12 @@ export default function ClassDetail() {
                 {classData.enrolledCount} / {classData.capacity} inscritos
               </p>
               <p
-                className={`text-sm mt-1 ${
-                  isFull
-                    ? 'text-red-400'
-                    : spotsLeft <= 3
-                      ? 'text-amber-400'
-                      : 'text-green-400'
-                }`}
+                className={`text-sm mt-1 ${isFull
+                  ? 'text-red-400'
+                  : spotsLeft <= 3
+                    ? 'text-amber-400'
+                    : 'text-green-400'
+                  }`}
               >
                 {isFull
                   ? 'Completa'
@@ -355,23 +376,24 @@ export default function ClassDetail() {
                     <span>{error}</span>
                   </div>
                 )}
-                <button
-                  onClick={handleCancelReservation}
-                  disabled={cancelLoading}
-                  className='btn w-full py-3 flex items-center justify-center gap-2 border border-red-400 text-red-400 hover:bg-red-400/10 transition-colors rounded-lg'
-                >
-                  {cancelLoading ? (
-                    <>
-                      <div className={UI.loading.spinnerSm}></div>
-                      Cancelando...
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className='w-5 h-5' />
-                      Cancelar Reserva
-                    </>
-                  )}
-                </button>
+                {!!existingReservation && canBeCancelled(existingReservation!.scheduledClass.date) ?
+                  <button
+                    onClick={handleCancelReservation}
+                    disabled={cancelLoading}
+                    className='btn w-full py-3 flex items-center justify-center gap-2 border border-red-400 text-red-400 hover:bg-red-400/10 transition-colors rounded-lg'
+                  >
+                    {cancelLoading ? (
+                      <>
+                        <div className={UI.loading.spinnerSm}></div>
+                        Cancelando...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className='w-5 h-5' />
+                        Cancelar Reserva
+                      </>
+                    )}
+                  </button> : <p className={UI.text.label}>Ya no se puede cancelar</p>}
               </div>
             ) : (
               <>
@@ -432,20 +454,7 @@ export default function ClassDetail() {
                     onClick={handleBookClass}
                     disabled={isFull || bookingLoading}
                     className='btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-2'
-                  >
-                    {bookingLoading ? (
-                      <>
-                        <div className={UI.loading.spinnerSm}></div>
-                        Procesando...
-                      </>
-                    ) : isFull ? (
-                      'Clase Completa'
-                    ) : (
-                      <>
-                        <Ticket className='w-5 h-5' />
-                        Usar 1 Crédito para Reservar
-                      </>
-                    )}
+                  >{_getButtonTitle()}
                   </button>
                 )}
                 <p className='text-xs text-ui-text-soft text-center mt-4'>
@@ -456,6 +465,6 @@ export default function ClassDetail() {
           </div>
         </div>
       </div>
-    </Layout>
+    </Layout >
   );
 }

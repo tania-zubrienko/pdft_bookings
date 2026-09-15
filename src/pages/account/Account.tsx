@@ -65,10 +65,19 @@ export default function Account() {
       scheduleService.getAllScheduledClasses(),
       creditService.getCreditBalance(user.uid),
     ]).then(([resData, classData, creditData]) => {
-      const enriched = resData.map((r: any) => ({
-        ...r,
-        scheduledClass: classData.find((c: any) => c.id === r.scheduledClassId),
-      }));
+      const enriched: ReservationWithClass[] = resData
+        .map((reservation) => {
+          const scheduledClass = classData.find(
+            (scheduledClass) => scheduledClass.id === reservation.scheduledClassId,
+          );
+          if (!scheduledClass) return null;
+
+          return {
+            ...reservation,
+            scheduledClass,
+          };
+        })
+        .filter((reservation): reservation is ReservationWithClass => reservation !== null);
       setReservations(enriched);
       setAllScheduledClasses(classData);
       setReservationsLoading(false);
@@ -137,10 +146,9 @@ export default function Account() {
 
   // ── Tab bar ──────────────────────────────────────────────────────────────
   const tabClass = (tab: Tab) =>
-    `px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-      activeTab === tab
-        ? 'border-brand text-brand-light'
-        : 'border-transparent text-ui-text-soft hover:text-ui-text'
+    `px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab
+      ? 'border-brand text-brand-light'
+      : 'border-transparent text-ui-text-soft hover:text-ui-text'
     }`;
 
   // IDs of scheduled classes with a confirmed reservation
@@ -153,9 +161,7 @@ export default function Account() {
   }, [reservations]);
 
   const cancelReservation = async (reservedClass: ReservationWithClass) => {
-    const isSuccess =
-      await reservationService.cancelReservationForStudent(reservedClass);
-    alert(isSuccess);
+    await reservationService.cancelReservationForStudent(reservedClass);
   };
   return (
     <Layout>

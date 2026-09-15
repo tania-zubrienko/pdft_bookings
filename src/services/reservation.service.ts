@@ -21,6 +21,7 @@ import scheduleService from './schedule.service';
 import userService from './user.service';
 import { User } from 'firebase/auth';
 import creditService from './credit.service';
+import { canBeCancelled } from '@/utils';
 
 export interface AdminReservation {
   id: string;
@@ -208,14 +209,9 @@ class ReservationService {
     reservation: ReservationWithClass,
   ): Promise<boolean> {
     const studentId = reservation.studentId;
-    console.log(
-      'student',
-      studentId,
-      'reservation',
-      reservation.id,
-      'schClass',
-      reservation.scheduledClassId,
-    );
+    if (!canBeCancelled(reservation.scheduledClass.date)) return false;
+
+
     try {
       const reservationRef = doc(this.db, this.collectionName, reservation.id);
       const classRef = doc(

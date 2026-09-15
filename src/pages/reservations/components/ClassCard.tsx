@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { Clock, Users } from 'lucide-react';
 import { AppUser, ScheduledClass } from '../../../types';
 import UI, { getClassAccent } from '@/styles';
+import { formatTime } from '@/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ClassCardProps {
   classData: ScheduledClass;
@@ -18,14 +20,9 @@ export default function ClassCard({
   const enrolledStudents = students.filter((s) =>
     classData.studentIds.includes(s.id),
   );
-
-  const formatTime = (date: Date) =>
-    date.toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-
+  const { appUser } = useAuth();
+  const isEnrolled = enrolledStudents.some((s) => s.id === appUser?.id);
+  console.log(appUser, enrolledStudents)
   return (
     <div className={`${UI.card.interactive} overflow-hidden relative`}>
       {/* Colored accent bar on the left */}
@@ -107,7 +104,7 @@ export default function ClassCard({
             to={`/classes/${classData.id}`}
             className={`btn text-sm ${isFull ? 'btn-secondary cursor-not-allowed pointer-events-none' : 'btn-primary'}`}
           >
-            {isFull ? 'Completa' : 'Reservar'}
+            {isEnrolled ? 'Cancelar' : isFull ? 'Completa' : 'Reservar'}
           </Link>
         </div>
       </div>

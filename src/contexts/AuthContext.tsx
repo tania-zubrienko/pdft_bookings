@@ -52,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (nextUser) {
         try {
           const userData = await fbService.getStudent(nextUser.uid);
+          if (userData) userData.id = nextUser.uid;
           setAppUser(userData || null);
         } catch (error) {
           console.error('Failed to fetch AppUser:', error);
@@ -118,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     try {
       const userData = await fbService.getStudent(user.uid);
+      if (userData) userData.id = user.uid;
       setAppUser(userData || null);
     } catch (error) {
       console.error('Failed to refresh AppUser:', error);

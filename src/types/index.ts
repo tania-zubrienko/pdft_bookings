@@ -56,7 +56,7 @@ export type ReservationStatus =
   (typeof ReservationStatus)[keyof typeof ReservationStatus];
 
 export interface ReservationWithClass extends Reservation {
-  scheduledClass?: ScheduledClass;
+  scheduledClass: ScheduledClass;
 }
 
 /**
@@ -123,10 +123,10 @@ export interface CreateCheckoutSessionResponse {
 
 export interface BookingError {
   code:
-    | 'CLASS_FULL'
-    | 'ALREADY_BOOKED'
-    | 'NO_VALID_CREDITS'
-    | 'PAYMENT_REQUIRED'
-    | 'INVALID_PAYMENT_MODE';
+  | 'CLASS_FULL'
+  | 'ALREADY_BOOKED'
+  | 'NO_VALID_CREDITS'
+  | 'PAYMENT_REQUIRED'
+  | 'INVALID_PAYMENT_MODE';
   message: string;
 }
