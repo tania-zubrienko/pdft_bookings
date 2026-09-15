@@ -6,7 +6,8 @@ import {
   Menu,
   X,
   ArrowLeft,
-  Coins,
+  Users,
+  ClipboardListIcon,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,9 +19,10 @@ interface AdminLayoutProps {
 }
 
 const adminLinks = [
+  { to: '/admin/reports', label: S.nav.reports, icon: ClipboardListIcon },
   { to: '/admin/schedule', label: S.nav.schedule, icon: CalendarDays },
   { to: '/admin/reservations', label: S.nav.reserves, icon: ClipboardList },
-  { to: '/admin/credits', label: S.nav.credits, icon: Coins },
+  { to: '/admin/credits', label: S.nav.alumnos, icon: Users },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -62,9 +64,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className={`flex items-center gap-2 transition-colors ${
-                      isActive ? UI.nav.linkActive : UI.nav.linkInactive
-                    }`}
+                    className={`flex items-center gap-2 transition-colors ${isActive ? UI.nav.linkActive : UI.nav.linkInactive
+                      }`}
                   >
                     <link.icon className='w-5 h-5' />
                     {link.label}
@@ -76,7 +77,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 className={`flex items-center gap-2 ${UI.nav.linkInactive} ml-4 border-l border-ui-border pl-4`}
               >
                 <ArrowLeft className='w-4 h-4' />
-                {S.nav.alumni}
+                {S.nav.alumno}
               </Link>
               <button
                 onClick={logout}
@@ -112,11 +113,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     key={link.to}
                     to={link.to}
                     onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-                      isActive
-                        ? 'bg-ui-input text-primary-400 font-medium'
-                        : 'text-gray-300 hover:bg-ui-input hover:text-primary-400'
-                    }`}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${isActive
+                      ? 'bg-ui-input text-primary-400 font-medium'
+                      : 'text-gray-300 hover:bg-ui-input hover:text-primary-400'
+                      }`}
                   >
                     <link.icon className='w-5 h-5' />
                     {link.label}
@@ -129,7 +129,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 className='flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 hover:bg-ui-input hover:text-white transition-colors border-t border-ui-border mt-2 pt-4'
               >
                 <ArrowLeft className='w-5 h-5' />
-                {S.nav.alumni}
+                {S.nav.alumno}
               </Link>
               <button
                 onClick={() => {

@@ -110,7 +110,7 @@ export default function CreditManagement() {
     setFormSuccess('');
 
     if (!selectedStudentId) {
-      setFormError('Selecciona una alumna.');
+      setFormError('Selecciona una alumno.');
       return;
     }
 
@@ -144,7 +144,7 @@ export default function CreditManagement() {
 
     if (hasOverlap) {
       setFormError(
-        'No se puede guardar: existe otro pool activo con fechas solapadas para esta alumna.',
+        'No se puede guardar: existe otro pool activo con fechas solapadas para esta alumno.',
       );
       return;
     }
@@ -202,7 +202,7 @@ export default function CreditManagement() {
       <div className='mb-6'>
         <h1 className={UI.text.heading}>Gestión de Créditos</h1>
         <p className={UI.text.soft}>
-          Asigna créditos manualmente y revisa los pools por alumna
+          Asigna créditos manualmente y revisa los pools por alumno
         </p>
       </div>
 
@@ -295,7 +295,7 @@ export default function CreditManagement() {
               <DisclosurePanel className='mt-4'>
                 {sortedPools.length === 0 ? (
                   <p className='text-gray-400 text-sm'>
-                    No hay pools para la alumna seleccionada.
+                    No hay pools para la alumno seleccionada.
                   </p>
                 ) : (
                   <div className='space-y-3'>

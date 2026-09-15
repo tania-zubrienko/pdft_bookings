@@ -9,10 +9,11 @@ class AppStrings {
     myAccount: 'Mi Cuenta',
     admin: 'Panel de Gestión',
     logout: 'Cerrar Sesión',
-    alumni: 'Vista Alumni',
+    alumno: 'Vista alumno',
     reserves: 'Reservas',
-    credits: 'Creditos',
+    alumnos: 'Alumnos',
     schedule: 'Horarios',
+    reports: 'Informes'
   };
 }
 

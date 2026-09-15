@@ -69,7 +69,7 @@ export default function StudentBookingsCalendar({
                     </p>
                     {bookingsForSelectedDay.length === 0 ? (
                         <p className='text-gray-400 text-sm'>
-                            No hay reservas de la alumna en este día.
+                            No hay reservas de la alumno en este día.
                         </p>
                     ) : (
                         <div className='space-y-2'>

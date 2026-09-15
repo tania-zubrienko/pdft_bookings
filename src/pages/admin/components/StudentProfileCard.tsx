@@ -48,7 +48,7 @@ export default function StudentProfileCard({
     expirationDate
 }: StudentProfileCardProps) {
     if (!student) {
-        return <p className='text-gray-400 text-sm'>Selecciona una alumna.</p>;
+        return <p className='text-gray-400 text-sm'>Selecciona una alumno.</p>;
     }
 
     return (

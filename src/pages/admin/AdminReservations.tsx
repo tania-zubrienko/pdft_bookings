@@ -279,7 +279,7 @@ function ClassCard({
       <div className='mt-1.5 flex items-center gap-1 text-xs font-medium text-brand-light'>
         <Users className='w-3 h-3' />
         <span>
-          {confirmed} alumna{confirmed !== 1 ? 's' : ''}
+          {confirmed} alumno{confirmed !== 1 ? 's' : ''}
         </span>
       </div>
     </button>
@@ -446,7 +446,7 @@ export default function AdminReservations() {
       <div className='mb-6'>
         <h1 className={UI.text.heading}>Reservas</h1>
         <p className={UI.text.headingDescription}>
-          Vista semanal de clases y alumnas apuntadas
+          Vista semanal de clases y alumnos apuntados
         </p>
       </div>
 
@@ -483,7 +483,7 @@ export default function AdminReservations() {
             type='text'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder='Buscar alumna o clase…'
+            placeholder='Buscar alumno o clase…'
             className='input pl-9'
           />
         </div>
@@ -504,7 +504,7 @@ export default function AdminReservations() {
         </div>
         <div className={UI.stats.card}>
           <p className={UI.stats.value}>{stats.uniqueStudents}</p>
-          <p className={UI.stats.label}>Alumnas Únicas</p>
+          <p className={UI.stats.label}>alumnos Únicas</p>
         </div>
         <div className={UI.stats.card}>
           <p className={UI.stats.value}>{stats.uniqueClasses}</p>
@@ -557,11 +557,10 @@ export default function AdminReservations() {
               >
                 {/* Day header */}
                 <div
-                  className={`text-center rounded-lg py-2 px-1 ${
-                    isToday
-                      ? 'bg-brand text-white'
-                      : 'bg-ui-input border border-ui-border'
-                  }`}
+                  className={`text-center rounded-lg py-2 px-1 ${isToday
+                    ? 'bg-brand text-white'
+                    : 'bg-ui-input border border-ui-border'
+                    }`}
                 >
                   <p
                     className={`text-xs font-medium ${isToday ? 'text-white' : 'text-ui-text-muted'}`}

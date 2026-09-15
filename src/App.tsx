@@ -17,6 +17,7 @@ import CreditManagement from './pages/admin/CreditManagement';
 import Login from './pages/auth/Login';
 import { RequireAdmin, RequireAuth } from './components/auth/RouteGuards';
 import PasswordReset from './pages/auth/PasswordReset';
+import Reports from './pages/admin/Reports';
 
 export default function App() {
   const [searchParams] = useSearchParams();
@@ -84,6 +85,14 @@ export default function App() {
       />
 
       {/* Admin routes */}
+      <Route
+        path='/admin/reports'
+        element={
+          <RequireAdmin>
+            <Reports />
+          </RequireAdmin>
+        }
+      />
       <Route
         path='/admin/schedule'
         element={
