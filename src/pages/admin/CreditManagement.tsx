@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../components/Layout/AdminLayout';
 import userService from '@/services/user.service';
 import creditService from '@/services/credit.service';
-import { CreditPool, AppUser } from '../../types';
+import { CreditPool, AppUser, ReservationWithClass } from '../../types';
 import { AlertCircle, CheckCircle2, Search } from 'lucide-react';
 import UI from '@/styles';
 import CreditForm from './components/CreditForm';
 import CreditModalDialog from './components/CreditModalDialog';
+import reservationService from '@/services/reservation.service';
+import StudentBookingsCalendar from './components/StudentBookingsCalendar';
 
 const EXPIRING_SOON_DAYS = 7;
 
@@ -25,6 +27,7 @@ export default function CreditManagement() {
 
   const [searchStudent, setSearchStudent] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [studentBookings, setStudentBookings] = useState<ReservationWithClass[]>([]);
 
   const [pools, setPools] = useState<CreditPool[]>([]);
   const [saving, setSaving] = useState(false);
@@ -43,8 +46,10 @@ export default function CreditManagement() {
   useEffect(() => {
     if (!selectedStudentId) {
       setPools([]);
+      setStudentBookings([]);
       return;
     }
+    reservationService.getReservationsWithClassByStudent(selectedStudentId).then(setStudentBookings);
     creditService.getCreditPoolsByStudent(selectedStudentId).then(setPools);
   }, [selectedStudentId]);
 
@@ -262,7 +267,7 @@ export default function CreditManagement() {
 
       <section className='card p-5 mt-6'>
         <h2 className='text-lg font-semibold text-gray-100 mb-4'>
-          Pools de créditos
+          Historia de créditos
         </h2>
 
         {pools.length === 0 ? (
@@ -328,7 +333,12 @@ export default function CreditManagement() {
           </div>
         )}
       </section>
-
+      <section className='card p-5 mt-6'>
+        <h2 className='text-lg font-semibold text-gray-100 mb-4'>
+          Historia de reservas ({studentBookings.length})
+        </h2>
+        <StudentBookingsCalendar studentBookings={studentBookings} />
+      </section>
       <section>
         <CreditModalDialog
           creditPool={selectedPool}

@@ -86,6 +86,31 @@ class ReservationService {
     }
   }
 
+  /** Returns all reservations for a given student, each enriched with its scheduled class.
+   * Reservations whose scheduled class can no longer be found are omitted. */
+  async getReservationsWithClassByStudent(
+    studentId: string,
+  ): Promise<ReservationWithClass[]> {
+    const [reservations, scheduledClasses] = await Promise.all([
+      this.getReservationsByStudent(studentId),
+      scheduleService.getAllScheduledClasses(),
+    ]);
+
+    const classMap = new Map(scheduledClasses.map((c) => [c.id, c]));
+
+    return reservations
+      .map((reservation) => {
+
+        const scheduledClass = classMap.get(reservation.scheduledClassId);
+        if (!scheduledClass) return null;
+        return { ...reservation, scheduledClass };
+      })
+      .filter(
+        (reservation): reservation is ReservationWithClass =>
+          reservation !== null,
+      );
+  }
+
   /** Returns all reservations enriched with class and student data for the admin view.
    * Fetches reservations, scheduled classes, and students in parallel, then joins them
    * in memory. Falls back to raw IDs/defaults if a related document is missing.
