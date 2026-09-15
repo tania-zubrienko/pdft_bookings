@@ -33,7 +33,7 @@ export default function ScheduledClassCard({
 
   const getStatusName = () => {
     const status = reservation?.status;
-    if (status === 'confirmed') return 'Ya reservada';
+    if (status === 'confirmed') return 'Reservada';
     return 'Disponible';
   };
 
@@ -44,7 +44,7 @@ export default function ScheduledClassCard({
       key={'id'}
       className='card p-6'
     >
-      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
+      <div className='flex flex-col sm:flex-row sm:items-end justify-between gap-4'>
         <div>
           <div className='flex items-center gap-3 mb-1'>
             {getStatusIcon()}
@@ -65,7 +65,7 @@ export default function ScheduledClassCard({
           </div>
         </div>
         {/*If reservation exists */}
-        <div className='flex gap-2'>
+        <div className='flex gap-2 self-end'>
           {!!reservation &&
             reservation.status !== 'cancelled' &&
             !isPassed() && (

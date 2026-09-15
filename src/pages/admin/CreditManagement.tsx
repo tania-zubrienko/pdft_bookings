@@ -3,12 +3,13 @@ import AdminLayout from '../../components/Layout/AdminLayout';
 import userService from '@/services/user.service';
 import creditService from '@/services/credit.service';
 import { CreditPool, AppUser, ReservationWithClass } from '../../types';
-import { AlertCircle, CheckCircle2, Search } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronDown, Plus, Search } from 'lucide-react';
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import UI from '@/styles';
-import CreditForm from './components/CreditForm';
 import CreditModalDialog from './components/CreditModalDialog';
 import reservationService from '@/services/reservation.service';
 import StudentBookingsCalendar from './components/StudentBookingsCalendar';
+import StudentProfileCard from './components/StudentProfileCard';
 
 const EXPIRING_SOON_DAYS = 7;
 
@@ -82,6 +83,17 @@ export default function CreditManagement() {
 
     return { activeCredits, expiringSoon };
   }, [pools]);
+
+  const activeBonosCount = useMemo(
+    () => pools.filter((p) => poolStatus(p) === 'active').length,
+    [pools],
+  );
+
+  const sortedPools = useMemo(
+    () =>
+      [...pools].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+    [pools],
+  );
 
   const selectedStudent = students.find((s) => s.id === selectedStudentId);
 
@@ -194,10 +206,10 @@ export default function CreditManagement() {
         </p>
       </div>
 
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+      <div className='grid  gap-6'>
         <section className='card p-5 lg:col-span-1'>
           <h2 className='text-lg font-semibold text-gray-100 mb-3'>
-            Seleccionar alumna
+            Seleccionar alumno
           </h2>
 
           <div className='relative mb-3'>
@@ -225,113 +237,128 @@ export default function CreditManagement() {
             ))}
           </select>
 
-          <div className='mt-4 space-y-2 text-sm text-gray-300'>
-            <p>
-              <span className='text-gray-400'>Alumna:</span>{' '}
-              {selectedStudent?.name ?? '—'}
-            </p>
-            <p>
-              <span className='text-gray-400'>Créditos activos:</span>{' '}
-              {stats.activeCredits}
-            </p>
-            <p>
-              <span className='text-gray-400'>
-                Bonos por vencer ({EXPIRING_SOON_DAYS} días):
-              </span>{' '}
-              {stats.expiringSoon}
-            </p>
+          <div className='mt-4'>
+            <StudentProfileCard
+              student={selectedStudent}
+              activeCredits={stats.activeCredits}
+              activeBonosCount={activeBonosCount}
+              expirationDate={pools
+                .find((p) => poolStatus(p) === 'active')?.expiresAt}
+            />
           </div>
+          <section className='p-5 flex flex-col'>
+            {formError && (
+              <div className={`${UI.alert.error} mb-4`}>
+                <AlertCircle className='w-4 h-4' />
+                {formError}
+              </div>
+            )}
+
+            {formSuccess && (
+              <div className={`${UI.alert.success} mb-4`}>
+                <CheckCircle2 className='w-4 h-4' />
+                {formSuccess}
+              </div>
+            )}
+            <button
+              type='button'
+              className={`${UI.button.primary} inline-flex items-center gap-2 ml-auto`}
+              disabled={!selectedStudentId}
+              onClick={() => {
+                setSelectedPool(null);
+                setShowDialog(true);
+              }}
+            >
+              <Plus className='w-4 h-4' />
+              Crear créditos
+            </button>
+          </section>
         </section>
 
-        <section className='card p-5 lg:col-span-2'>
-          {formError && (
-            <div className={`${UI.alert.error} mb-4`}>
-              <AlertCircle className='w-4 h-4' />
-              {formError}
-            </div>
-          )}
 
-          {formSuccess && (
-            <div className={`${UI.alert.success} mb-4`}>
-              <CheckCircle2 className='w-4 h-4' />
-              {formSuccess}
-            </div>
-          )}
-          <CreditForm
-            initialPaymentMethod='cash'
-            onSubmit={handleFormSubmit}
-            saving={saving}
-          />
-        </section>
       </div>
 
       <section className='card p-5 mt-6'>
-        <h2 className='text-lg font-semibold text-gray-100 mb-4'>
-          Historia de créditos
-        </h2>
+        <Disclosure defaultOpen>
+          {({ open }) => (
+            <>
+              <DisclosureButton className='flex w-full items-center justify-between text-left'>
+                <h2 className='text-lg font-semibold text-gray-100'>
+                  Historia de créditos ({sortedPools.length})
+                </h2>
+                <ChevronDown
+                  className={`w-5 h-5 text-gray-400 transition-transform ${open ? 'rotate-180' : ''
+                    }`}
+                />
+              </DisclosureButton>
 
-        {pools.length === 0 ? (
-          <p className='text-gray-400 text-sm'>
-            No hay pools para la alumna seleccionada.
-          </p>
-        ) : (
-          <div className='space-y-3'>
-            {pools.map((pool) => {
-              const status = poolStatus(pool);
-              return (
-                <div
-                  key={pool.id}
-                  className='rounded-lg border border-gray-700 bg-gray-800 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3'
-                >
-                  <div className='text-sm text-gray-200'>
-                    <p className='font-medium'>
-                      {pool.remainingCredits}/{pool.totalCredits} créditos
-                    </p>
-                    <p className='text-gray-400'>
-                      Válido: {pool.startDate.toLocaleDateString('es-ES')} →{' '}
-                      {pool.expiresAt.toLocaleDateString('es-ES')}
-                    </p>
-                    {pool.packageId && (
-                      <p className='text-gray-400'>Paquete: {pool.packageId}</p>
-                    )}
-                    <p className='text-gray-400'>Forma de pago: {pool.paymentMethod}</p>
-                    {pool.notes && (
-                      <p className='text-gray-400'>Notas: {pool.notes}</p>
-                    )}
+              <DisclosurePanel className='mt-4'>
+                {sortedPools.length === 0 ? (
+                  <p className='text-gray-400 text-sm'>
+                    No hay pools para la alumna seleccionada.
+                  </p>
+                ) : (
+                  <div className='space-y-3'>
+                    {sortedPools.map((pool) => {
+                      const status = poolStatus(pool);
+                      return (
+                        <div
+                          key={pool.id}
+                          className='rounded-lg border border-gray-700 bg-gray-800 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3'
+                        >
+                          <div className='text-sm text-gray-200'>
+                            <p className='font-medium'>
+                              {pool.remainingCredits}/{pool.totalCredits} créditos
+                            </p>
+                            <p className='text-gray-400'>
+                              Válido: {pool.startDate.toLocaleDateString('es-ES')} →{' '}
+                              {pool.expiresAt.toLocaleDateString('es-ES')}
+                            </p>
+                            {pool.packageId && (
+                              <p className='text-gray-400'>Paquete: {pool.packageId}</p>
+                            )}
+                            <p className='text-gray-400'>Forma de pago: {pool.paymentMethod}</p>
+                            {pool.notes && (
+                              <p className='text-gray-400'>Notas: {pool.notes}</p>
+                            )}
+                          </div>
+                          <div className='flex flex-col md:flex-row md:items-center md:justify-end gap-3'>
+                            <span
+                              className={`${status === 'active'
+                                ? UI.badge.green
+                                : status === 'future'
+                                  ? UI.badge.amber
+                                  : status === 'expired'
+                                    ? UI.badge.red
+                                    : UI.badge.base
+                                } w-fit`}
+                            >
+                              {status === 'active'
+                                ? 'Activo'
+                                : status === 'future'
+                                  ? 'Futuro'
+                                  : 'Expirado'}
+                            </span>
+                            <button
+                              className={UI.button.primary}
+                              onClick={() => {
+                                setShowDialog(true);
+                                setSelectedPool(pool);
+                              }}
+                            >
+                              {' '}
+                              Editar
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className='flex flex-col md:flex-row md:items-center md:justify-end gap-3'>
-                    <span
-                      className={`${status === 'active'
-                        ? UI.badge.green
-                        : status === 'future'
-                          ? UI.badge.amber
-                          : status === 'expired'
-                            ? UI.badge.red
-                            : UI.badge.base
-                        } w-fit`}
-                    >
-                      {status === 'active'
-                        ? 'Activo'
-                        : status === 'future'
-                          ? 'Futuro'
-                          : 'Expirado'}
-                    </span>
-                    <button
-                      className={UI.button.primary}
-                      onClick={() => {
-                        setShowDialog(true);
-                        setSelectedPool(pool);
-                      }}
-                    >
-                      {' '}
-                      Editar
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                )}
+              </DisclosurePanel>
+            </>
+          )}
+        </Disclosure>
       </section>
       <section className='card p-5 mt-6'>
         <h2 className='text-lg font-semibold text-gray-100 mb-4'>
@@ -345,6 +372,7 @@ export default function CreditManagement() {
           isVisible={showDialog}
           onClose={() => setShowDialog(false)}
           onSave={handleFormSubmit}
+          saving={saving}
         />
       </section>
     </AdminLayout>

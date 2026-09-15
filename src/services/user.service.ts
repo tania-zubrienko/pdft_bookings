@@ -40,25 +40,33 @@ class UserService {
     );
   }
 
+  private toAppUser(data: Record<string, any>, id: string): AppUser {
+    return {
+      ...data,
+      id,
+      createdAt: data['createdAt']?.toDate?.() ?? undefined,
+    } as AppUser;
+  }
+
   async getStudent(uid: string): Promise<AppUser | null> {
     const document = doc(this.db, this.collectionName, uid);
     const userDoc = await getDoc(document);
     if (!userDoc.exists()) return null;
     const userData = userDoc.data();
-    return {
-      id: userData['uid'],
-      name: userData['name'],
-      email: userData['email'],
-      active: userData['active'] || true,
-      avatar: userData['avatar'],
-      role: userData['role'] || 'student',
-    } as AppUser;
+    return this.toAppUser(
+      {
+        ...userData,
+        active: userData['active'] || true,
+        role: userData['role'] || 'student',
+      },
+      userData['uid'] ?? uid,
+    );
   }
 
   async getInstructors(): Promise<AppUser[]> {
     const q = query(collection(this.db, 'instructors'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((d) => ({ ...d.data(), id: d.id }) as AppUser);
+    return snapshot.docs.map((d) => this.toAppUser(d.data(), d.id));
   }
 
   async getStudents(): Promise<AppUser[]> {
@@ -67,7 +75,7 @@ class UserService {
       where('role', '==', 'student'),
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((d) => ({ ...d.data(), id: d.id }) as AppUser);
+    return snapshot.docs.map((d) => this.toAppUser(d.data(), d.id));
   }
 
   async getUserByEmail(email: string) {

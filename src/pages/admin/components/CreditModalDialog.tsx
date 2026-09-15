@@ -12,6 +12,7 @@ export default function CreditModalDialog({
   onClose,
   creditPool,
   onSave,
+  saving = false,
 }: {
   isVisible: boolean;
   onClose: () => void;
@@ -24,7 +25,9 @@ export default function CreditModalDialog({
     paymentMethod: string;
   }) => Promise<void>;
   creditPool: CreditPool | null;
+  saving?: boolean;
 }) {
+  const isEdit = Boolean(creditPool);
   return (
     <Dialog
       open={isVisible}
@@ -51,7 +54,7 @@ export default function CreditModalDialog({
                     as='h3'
                     className={`${UI.text.subheading}`}
                   >
-                    Editar créditos
+                    {isEdit ? 'Editar créditos' : 'Crear créditos'}
                   </DialogTitle>
                   {/** BODY */}
                   <div className='mt-2 bg-primary'>
@@ -75,6 +78,7 @@ export default function CreditModalDialog({
                           : undefined
                       }
                       initialNotes={creditPool?.notes}
+                      saving={saving}
                       onSubmit={async (data) => {
                         await onSave(data);
                         onClose();

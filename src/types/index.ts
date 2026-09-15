@@ -71,6 +71,8 @@ export interface AppUser {
   avatar: string;
   role: 'student' | 'instructor' | 'admin';
   specialties?: string[];
+  phone?: string;
+  createdAt?: Date;
 }
 
 /**
