@@ -57,4 +57,30 @@ body {
   .card {
     @apply bg-ui-card rounded-xl shadow-md overflow-hidden border border-ui-border-soft;
   }
+
+  .admin-week-picker {
+    --rdp-accent-color: theme('colors.brand');
+    --rdp-accent-background-color: theme('colors.ui-hover');
+    --rdp-day_button-border-radius: 0;
+    --rdp-day_button-width: 2.5rem;
+    --rdp-day_button-height: 2.5rem;
+    color: theme('colors.ui-text');
+  }
+
+  .admin-week-picker .rdp-month_caption {
+    @apply text-ui-text-soft;
+  }
+
+  .admin-week-picker .rdp-weekday,
+  .admin-week-picker .rdp-outside {
+    @apply text-ui-text-muted;
+  }
+
+  .admin-week-picker .rdp-day_button:hover {
+    @apply bg-ui-hover;
+  }
+
+  .admin-week-picker .selected-week .rdp-day_button {
+    @apply bg-brand text-white;
+  }
 }

@@ -36,6 +36,7 @@ A reservation and credit-based booking system for a dance academy. Students brow
 - ✅ Stats dashboard (total, confirmed, unique students/classes)
 - ✅ Dark-themed admin layout with mobile support
 - ✅ Manual credit management (create pools with custom start/expiration dates)
+- ✅ Credit pool payment method tracking (`cash` or `bizum`; defaults to `cash`)
 
 ## Project Structure
 
@@ -172,6 +173,7 @@ npm run dev
 - [x] Credit management page UI
 - [x] Student selector with search
 - [x] Credit pool creation form (credits, start date, expiration)
+- [x] Credit pool payment method selector (cash default)
 - [x] Credit pool list view per student
 - [x] Validation for date ranges and credit amounts
 

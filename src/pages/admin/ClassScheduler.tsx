@@ -1,8 +1,20 @@
 import { useEffect, useState, useMemo } from 'react';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { DayPicker } from 'react-day-picker';
+import { es } from 'react-day-picker/locale';
+import 'react-day-picker/style.css';
 
 import { ClassDefinition, AppUser, ScheduledClass } from '../../types';
 import AdminLayout from '../../components/Layout/AdminLayout';
-import { ChevronLeft, ChevronRight, Plus, Save, X, Copy } from 'lucide-react';
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Save,
+  X,
+  Copy,
+} from 'lucide-react';
 import scheduleService from '@/services/schedule.service';
 import classDefinitionService from '@/services/class-definition.service';
 import userService from '@/services/user.service';
@@ -221,6 +233,43 @@ export default function ClassScheduler() {
           Gestiona las clases semanales — duplica cualquier semana para
           planificar
         </p>
+      </div>
+
+      {/* Week picker */}
+      <div className='mb-3'>
+        <Popover className='relative inline-block'>
+          <PopoverButton
+            className={`${UI.button.secondary} flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand`}
+            aria-label='Seleccionar semana en el calendario'
+          >
+            <CalendarDays className='h-4 w-4' />
+            <span>Seleccionar semana</span>
+          </PopoverButton>
+          <PopoverPanel
+            anchor='bottom start'
+            transition
+            className='z-40 mt-2 rounded-lg border border-ui-border bg-ui-card p-3 shadow-xl transition duration-150 ease-out data-[closed]:scale-95 data-[closed]:opacity-0'
+          >
+            {({ close }) => (
+              <DayPicker
+                className='admin-week-picker'
+                locale={es}
+                weekStartsOn={1}
+                showOutsideDays
+                month={weekStart}
+                onMonthChange={(month) => setWeekStart(startOfWeek(month))}
+                modifiers={{
+                  selectedWeek: { from: weekStart, to: weekEnd },
+                }}
+                modifiersClassNames={{ selectedWeek: 'selected-week' }}
+                onDayClick={(day) => {
+                  setWeekStart(startOfWeek(day));
+                  close();
+                }}
+              />
+            )}
+          </PopoverPanel>
+        </Popover>
       </div>
 
       {/* Week navigation */}

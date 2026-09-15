@@ -12,6 +12,7 @@ export interface CreditFormData {
   startDate: string;
   expiresAt: string;
   notes: string;
+  paymentMethod: string;
 }
 
 export default function CreditForm({
@@ -21,6 +22,7 @@ export default function CreditForm({
   initialStartDate,
   initialExpiresAt,
   initialNotes = '',
+  initialPaymentMethod = 'cash',
   saving = false,
   onSubmit,
 }: {
@@ -30,10 +32,14 @@ export default function CreditForm({
   initialStartDate?: string;
   initialExpiresAt?: string;
   initialNotes?: string;
+  initialPaymentMethod?: string;
   saving?: boolean;
   onSubmit: (data: CreditFormData) => Promise<void>;
 }) {
   const [credits, setCredits] = useState(initialCredits);
+  const [paymentMethod, setPaymentMethod] = useState(
+    initialPaymentMethod || 'cash',
+  );
   const [remainingCredits, setRemainingCredits] = useState(
     initialRemainingCredits ?? initialCredits,
   );
@@ -42,13 +48,21 @@ export default function CreditForm({
   );
   const [expiresAt, setExpiresAt] = useState(
     initialExpiresAt ??
-      formatDateInput(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+    formatDateInput(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
   );
   const [notes, setNotes] = useState(initialNotes);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    onSubmit({ id, credits, remainingCredits, startDate, expiresAt, notes });
+    onSubmit({
+      id,
+      credits,
+      remainingCredits,
+      startDate,
+      expiresAt,
+      notes,
+      paymentMethod: paymentMethod || 'cash',
+    });
   };
 
   const isEdit = Boolean(id);
@@ -59,10 +73,10 @@ export default function CreditForm({
       className='grid grid-cols-1 md:grid-cols-2 gap-4'
     >
       <h2 className='text-lg font-semibold text-gray-100 mb-4 md:col-span-2'>
-        {isEdit ? 'Editar pool de créditos' : 'Crear pool de créditos'}
+        {isEdit ? 'Editar créditos' : 'Crear créditos'}
       </h2>
 
-      <div className={isEdit ? '' : 'md:col-span-2'}>
+      <div className={isEdit ? '' : 'md:grid-cols-2'}>
         <label className='block text-sm text-gray-300 mb-1'>Créditos totales</label>
         <input
           type='number'
@@ -77,7 +91,18 @@ export default function CreditForm({
           }}
         />
       </div>
-
+      <div>
+        <label htmlFor='payment-method'>Forma de pago</label>
+        <select
+          id='payment-method'
+          className='input'
+          value={paymentMethod}
+          onChange={(e) => setPaymentMethod(e.target.value || 'cash')}
+        >
+          <option value='bizum'>Bizum</option>
+          <option value='cash'>Efectivo</option>
+        </select>
+      </div>
       {isEdit && (
         <div>
           <label className='block text-sm text-gray-300 mb-1'>Créditos restantes</label>

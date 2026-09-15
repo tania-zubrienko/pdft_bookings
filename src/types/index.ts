@@ -89,6 +89,7 @@ export interface CreditPool {
   createdBy: string;
   notes?: string;
   isActive: boolean;
+  paymentMethod: string;
 }
 
 /**

@@ -22,7 +22,7 @@ export default function ClassCard({
   );
   const { appUser } = useAuth();
   const isEnrolled = enrolledStudents.some((s) => s.id === appUser?.id);
-  console.log(appUser, enrolledStudents)
+  const isPassed = new Date() < classData.date;
   return (
     <div className={`${UI.card.interactive} overflow-hidden relative`}>
       {/* Colored accent bar on the left */}
@@ -67,7 +67,7 @@ export default function ClassCard({
         </div>
 
         {/* Enrolled student avatars */}
-        {enrolledStudents.length > 0 && (
+        {enrolledStudents.length > 0 ? (
           <div className='flex items-center gap-1'>
             {enrolledStudents.slice(0, 8).map((student) =>
               student.avatar ? (
@@ -96,7 +96,7 @@ export default function ClassCard({
               </span>
             )}
           </div>
-        )}
+        ) : <p className='w-7 h-7' />}
 
         {/* Footer */}
         <div className='flex items-center justify-end pt-2 border-t border-gray-800'>
@@ -104,10 +104,10 @@ export default function ClassCard({
             to={`/classes/${classData.id}`}
             className={`btn text-sm ${isFull ? 'btn-secondary cursor-not-allowed pointer-events-none' : 'btn-primary'}`}
           >
-            {isEnrolled ? 'Cancelar' : isFull ? 'Completa' : 'Reservar'}
+            {isPassed ? isEnrolled ? 'Cancelar' : isFull ? 'Completa' : 'Reservar' : 'Ver'}
           </Link>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

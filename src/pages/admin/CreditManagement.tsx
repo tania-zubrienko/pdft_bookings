@@ -87,6 +87,7 @@ export default function CreditManagement() {
     expiresAt: string;
     notes: string;
     id?: string;
+    paymentMethod: string;
   }) => {
     setFormError('');
     setFormSuccess('');
@@ -133,6 +134,8 @@ export default function CreditManagement() {
 
     setSaving(true);
     try {
+      const paymentMethod = data.paymentMethod || 'cash';
+
       if (data.id) {
         await creditService.updateCreditPool(data.id, {
           totalCredits: data.credits,
@@ -140,6 +143,7 @@ export default function CreditManagement() {
           startDate: start,
           expiresAt: end,
           notes: data.notes,
+          paymentMethod,
         });
         const refreshed =
           await creditService.getCreditPoolsByStudent(selectedStudentId);
@@ -154,6 +158,7 @@ export default function CreditManagement() {
         expiresAt: end,
         notes: data.notes,
         createdBy: 'admin_1',
+        paymentMethod,
       });
 
       const refreshed =
@@ -226,7 +231,7 @@ export default function CreditManagement() {
             </p>
             <p>
               <span className='text-gray-400'>
-                Pools por vencer ({EXPIRING_SOON_DAYS} días):
+                Bonos por vencer ({EXPIRING_SOON_DAYS} días):
               </span>{' '}
               {stats.expiringSoon}
             </p>
@@ -248,6 +253,7 @@ export default function CreditManagement() {
             </div>
           )}
           <CreditForm
+            initialPaymentMethod='cash'
             onSubmit={handleFormSubmit}
             saving={saving}
           />
@@ -283,21 +289,21 @@ export default function CreditManagement() {
                     {pool.packageId && (
                       <p className='text-gray-400'>Paquete: {pool.packageId}</p>
                     )}
+                    <p className='text-gray-400'>Forma de pago: {pool.paymentMethod}</p>
                     {pool.notes && (
                       <p className='text-gray-400'>Notas: {pool.notes}</p>
                     )}
                   </div>
                   <div className='flex flex-col md:flex-row md:items-center md:justify-end gap-3'>
                     <span
-                      className={`${
-                        status === 'active'
-                          ? UI.badge.green
-                          : status === 'future'
-                            ? UI.badge.amber
-                            : status === 'expired'
-                              ? UI.badge.red
-                              : UI.badge.base
-                      } w-fit`}
+                      className={`${status === 'active'
+                        ? UI.badge.green
+                        : status === 'future'
+                          ? UI.badge.amber
+                          : status === 'expired'
+                            ? UI.badge.red
+                            : UI.badge.base
+                        } w-fit`}
                     >
                       {status === 'active'
                         ? 'Activo'

@@ -65,7 +65,8 @@ Goal: eliminate client-side writes to sensitive collections (`creditPools`, `res
   - Output: `Reservation[]` with denormalized class info
 
 - [ ] **adminCreateCreditPool**
-  - Input: `{ studentId, credits, startDate, expiresAt, packageId?, notes? }`
+  - Input: `{ studentId, credits, startDate, expiresAt, packageId?, notes?, paymentMethod }`
+  - `paymentMethod` accepts `cash` or `bizum`; missing or empty values must be stored as `cash`
   - Auth: required, must have `isAdmin` custom claim
   - Validate: `startDate < expiresAt`, `credits > 0`
   - Create `creditPool` document with `createdBy: context.auth.uid`

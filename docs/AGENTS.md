@@ -281,6 +281,7 @@ interface CreditPool {
   createdAt: Date;
   createdBy: string; // Admin who created the pool
   notes?: string; // Optional admin notes
+  paymentMethod: string; // Payment method used for the pool
 }
 ```
 
@@ -339,7 +340,7 @@ getStudents(): Promise<AppUser[]>
 ```typescript
 getCreditBalance(studentId: string): Promise<CreditBalance>
 getCreditPoolsByStudent(studentId: string): Promise<CreditPool[]>
-createCreditPool(params: { studentId, credits, startDate, expiresAt, packageId?, notes?, createdBy }): Promise<void>
+createCreditPool(params: { studentId, credits, startDate, expiresAt, packageId?, notes?, createdBy, paymentMethod }): Promise<void>
 ```
 
 ### `reservationService` (`reservation.service.ts`)
@@ -692,6 +693,7 @@ await admin
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     createdBy: 'admin_user_id',
     notes: 'Monthly membership credits',
+    paymentMethod: 'cash',
   });
 ```
 
@@ -825,6 +827,7 @@ await admin.firestore().collection('creditPools').add({
   expiresAt: expirationDate,
   packageId,
   createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  paymentMethod: 'cash',
 });
 ```
 

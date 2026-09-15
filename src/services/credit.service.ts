@@ -22,9 +22,19 @@ class CreditService {
   }
 
   private toCreditPool(docData: Record<string, any>, id: string): CreditPool {
+    const paymentMethod =
+      typeof docData['paymentMethod'] === 'string' &&
+        docData['paymentMethod'].trim()
+        ? docData['paymentMethod']
+        : typeof docData['paymentType'] === 'string' &&
+          docData['paymentType'].trim()
+          ? docData['paymentType']
+          : 'cash';
+
     return {
       ...docData,
       id,
+      paymentMethod,
       startDate:
         docData['startDate']?.toDate?.() ?? new Date(docData['startDate']),
       expiresAt:
@@ -97,6 +107,7 @@ class CreditService {
     packageId?: string;
     notes?: string;
     createdBy: string;
+    paymentMethod: string;
   }): Promise<void> {
     await addDoc(collection(this.db, this.collectionName), {
       studentId: params.studentId,
@@ -109,6 +120,7 @@ class CreditService {
       createdBy: params.createdBy,
       createdAt: Timestamp.now(),
       isActive: true,
+      paymentMethod: params.paymentMethod || 'cash',
     });
   }
 
@@ -120,6 +132,7 @@ class CreditService {
       startDate: Date;
       expiresAt: Date;
       notes?: string;
+      paymentMethod: string;
     },
   ): Promise<void> {
     const { updateDoc, doc: firestoreDoc } = await import('firebase/firestore');
@@ -130,6 +143,7 @@ class CreditService {
       startDate: Timestamp.fromDate(params.startDate),
       expiresAt: Timestamp.fromDate(params.expiresAt),
       notes: params.notes ?? '',
+      paymentMethod: params.paymentMethod || 'cash',
     });
   }
 

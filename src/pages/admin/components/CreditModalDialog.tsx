@@ -21,6 +21,7 @@ export default function CreditModalDialog({
     startDate: string;
     expiresAt: string;
     notes: string;
+    paymentMethod: string;
   }) => Promise<void>;
   creditPool: CreditPool | null;
 }) {
@@ -56,6 +57,7 @@ export default function CreditModalDialog({
                   <div className='mt-2 bg-primary'>
                     <CreditForm
                       id={creditPool?.id}
+                      initialPaymentMethod={creditPool?.paymentMethod ?? 'cash'}
                       initialCredits={
                         creditPool ? creditPool.totalCredits : undefined
                       }

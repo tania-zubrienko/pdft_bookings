@@ -46,6 +46,7 @@ export interface CreditPool {
   createdAt: admin.firestore.Timestamp;
   createdBy: string;
   notes?: string;
+  paymentMethod: string;
 }
 
 // Error codes
