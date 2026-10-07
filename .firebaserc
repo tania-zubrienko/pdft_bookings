@@ -1,7 +1,6 @@
 {
   "projects": {
-    "default": "your-project-id",
-    "dev": "pdft-booking"
+    "default": "pdft-booking"
   },
   "targets": {},
   "etags": {}

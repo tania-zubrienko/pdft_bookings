@@ -1,10 +1,10 @@
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
-
-// Initialize Firebase Admin
-admin.initializeApp();
-
-const db = admin.firestore();
+export {
+  cancelReservation,
+  createReservation,
+  getMyReservations,
+  getReservationsByStudent,
+} from './reservations';
+import { admin } from './firebase';
 
 // Type definitions — aligned with src/types/index.ts
 
@@ -59,31 +59,3 @@ export const ERROR_CODES = {
   CREDITS_EXPIRED: 'CREDITS_EXPIRED',
   CANCELLATION_WINDOW_EXPIRED: 'CANCELLATION_WINDOW_EXPIRED',
 } as const;
-
-/**
- * Get user's reservations
- */
-export const getMyReservations = functions.https.onCall(
-  async (data, context: functions.https.CallableContext) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
-        'unauthenticated',
-        'You must be logged in',
-      );
-    }
-
-    const studentId = context.auth.uid;
-
-    const reservations = await db
-      .collection('reservations')
-      .where('studentId', '==', studentId)
-      .orderBy('createdAt', 'desc')
-      .limit(50)
-      .get();
-
-    return reservations.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-  },
-);

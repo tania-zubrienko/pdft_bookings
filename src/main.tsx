@@ -7,7 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter basename="/pdft_bookings/">
+    <BrowserRouter>
       <AuthProvider>
         <App />
       </AuthProvider>
