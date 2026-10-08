@@ -43,7 +43,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 className='flex items-center gap-2'
               >
                 <div className='w-10 h-10 bg-brand rounded-lg flex items-center justify-center'>
-                  <span className='text-white font-bold text-xl'>D</span>
+                  <img
+                    src='/logo.png'
+                    alt='Pole Dance Fit Talavera'
+                  />
                 </div>
                 <div className='flex flex-col'>
                   <span className='font-bold text-lg text-white leading-tight'>
@@ -64,8 +67,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className={`flex items-center gap-2 transition-colors ${isActive ? UI.nav.linkActive : UI.nav.linkInactive
-                      }`}
+                    className={`flex items-center gap-2 transition-colors ${
+                      isActive ? UI.nav.linkActive : UI.nav.linkInactive
+                    }`}
                   >
                     <link.icon className='w-5 h-5' />
                     {link.label}
@@ -113,10 +117,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     key={link.to}
                     to={link.to}
                     onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${isActive
-                      ? 'bg-ui-input text-primary-400 font-medium'
-                      : 'text-gray-300 hover:bg-ui-input hover:text-primary-400'
-                      }`}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-ui-input text-primary-400 font-medium'
+                        : 'text-gray-300 hover:bg-ui-input hover:text-primary-400'
+                    }`}
                   >
                     <link.icon className='w-5 h-5' />
                     {link.label}

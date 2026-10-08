@@ -20,9 +20,12 @@ export default function NavBar() {
               className='flex items-center gap-2'
             >
               <div className={UI.header.logoMark}>
-                <span className='text-white font-bold text-xl'>D</span>
+                <img
+                  src='/logo.png'
+                  alt='Pole Dance Fit Talavera'
+                />
               </div>
-              <span className={UI.header.logoText}>{S.app.name}</span>
+              {/* <span className={UI.header.logoText}>{S.app.name}</span> */}
             </Link>
             {appUser && 'role' in appUser && appUser.role === 'admin' && (
               <Link
