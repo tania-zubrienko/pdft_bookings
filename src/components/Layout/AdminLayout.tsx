@@ -40,22 +40,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <div className='flex items-center gap-4'>
               <Link
                 to='/admin/schedule'
-                className='flex items-center gap-2'
+                className='flex items-center gap-3'
               >
-                <div className='w-10 h-10 bg-brand rounded-lg flex items-center justify-center'>
-                  <img
-                    src='/logo.png'
-                    alt='Pole Dance Fit Talavera'
-                  />
-                </div>
-                <div className='flex flex-col'>
-                  <span className='font-bold text-lg text-white leading-tight'>
-                    Pole Dance Fit Talavera
-                  </span>
-                  <span className='text-xs text-gray-400 leading-tight'>
-                    {S.nav.admin}
-                  </span>
-                </div>
+                <img
+                  src='/logo.png'
+                  alt='Pole Dance Fit Talavera'
+                  className='h-14 w-24 object-contain'
+                />
+                <span className='text-xs text-gray-400 leading-tight'>
+                  {S.nav.admin}
+                </span>
               </Link>
             </div>
 
