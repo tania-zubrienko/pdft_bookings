@@ -30,6 +30,7 @@ export const formatTime = (date: Date) => {
 };
 export const canBeCancelled = (date: Date) => {
   const maxTimeToCancel = new Date(date.getTime() - 12 * 60 * 60 * 1000);
-  console.log(new Date(), '\n', maxTimeToCancel)
   return new Date() < maxTimeToCancel;
-}
+};
+
+export const hideFeature = true;

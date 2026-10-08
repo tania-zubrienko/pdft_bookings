@@ -31,6 +31,8 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [userName, setUserName] = useState('');
+  const [phone, setPhone] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [unverifiedLogin, setUnverifiedLogin] = useState(false);
@@ -103,7 +105,12 @@ export default function Login() {
   };
 
   const register = async () => {
-    if (!email.trim() || !password.trim() || !userName.trim()) {
+    if (
+      !email.trim() ||
+      !password.trim() ||
+      !userName.trim() ||
+      !phone.trim()
+    ) {
       return;
     }
     setLoading(true);
@@ -112,7 +119,7 @@ export default function Login() {
     setResendSuccess(false);
 
     try {
-      await signup(email, password, userName);
+      await signup(email, password, userName, phone);
       setVerificationSent(true);
     } catch (err) {
       setError((err as Error).message || 'No se pudo crear la cuenta.');
@@ -343,17 +350,33 @@ export default function Login() {
                     </div>
                   )}
                   {activeTab === 'sign_up' && (
-                    <div>
-                      <label className='block text-sm text-ui-text-soft mb-1'>
-                        Nombre y Apellidos
-                      </label>
-                      <input
-                        type='text'
-                        className='input'
-                        value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
-                      />
-                    </div>
+                    <>
+                      <div>
+                        <label className='block text-sm text-ui-text-soft mb-1'>
+                          Nombre y Apellidos
+                        </label>
+                        <input
+                          type='text'
+                          className='input'
+                          value={userName}
+                          onChange={(e) => setUserName(e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <label className='block text-sm text-ui-text-soft mb-1'>
+                          Teléfono(WhatsApp)
+                        </label>
+                        <input
+                          type='phone'
+                          className='input'
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          required
+                          minLength={9}
+                        />
+                      </div>
+                    </>
                   )}
                   <button
                     type='submit'

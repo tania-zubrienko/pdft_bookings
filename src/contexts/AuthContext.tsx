@@ -27,7 +27,12 @@ interface AuthContextValue {
   isAdmin: boolean;
   isVerified: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, userName: string) => Promise<void>;
+  signup: (
+    email: string,
+    password: string,
+    userName: string,
+    phone: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
   refreshAppUser: () => Promise<void>;
   resendVerificationEmail: (email: string, password: string) => Promise<void>;
@@ -73,7 +78,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signup = useCallback(
-    async (email: string, password: string, userName: string) => {
+    async (
+      email: string,
+      password: string,
+      userName: string,
+      phone: string,
+    ) => {
       if (!auth) throw new Error('Firebase Auth no está configurado.');
       const credential = await createUserWithEmailAndPassword(
         auth,
@@ -81,7 +91,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       );
       await sendEmailVerification(credential.user);
-      await fbService.createStudent(credential.user.uid, email, userName);
+      await fbService.createStudent(
+        credential.user.uid,
+        email,
+        userName,
+        phone,
+      );
       await signOut(auth); // Sign out until email is verified
     },
     [],

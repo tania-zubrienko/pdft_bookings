@@ -13,6 +13,7 @@ import creditService from '@/services/credit.service';
 import CreditBalanceCard from '@/pages/account/components/CreditBalance';
 import ReservationsTab from '@/pages/account/components/ReservationsTab';
 import ProfileTab from '@/pages/account/components/ProfileTab';
+import { hideFeature } from '@/utils';
 
 type Tab = 'reservations' | 'profile';
 
@@ -40,6 +41,8 @@ export default function Account() {
 
   // ── Profile tab state ───────────────────────────────────────────────────
   const [displayName, setDisplayName] = useState('');
+  const [displayPhone, setDisplayPhone] = useState('');
+
   const [avatarUrl, setAvatarUrl] = useState(''); // persisted download URL
   const [avatarPreview, setAvatarPreview] = useState(''); // local blob preview
   const [uploading, setUploading] = useState(false);
@@ -53,6 +56,7 @@ export default function Account() {
     if (appUser) {
       setDisplayName(appUser.name ?? '');
       setAvatarUrl(appUser.avatar ?? '');
+      setDisplayPhone(appUser.phone ?? '');
     }
   }, [appUser]);
 
@@ -68,7 +72,8 @@ export default function Account() {
       const enriched: ReservationWithClass[] = resData
         .map((reservation) => {
           const scheduledClass = classData.find(
-            (scheduledClass) => scheduledClass.id === reservation.scheduledClassId,
+            (scheduledClass) =>
+              scheduledClass.id === reservation.scheduledClassId,
           );
           if (!scheduledClass) return null;
 
@@ -77,7 +82,10 @@ export default function Account() {
             scheduledClass,
           };
         })
-        .filter((reservation): reservation is ReservationWithClass => reservation !== null);
+        .filter(
+          (reservation): reservation is ReservationWithClass =>
+            reservation !== null,
+        );
       setReservations(enriched);
       setAllScheduledClasses(classData);
       setReservationsLoading(false);
@@ -105,19 +113,20 @@ export default function Account() {
     setAvatarPreview(URL.createObjectURL(file));
     setUploading(true);
 
-    try {
-      const storageRef = ref(storage, `avatars/${user.uid}`);
-      await uploadBytes(storageRef, file, { contentType: file.type });
-      const downloadUrl = await getDownloadURL(storageRef);
-      setAvatarUrl(downloadUrl);
-    } catch {
-      setSaveError('Error al subir la imagen. Inténtalo de nuevo.');
-      setAvatarPreview('');
-    } finally {
-      setUploading(false);
-      // reset input so the same file can be re-selected
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+    if (!hideFeature)
+      try {
+        const storageRef = ref(storage, `avatars/${user.uid}`);
+        await uploadBytes(storageRef, file, { contentType: file.type });
+        const downloadUrl = await getDownloadURL(storageRef);
+        setAvatarUrl(downloadUrl);
+      } catch {
+        setSaveError('Error al subir la imagen. Inténtalo de nuevo.');
+        setAvatarPreview('');
+      } finally {
+        setUploading(false);
+        // reset input so the same file can be re-selected
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
   };
 
   // ── Profile save ─────────────────────────────────────────────────────────
@@ -127,6 +136,10 @@ export default function Account() {
       setSaveError('El nombre no puede estar vacío.');
       return;
     }
+    if (!displayPhone.trim()) {
+      setSaveError('El teléfono no puede estar vacío.');
+      return;
+    }
     setSaving(true);
     setSaveError('');
     setSaveSuccess(false);
@@ -134,6 +147,7 @@ export default function Account() {
       await userService.updateUserProfile(user.uid, {
         name: displayName.trim(),
         avatar: avatarUrl.trim(),
+        phone: displayPhone.trim(),
       });
       await refreshAppUser();
       setSaveSuccess(true);
@@ -146,9 +160,10 @@ export default function Account() {
 
   // ── Tab bar ──────────────────────────────────────────────────────────────
   const tabClass = (tab: Tab) =>
-    `px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab
-      ? 'border-brand text-brand-light'
-      : 'border-transparent text-ui-text-soft hover:text-ui-text'
+    `px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+      activeTab === tab
+        ? 'border-brand text-brand-light'
+        : 'border-transparent text-ui-text-soft hover:text-ui-text'
     }`;
 
   // IDs of scheduled classes with a confirmed reservation
@@ -220,6 +235,7 @@ export default function Account() {
         <ProfileTab
           appUser={appUser}
           displayName={displayName}
+          displayPhone={displayPhone}
           avatarUrl={avatarUrl}
           avatarPreview={avatarPreview}
           uploading={uploading}
@@ -228,6 +244,7 @@ export default function Account() {
           saveSuccess={saveSuccess}
           fileInputRef={fileInputRef}
           onDisplayNameChange={setDisplayName}
+          onDisplayPhoneChange={setDisplayPhone}
           onFileChange={handleFileChange}
           onSaveProfile={handleSaveProfile}
         />

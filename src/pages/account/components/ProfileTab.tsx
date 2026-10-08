@@ -2,10 +2,12 @@ import { RefObject } from 'react';
 import { Camera, Save } from 'lucide-react';
 import UI from '@/styles';
 import { AppUser } from '@/types';
+import { hideFeature } from '../../../utils';
 
 interface ProfileTabProps {
   appUser?: AppUser | null;
   displayName: string;
+  displayPhone: string;
   avatarUrl: string;
   avatarPreview: string;
   uploading: boolean;
@@ -14,6 +16,7 @@ interface ProfileTabProps {
   saveSuccess: boolean;
   fileInputRef: RefObject<HTMLInputElement>;
   onDisplayNameChange: (value: string) => void;
+  onDisplayPhoneChange: (value: string) => void;
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSaveProfile: () => void;
 }
@@ -24,6 +27,7 @@ const avatarInitial = (name: string) =>
 export default function ProfileTab({
   appUser,
   displayName,
+  displayPhone,
   avatarUrl,
   avatarPreview,
   uploading,
@@ -32,6 +36,7 @@ export default function ProfileTab({
   saveSuccess,
   fileInputRef,
   onDisplayNameChange,
+  onDisplayPhoneChange,
   onFileChange,
   onSaveProfile,
 }: ProfileTabProps) {
@@ -52,28 +57,30 @@ export default function ProfileTab({
               </span>
             )}
           </div>
-
-          <button
-            type='button'
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className='absolute bottom-0 right-0 w-7 h-7 rounded-full bg-brand border-2 border-ui-page flex items-center justify-center hover:bg-brand/80 transition-colors disabled:opacity-50'
-            aria-label='Cambiar foto'
-          >
-            {uploading ? (
-              <span className='w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin' />
-            ) : (
-              <Camera className='w-3.5 h-3.5 text-ui-text-inverse' />
-            )}
-          </button>
-
-          <input
-            ref={fileInputRef}
-            type='file'
-            accept='image/*'
-            className='hidden'
-            onChange={onFileChange}
-          />
+          {!hideFeature && (
+            <>
+              <button
+                type='button'
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading || hideFeature}
+                className='absolute bottom-0 right-0 w-7 h-7 rounded-full bg-brand border-2 border-ui-page flex items-center justify-center hover:bg-brand/80 transition-colors disabled:opacity-50'
+                aria-label='Cambiar foto'
+              >
+                {uploading ? (
+                  <span className='w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin' />
+                ) : (
+                  <Camera className='w-3.5 h-3.5 text-ui-text-inverse' />
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type='file'
+                accept='image/*'
+                className='hidden'
+                onChange={onFileChange}
+              />
+            </>
+          )}
         </div>
 
         <div>
@@ -81,14 +88,16 @@ export default function ProfileTab({
             {appUser?.name || 'Sin nombre'}
           </p>
           <p className={UI.text.soft}>{appUser?.email}</p>
-          <button
-            type='button'
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className='mt-1 text-xs text-brand-light hover:text-brand disabled:opacity-50 transition-colors'
-          >
-            {uploading ? 'Subiendo...' : 'Cambiar foto'}
-          </button>
+          {!hideFeature && (
+            <button
+              type='button'
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className='mt-1 text-xs text-brand-light hover:text-brand disabled:opacity-50 transition-colors'
+            >
+              {uploading ? 'Subiendo...' : 'Cambiar foto'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -104,7 +113,17 @@ export default function ProfileTab({
             maxLength={60}
           />
         </div>
-
+        <div>
+          <label className={`${UI.text.label} block mb-1`}>Nombre</label>
+          <input
+            type='text'
+            value={displayPhone}
+            onChange={(event) => onDisplayPhoneChange(event.target.value)}
+            className='input w-full'
+            placeholder='Teléfono (WhatsApp)'
+            maxLength={60}
+          />
+        </div>
         {saveError && <p className={UI.text.error}>{saveError}</p>}
         {saveSuccess && (
           <p className={UI.text.success}>Perfil actualizado correctamente.</p>

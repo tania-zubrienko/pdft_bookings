@@ -24,7 +24,12 @@ class UserService {
     q.forEach((user) => console.log(user));
   }
 
-  async createStudent(uid: string, email: string, userName: string) {
+  async createStudent(
+    uid: string,
+    email: string,
+    userName: string,
+    phone: string,
+  ) {
     const existingUser = await this.getUserByEmail(email);
     if (!!existingUser) return null;
     await setDoc(
@@ -32,6 +37,7 @@ class UserService {
       {
         email,
         id: uid,
+        phone,
         role: 'student',
         name: userName,
         createdAt: new Date(),
@@ -89,7 +95,7 @@ class UserService {
 
   async updateUserProfile(
     uid: string,
-    updates: { name?: string; avatar?: string },
+    updates: { name?: string; avatar?: string; phone?: string },
   ): Promise<void> {
     const ref = doc(this.db, this.collectionName, uid);
     await setDoc(ref, updates, { merge: true });
