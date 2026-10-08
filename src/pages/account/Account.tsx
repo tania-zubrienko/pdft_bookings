@@ -7,7 +7,12 @@ import reservationService from '@/services/reservation.service';
 import scheduleService from '@/services/schedule.service';
 import userService from '@/services/user.service';
 import { storage } from '@/lib/firebase';
-import { CreditBalance, ReservationWithClass, ScheduledClass } from '@/types';
+import {
+  CreditBalance,
+  ReservationStatus,
+  ReservationWithClass,
+  ScheduledClass,
+} from '@/types';
 import UI from '@/styles';
 import creditService from '@/services/credit.service';
 import CreditBalanceCard from '@/pages/account/components/CreditBalance';
@@ -176,7 +181,35 @@ export default function Account() {
   }, [reservations]);
 
   const cancelReservation = async (reservedClass: ReservationWithClass) => {
-    await reservationService.cancelReservationForStudent(reservedClass);
+    const cancelled =
+      await reservationService.cancelReservationForStudent(reservedClass);
+    if (!cancelled) return;
+
+    setReservations((currentReservations) =>
+      currentReservations.map((reservation) =>
+        reservation.id === reservedClass.id
+          ? { ...reservation, status: ReservationStatus.Cancelled }
+          : reservation,
+      ),
+    );
+    setAllScheduledClasses((currentClasses) =>
+      currentClasses.map((scheduledClass) =>
+        scheduledClass.id === reservedClass.scheduledClassId
+          ? {
+              ...scheduledClass,
+              enrolledCount: Math.max(0, scheduledClass.enrolledCount - 1),
+              studentIds: scheduledClass.studentIds.filter(
+                (studentId) => studentId !== reservedClass.studentId,
+              ),
+            }
+          : scheduledClass,
+      ),
+    );
+
+    if (user) {
+      const updatedCredits = await creditService.getCreditBalance(user.uid);
+      setCredits(updatedCredits ?? { remaining: 0, total: 0 });
+    }
   };
   return (
     <Layout>
